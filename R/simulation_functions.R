@@ -182,6 +182,8 @@ Dropped2Biased <- function(dropped_exprs,nbins,randseed,gcslope,lenslope,batch,e
 #' @return list a list of 4 elements: evf, true counts, sampled counts and biased counts. 
 sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
 	bimod,alpha,alpha_sd,nbins,gcbias,lenbias,batch,noise){
+	a=as.numeric(Sys.time())
+	set.seed(a)
 	if(gcbias>=2 | lenbias>=2){return('Error: gcbias or lenbias must be smaller than 2')}
 	evf_mean <- rep(0,nevf)
 	evf_sd <- rep(1,nevf)
@@ -197,4 +199,47 @@ sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
 	sampled_counts <- TrueCounts2Dropped(true_counts,alpha,alpha_sd)
 	biased_counts <- Dropped2Biased(sampled_counts,nbins,randseed,gcbias,lenbias,batch,noise)
 	return(list(evfs,true_counts,sampled_counts,biased_counts))
+}
+#' Test results of scaling normalization
+#' 
+#' This function runs rpm, deseq, tmm, uq (quantile normalization), scran, and clt normalization
+#' @param sim_results output of sim1Pop1Batch, list a list of 4 elements: evf, true counts, sampled counts and biased counts.
+#' @return cor_compare a matrix of ngenes * 2*(1+nmethods), each row is a gene, and the columns are the correlation between the true counts to dropped counts, dropped counts corrected, biased counts and dropped counts corrected
+
+
+### Compute value of impulse model
+
+#' Compute value of impulse function given parameters.
+#' 
+#' Compute value of impulse function given parameters.
+#' Enforces lower bound on value of function to avoid numerical
+#' errors during model fitting.
+#' 
+#' @seealso Compiled version: \link{evalImpulse_comp}
+#' 
+#' @param vecImpulseParam (numeric vector number of impulse model parameters)
+#' \{beta, h0, h1, h2, t1, t2\}
+#' Vector of impulse model parameters.
+#' @param vecTimepoints (numeric vector length number of time points) 
+#' Time points to be evaluated.
+#' 
+#' @return vecImpulseValue (vec number of vecTimepoints) 
+#' Model values for given time points.
+#' 
+#' @author David Sebastian Fischer
+evalImpulse <- function(vecImpulseParam, vecTimepoints) {
+    
+    # beta is vecImpulseParam[1] h0 is vecImpulseParam[2] h1 is
+    # vecImpulseParam[3] h2 is vecImpulseParam[4] t1 is vecImpulseParam[5]
+    # t2 is vecImpulseParam[6]
+    vecImpulseValue <- sapply(vecTimepoints, function(t) {
+        (1/vecImpulseParam[3]) * 
+            (vecImpulseParam[2] + (vecImpulseParam[3] - vecImpulseParam[2]) *
+                 (1/(1 + exp(-vecImpulseParam[1] * (t - vecImpulseParam[5]))))) *
+            (vecImpulseParam[4] + (vecImpulseParam[3] - vecImpulseParam[4]) *
+                 (1/(1 + exp(vecImpulseParam[1] * (t - vecImpulseParam[6])))))
+    })
+    vecImpulseValue[vecImpulseValue < 10^(-10)] <- 10^(-10)
+    
+    return(vecImpulseValue)
 }
