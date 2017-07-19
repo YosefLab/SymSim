@@ -18,10 +18,10 @@ TestScaling <- function(sim_results){
 #' This function runs rpm, deseq, tmm, uq (quantile normalization), scran, and clt normalization
 #' @param x matrix of transcript counts where rows are genes and columns are cells
 #' @return list(sf,results) sf is a nmethods * ncells matrix that stores the scaling factors of different methods, results are the gene-cell matrix after normalization
-library('DESeq2')
-library('scran')
-library('scone')
-library('edgeR')
+# library('DESeq2')
+# library('scran')
+# library('scone')
+# library('edgeR')
 
 
 Normalize <- function(x){
