@@ -185,10 +185,9 @@ sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
 	a=as.numeric(Sys.time())
 	set.seed(a)
 	if(gcbias>=2 | lenbias>=2){return('Error: gcbias or lenbias must be smaller than 2')}
-	evf_mean <- rep(0,nevf)
 	evf_sd <- rep(1,nevf)
 	evfs <- lapply(c(1:ncells),function(celli){
-		evf <- rnorm(evf_mean,evf_sd)
+		evf <- sapply(c(1:length(evf_mean)),function(evfi){rnorm(1,evf_mean[evfi],evf_sd[evfi])})
 		return(evf)
 	})
 	true_counts <- lapply(c(1:ncells),function(celli){
