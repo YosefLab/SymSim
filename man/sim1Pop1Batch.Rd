@@ -22,7 +22,7 @@ sim1Pop1Batch(evf_mean, evf_sd, ncells, randseed, gene_effects, bimod, alpha,
 
 \item{alpha}{library prep capture efficiency, or dropout of transcript: the number of of captured transcript is distributed as the number of successes with probability of success alpha in X trials, where X is the true number of transcripts}
 
-\item{alpha_sd}{the standard deviation of alpha (to add noise for different efficiency for each cell)}
+\item{alpha_sd}{the standard deviation of alpha (to add nsimoise for different efficiency for each cell)}
 
 \item{nbins}{the number of bins for gc and length bias}
 

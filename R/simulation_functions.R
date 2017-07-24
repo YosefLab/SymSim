@@ -28,6 +28,24 @@ MasterEqn2 <- function(rateParams){
   return(p_all[-1]) # data_1gene is indices
 }
 
+#' Get the logged distribution from master equation simulations
+#'
+#' This function converts the frequency on integers from (0-K transcripts) to log scaled frequency, where the log_count_bins gives the range for each count bin
+#' @param dist a list of master equation simulation results, each element is a vector of length K
+#' @param log_count_bins a vector of form seq(min,max,stepsize), or doesn't have equal distance bins
+#' @return a matrix where each column is a bin, and each row is one distribution, and the contents are frequencies of probability of being in each bin 
+
+Sim_LogDist <- function(dist,log_count_bins){
+	bins=10^log_count_bins
+	Log_dist=lapply(dist,function(X){
+		inbins=split(X[c(2:length(X))],cut(c(2:length(X)),bins))
+		dist=c(X[1],sapply(inbins,sum))
+		dist[is.na(dist)]=0
+		return(dist)
+	})
+	Log_dist=do.call(rbind,Log_dist)
+	return(Log_dist)
+}
 
 #' Getting True Counts from EVF and Gene effects
 #'
@@ -45,9 +63,7 @@ MasterEqn2 <- function(rateParams){
 EVF2TrueCounts <- function(allparams,sim_master,evf,gene_effects,bimod){
 	nevf <- length(evf)
 	ngenes <- length(gene_effects[[1]][,1])
-	params <- Get_params(gene_effects,evf)
-	params[,1] <- 10^(log(base=10,params[,1]) - (log(base=10,params[,1])+0.5)*bimod)
-	params[,2] <- 10^(log(base=10,params[,2]) - (log(base=10,params[,2])+1)*bimod)
+	params <- Get_params(gene_effects,evf,bimod)
 	best_matches <- FNN::knnx.index(data=allparams,query=params,k=1,algorithm=c('kd_tree'))
 	sim <- sim_master[best_matches]
 	sim_exprs <- SampleExprs(sim,1)
@@ -89,8 +105,10 @@ Get_params <- function(gene_effects,evf){
 	params <- lapply(gene_effects,function(X){X %*% evf})
 	params <- do.call(cbind,params)
 	params <- apply(params,2,function(x){1/(1+exp(-x))})
-	params[,1] <- 10^(params[,1]*7-1)
-	params[,2] <- 10^(params[,2]*7-2)
+	params[,1] <- (params[,1]*7-1)
+	params[,1] <- 10^(params[,1] - (params[,1]+0.5)*bimod)
+	params[,2] <- params[,2]*7-2
+	params[,2] <- 10^(params[,2] - (params[,2]+1)*bimod)
 	params[,3] <- 10^(params[,3]*3)
 	return(params)
 }
@@ -242,3 +260,4 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
     
     return(vecImpulseValue)
 }
+
