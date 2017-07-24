@@ -28,25 +28,6 @@ MasterEqn2 <- function(rateParams){
   return(p_all[-1]) # data_1gene is indices
 }
 
-#' Get the logged distribution from master equation simulations
-#'
-#' This function converts the frequency on integers from (0-K transcripts) to log scaled frequency, where the log_count_bins gives the range for each count bin
-#' @param dist a list of master equation simulation results, each element is a vector of length K
-#' @param log_count_bins a vector of form seq(min,max,stepsize), or doesn't have equal distance bins
-#' @return a matrix where each column is a bin, and each row is one distribution, and the contents are frequencies of probability of being in each bin 
-
-Sim_LogDist <- function(dist,log_count_bins){
-	bins=10^log_count_bins
-	Log_dist=lapply(dist,function(X){
-		inbins=split(X[c(2:length(X))],cut(c(2:length(X)),bins))
-		dist=c(X[1],sapply(inbins,sum))
-		dist[is.na(dist)]=0
-		return(dist)
-	})
-	Log_dist=do.call(rbind,Log_dist)
-	return(Log_dist)
-}
-
 #' Getting True Counts from EVF and Gene effects
 #'
 #' This function first calls the Get_params function to calculate the kinetic parameters from evf and gene effects. 
