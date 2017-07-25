@@ -4,12 +4,16 @@
 \alias{Get_params}
 \title{Getting the parameters for simulating gene expression from EVf and gene effects}
 \usage{
-Get_params(gene_effects, evf)
+Get_params(gene_effects, evf, param_dist, bimod)
 }
 \arguments{
 \item{gene_effects}{a list of three matrices (generated using the GeneEffects function), each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows.}
 
 \item{evf}{a vector of length nevf, the cell specific extrinsic variation factor}
+
+\item{param_dist}{the fitted parameter distribution to sample from}
+
+\item{bimod}{the bimodality constant}
 }
 \value{
 params a matrix of ngenes * 3

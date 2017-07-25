@@ -5,7 +5,7 @@
 \title{Simulate 1 homogenous population in 1 batch}
 \usage{
 sim1Pop1Batch(evf_mean, evf_sd, ncells, randseed, gene_effects, bimod, alpha,
-  alpha_sd, nbins, gcbias, lenbias, batch, noise)
+  alpha_sd, nbins, gcbias, lenbias, batch, noise, matched_params)
 }
 \arguments{
 \item{evf_mean}{a vector of length nevf, the means of the normal distribution to sample evf from}

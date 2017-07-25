@@ -52,7 +52,7 @@ LogDist <- function(counts,log_count_bins){
 PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename){
     mean_counts=mean_counts[log_real[,1]<zeropropthres]
     log_real=log_real[log_real[,1]<zeropropthres,]
-    colnames(log_real)[1]='0'
+    colnames(log_real)[1]='.0'
     plot_real=melt(log_real)
     plot_real$freq=plot_real$value
     genenames=rownames(log_real)
@@ -72,4 +72,24 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     scale_y_discrete(breaks=NULL)
     ggsave(filename,dev='jpeg',width = 8, height = 8)
     return(ord)
+}
+#' Plotting the histograms of kon,koff,s values
+#'
+#' plot colored histograms of parameters
+#' @param params a matrix of 3 columns, the first one is kon, the second is koff and the third is s
+#' @param samplename the prefix of the plot, the suffix is '.params_dist.jpeg'
+#' @return make a plot of three histograms
+PlotParamHist<-function(params,samplename){
+        df <- data.frame(kon = log(base=10,params[,1]),koff=log(base=10,params[,2]),s=log(base=10,params[,3]))
+        df <- melt(df)
+        p1 <- ggplot(df,aes(x=value)) +
+            geom_histogram(data=subset(df,variable == 'kon'),aes(y = ..density..), binwidth=density(df$value)$bw) +
+            geom_density(data=subset(df,variable == 'kon'),fill="red", alpha = 0.2) 
+        p2 <- ggplot(df,aes(x=value)) +
+            geom_histogram(data=subset(df,variable == 'koff'),aes(y = ..density..), binwidth=density(df$value)$bw) +
+            geom_density(data=subset(df,variable == 'koff'),fill="green", alpha = 0.2) 
+        p3 <- ggplot(df,aes(x=value)) +
+            geom_histogram(data=subset(df,variable == 's'),aes(y = ..density..), binwidth=density(df$value)$bw) +
+            geom_density(data=subset(df,variable == 's'),fill="blue", alpha = 0.2) 
+        ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')
 }

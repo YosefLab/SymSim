@@ -41,10 +41,10 @@ MasterEqn2 <- function(rateParams){
 #' @return the simulated (true) expression matrix
 #' @examples 
 #' EVF2TrueCounts()
-EVF2TrueCounts <- function(allparams,sim_master,evf,gene_effects,bimod){
+EVF2TrueCounts <- function(allparams,matched_params,sim_master,evf,gene_effects,bimod){
 	nevf <- length(evf)
 	ngenes <- length(gene_effects[[1]][,1])
-	params <- Get_params(gene_effects,evf,bimod)
+	params <- Get_params(gene_effects,evf,match_params1,bimod)
 	best_matches <- FNN::knnx.index(data=allparams,query=params,k=1,algorithm=c('kd_tree'))
 	sim <- sim_master[best_matches]
 	sim_exprs <- SampleExprs(sim,1)
@@ -79,20 +79,29 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,sd){
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range by using first a logistic function and then adding/dividing by constant to their correct range
 #' @param evf a vector of length nevf, the cell specific extrinsic variation factor
 #' @param gene_effects a list of three matrices (generated using the GeneEffects function), each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param param_dist the fitted parameter distribution to sample from 
+#' @param bimod the bimodality constant
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
-Get_params <- function(gene_effects,evf){
+Get_params <- function(gene_effects,evf,param_dist,bimod){
+	nparams <- length(param_dist[,1])
 	params <- lapply(gene_effects,function(X){X %*% evf})
 	params <- do.call(cbind,params)
 	params <- apply(params,2,function(x){1/(1+exp(-x))})
-	params[,1] <- (params[,1]*7-1)
+	params[,1] = sort(param_dist[,1])[ceiling(params[,1]*nparams)]
+	params[,2] = sort(param_dist[,2])[ceiling(params[,2]*nparams)]
+	params[,3] = sort(param_dist[,3])[ceiling(params[,3]*nparams)]
+	# params[,1] <- (params[,1]*7-1)
+	# params[,2] <- params[,2]*7-2
+	# params[,3] <- 10^(params[,3]*3)
+	params[,1] <- log(base=10,params[,1])
+	params[,2] <- log(base=10,params[,2])
 	params[,1] <- 10^(params[,1] - (params[,1]+0.5)*bimod)
-	params[,2] <- params[,2]*7-2
 	params[,2] <- 10^(params[,2] - (params[,2]+1)*bimod)
-	params[,3] <- 10^(params[,3]*3)
 	return(params)
 }
+
 #' Sample read counts from master equation
 #'
 #' This function takes ngenes distributions of transcript counts calculated by the master equation and sample from them
@@ -180,17 +189,16 @@ Dropped2Biased <- function(dropped_exprs,nbins,randseed,gcslope,lenslope,batch,e
 #' @param noise the standard deviation of a normal distribution where the log(noise) is sampled from
 #' @return list a list of 4 elements: evf, true counts, sampled counts and biased counts. 
 sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
-	bimod,alpha,alpha_sd,nbins,gcbias,lenbias,batch,noise){
+	bimod,alpha,alpha_sd,nbins,gcbias,lenbias,batch,noise,matched_params){
 	a=as.numeric(Sys.time())
 	set.seed(a)
 	if(gcbias>=2 | lenbias>=2){return('Error: gcbias or lenbias must be smaller than 2')}
-	evf_sd <- rep(1,nevf)
 	evfs <- lapply(c(1:ncells),function(celli){
 		evf <- sapply(c(1:length(evf_mean)),function(evfi){rnorm(1,evf_mean[evfi],evf_sd[evfi])})
 		return(evf)
 	})
 	true_counts <- lapply(c(1:ncells),function(celli){
-		true_counts <- EVF2TrueCounts(allparams,sim_master,evfs[[celli]],gene_effects,bimod)
+		true_counts <- EVF2TrueCounts(allparams,matched_params,sim_master,evfs[[celli]],gene_effects,bimod)
 		return(true_counts)
 	})
 	true_counts <- do.call(cbind,true_counts)
@@ -240,5 +248,35 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
     vecImpulseValue[vecImpulseValue < 10^(-10)] <- 10^(-10)
     
     return(vecImpulseValue)
+}
+
+#' find closest matching simulated parameter sets 
+#'
+#' using kd-tree method find the simulated distribution that is closest to the observed distribution, and as diagnostic, plot the expression heat map of the true counts and the best-match simulated counts, and also the distribution of the parameters
+#' @param sim_master the output of the master equation simulation serving as the database
+#' @param allparams the parameters that produced the sim_master
+#' @param log_count_bin the log scale bins
+#' @param counts the real expression matrix that we are trying to fit to
+#' @param plotting (boolean) whether to generate plots or not, default is true
+#' @param samplename the prefix of the output plots 
+#' @return match_params1 the best matched parameters
+MatchParams <- function(sim_master,allparams,log_count_bin,counts,plotting=TRUE,samplename){
+	simlogdist <- Sim_LogDist(sim_master,log_count_bin)
+	truelogdist <- LogDist(counts, log_count_bin)
+	outofrange <- is.na(rowMeans(truelogdist))
+	counts <- counts[!outofrange,]
+	truelogdist <- truelogdist[!outofrange,]
+	#there are 6 genes ACTB (beta actin), GAPDH, Il17f(Interleukin 17f), Rpl41(Ribosomal Protein L41) , Il9(Interleukin 9), Rn18s.rs5(18s RNA) taht have greater than 10^4 expression and are ignore 
+	best_matches=knnx.index(data=simlogdist,query=truelogdist,k=10,algorithm=c('kd_tree'))
+	matchedlogdist=lapply(best_matches[,1],function(X){simlogdist[X,]})
+	matchedlogdist=do.call(rbind,matchedlogdist)
+	rownames(matchedlogdist)=rownames(truelogdist);colnames(matchedlogdist)=colnames(truelogdist)
+	match_params1 <- allparams[best_matches[,1],] 
+	if(plotting==T){
+		ord <- PlotCountHeatmap(truelogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.true.logged.jpeg',sep=''))
+		ord2 <- PlotCountHeatmap(matchedlogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.sim.logged.jpeg',sep=''))
+		PlotParamHist(match_params1,samplename)
+	}
+	return(match_params1)
 }
 

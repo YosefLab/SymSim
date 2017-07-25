@@ -4,7 +4,7 @@
 \alias{EVF2TrueCounts}
 \title{Getting True Counts from EVF and Gene effects}
 \usage{
-EVF2TrueCounts(allparams, sim_master, evf, gene_effects, bimod)
+EVF2TrueCounts(allparams, matched_params, sim_master, evf, gene_effects, bimod)
 }
 \arguments{
 \item{allparams}{the sets of parameter used to simulate master equations}
