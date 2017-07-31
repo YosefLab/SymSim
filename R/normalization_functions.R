@@ -38,13 +38,14 @@ Normalize <- function(x){
 	x_uq <- uq(x)
 	print(paste('uq',proc.time()[3]-temp_t))
 	temp_t <- proc.time()[3]
-	if(length(x[1,])>1000){x_scran <- scran_norm(x)}else{x_scran=list(NA,NA)}
-	# x_census <- census_norm(x)
-	x_clt <- CLT_norm(x)
-	print(paste('clt',proc.time()[3]-temp_t))
-	temp_t <- proc.time()[3]
-	results <- list(x_rpm,x_deseq,x_tmm,x_uq,x_scran,x_clt)
-	names(results) <- c('rpm','deseq','tmm','uq','scran','clt')
+	# if(length(x[1,])>1000){x_scran <- scran_norm(x)}else{x_scran=list(NA,NA)}
+	# # x_census <- census_norm(x)
+	# x_clt <- CLT_norm(x)
+	# print(paste('clt',proc.time()[3]-temp_t))
+	# results <- list(x_rpm,x_deseq,x_tmm,x_uq,x_scran,x_clt)
+	# names(results) <- c('rpm','deseq','tmm','uq','scran','clt')
+	results <- list(x_rpm,x_deseq,x_tmm,x_uq)
+	names(results) <- c('rpm','deseq','tmm','uq')
 	sf <- lapply(results,function(X){X[[1]]})
 	results <- results[!is.na(sf)]
 	sf <- sf[!is.na(sf)]
@@ -74,6 +75,7 @@ rpm <- function(x) {
 #' @param x matrix of transcript counts where rows are genes and columns are cells
 #' @return list(s,counts) s is a ncells long vector that stores the scaling factors for each cell, counts is the gene-cell matrix after normalization
 deseq <- function(x) {
+	library('DESeq2')
 	geoMeans <- apply(x, 1, function(row) if (all(row == 0)) 0 else exp(mean(log(row[row != 0])))) #set the geomMean method we want```
 	s <-estimateSizeFactorsForMatrix(x, geoMeans=geoMeans) #estimate size factors```
 	n.cells<-ncol(x)
@@ -88,6 +90,7 @@ deseq <- function(x) {
 #' @param x matrix of transcript counts where rows are genes and columns are cells
 #' @return list(s,counts) s is a ncells long vector that stores the scaling factors for each cell, counts is the gene-cell matrix after normalization
 tmm <- function(x) {
+	library('edgeR')
 	s <- calcNormFactors(x)*colSums(x)
 	n.cells<-ncol(x)
 	s <- n.cells*(s/sum(s))
