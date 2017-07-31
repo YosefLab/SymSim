@@ -6,7 +6,7 @@
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
 
-PlotTsne <- function(meta,data,plotname,label,discrete=T){
+PlotTsne <- function(meta,data,plotname,label,discrete=T,saving=F){
 	library('Rtsne')
 	data_tsne=Rtsne(t(data))
 	if(discrete==T){
@@ -19,6 +19,6 @@ PlotTsne <- function(meta,data,plotname,label,discrete=T){
 	p <- ggplot(plot_tsne, aes(x, y))
 	p <- p + geom_point()
 	p <- p + geom_point(aes(colour = plot_tsne[['label']]))+labs(color=label)
-	ggsave(p,filename=plotname,device='jpeg',width=5,height=4)
+	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}else{p}
 	return(plot_tsne)
 }

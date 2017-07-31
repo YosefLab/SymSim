@@ -49,7 +49,7 @@ LogDist <- function(counts,log_count_bins){
 #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
 #' @examples
 #' Sim_LogDist()
-PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename){
+PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename,saving=F){
     mean_counts=mean_counts[log_real[,1]<zeropropthres]
     log_real=log_real[log_real[,1]<zeropropthres,]
     colnames(log_real)[1]='.0'
@@ -70,7 +70,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     ggtitle('distribution of mRNA counts') +
     labs(colour = 'Percentage of Cells',x='Counts',y='Genes') +
     scale_y_discrete(breaks=NULL)
-    ggsave(filename,dev='jpeg',width = 8, height = 8)
+    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{p}
     return(ord)
 }
 #' Plotting the histograms of kon,koff,s values
@@ -79,7 +79,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
 #' @param params a matrix of 3 columns, the first one is kon, the second is koff and the third is s
 #' @param samplename the prefix of the plot, the suffix is '.params_dist.jpeg'
 #' @return make a plot of three histograms
-PlotParamHist<-function(params,samplename){
+PlotParamHist<-function(params,samplename,saving=F){
         df <- data.frame(kon = log(base=10,params[,1]),koff=log(base=10,params[,2]),s=log(base=10,params[,3]))
         df <- melt(df)
         p1 <- ggplot(df,aes(x=value)) +
@@ -91,5 +91,5 @@ PlotParamHist<-function(params,samplename){
         p3 <- ggplot(df,aes(x=value)) +
             geom_histogram(data=subset(df,variable == 's'),aes(y = ..density..), binwidth=density(df$value)$bw) +
             geom_density(data=subset(df,variable == 's'),fill="blue", alpha = 0.2) 
-        ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')
+        if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=grid.arrange(p1, p2, p3, ncol=1),device='jpeg')}else{arrangeGrob(p1, p2, p3, ncol=1)}
 }
