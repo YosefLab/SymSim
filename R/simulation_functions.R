@@ -281,37 +281,35 @@ Npop1Batch <- function(phyla, nevf,
 #' @param noise a vector of length nbatches: the standard deviation of a normal distribution where the log(noise) is sampled from
 #' @return list a list of 2 elements: all_counts and meta. all_counts is a list of 3 matrices of nrow=number of genes and ncol=sum of number of cells in each population. The fist matrix is the real counts, the second matrix is the counts after dropout, and the third matrix is the biased counts. each row of meta correspond to 1 cell in the count matrix, and the most important information in it is the 'pop' column that tells which population a cell comes from and 'batch' the column that tells which batch a cell is from
 
-# NpopNBatch <- function(phyla, nevf,nbatches,
-# 	evf_sd, ncells, 
-# 	randseed, gene_effects, bimod, alpha, 
-# 	alpha_sd,nbins,gcbias,lenbias, batch, noise){
-# 	if(!(length(ncells[,1])==nbatches & length(alpha)==nbatches &
-# 		length(alpha_sd)==nbatches & length(gcbias)==nbatches &
-# 		length(lenbias)==nbatches & length(batch)==nbatches & length(noise)==nbatches)){
-# 		print('number of rows in ncells, length of alpha, alpha_sd, gcbias, lenbias, batch and noise has to be the same as the number of batches')
-# 		stop()
-# 	}
-# 	recover()
-# 	npop <- length(phyla$tip.label)
-# 	if(length(ncells)==1){ncells <- rep(ncells,npop)}
-# 	if(npop!=length(ncells)){print('number of populations specified by cell size vector has to be the same as the number of tips in the tree')}
-# 	cor_evf_mean<-vcv.phylo(phyla,cor=T)
-# 	pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)
-# 	data<-lapply(c(1:nbatches),function(i){
-# 		Npop1Batch(phyla=phyla,nevf=nevf,
-# 			evf_sd=evf_sd, ncells=ncells[i,],
-# 			randseed=randseed,gene_effects=gene_effects,bimod=bimod,alpha=alpha[i],
-# 			alpha_sd=alpha_sd[i],nbins=nbins,
-# 			gcbias=gcbias[i],lenbias=lenbias[i],batch=batch[i], noise=noise[i])
-# 	})
-# 	meta<-
-# }
+NpopNBatch <- function(phyla, nevf,nbatches,
+	evf_sd, ncells, 
+	randseed, gene_effects, bimod, alpha, 
+	alpha_sd,nbins,gcbias,lenbias, batch, noise){
+	if(!(length(ncells[,1])==nbatches & length(alpha)==nbatches &
+		length(alpha_sd)==nbatches & length(gcbias)==nbatches &
+		length(lenbias)==nbatches & length(batch)==nbatches & length(noise)==nbatches)){
+		print('number of rows in ncells, length of alpha, alpha_sd, gcbias, lenbias, batch and noise has to be the same as the number of batches')
+		stop()
+	}
+	npop <- length(phyla$tip.label)
+	cor_evf_mean<-vcv.phylo(phyla,cor=T)
+	pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)
+	data<-lapply(c(1:nbatches),function(i){
+		result<-Npop1Batch(phyla=phyla,nevf=nevf,
+			evf_sd=evf_sd, ncells=ncells[i,],
+			randseed=randseed,gene_effects=gene_effects,bimod=bimod,alpha=alpha[i],
+			alpha_sd=alpha_sd[i],nbins=nbins,
+			gcbias=gcbias[i],lenbias=lenbias[i],batch=batch[i], noise=noise[i])
+			result[[2]]$batch <- rep(i,sum(ncells[i,]))
+			return(result)
+	})
+	all_counts <- lapply(c(1:3),function(i){
+		do.call(cbind,lapply(data,function(X){X[[1]][[i]]}))
+	})
+	meta <- do.call(rbind,lapply(data,function(X){X[[2]]}))
+	return(list(all_counts,meta))
+}
 
-# NpopNBatch(phyla,nevf=10,nbatches=3,
-# 	evf_sd=0.1,ncells=matrix(rep(10,30),nrow=3),
-# 	randsee=0,gene_effects=gene_effects,bimod=0,alpha=rep(0.1,3),
-# 	alpha_sd=rep(0.01,3),nbins=10,gcbias=rep(0.1,3),lenbias=rep(0.1,3),
-# 	batch=rep(0.1,3),noise=rep(0.05,3))
 
 #' Test results of scaling normalization
 #' 
