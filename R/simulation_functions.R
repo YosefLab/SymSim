@@ -244,7 +244,8 @@ Npop1Batch <- function(phyla, nevf,
 	}
 	cor_evf_mean<-vcv.phylo(phyla,cor=T)
 	pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)
-
+    
+	#need to specify the cell population name for cell size because the cor_evf_mean is scrambled 
 	pop_change <- lapply(c(1:npop),function(pop){
 		evf_mean <- pop_evf_mean[,pop]
 		sim1Pop1Batch(evf_mean=evf_mean, evf_sd=rep(evf_sd,nevf),ncells=ncells[pop],
@@ -257,10 +258,9 @@ Npop1Batch <- function(phyla, nevf,
 		do.call(cbind,lapply(pop_change,function(X){X[[i+1]]}))	
 	})
 	meta <- data.frame(beta=rep(bimod,sum(ncells)),sigma=rep(evf_sd,sum(ncells)),alpha=rep(alpha,sum(ncells)),
-	pop=do.call(c,lapply(c(1:npop),function(x){rep(x,ncells[x])})))
+	pop=do.call(c,lapply(c(1:length(ncells)),function(x){rep(colnames(cor_evf_mean)[x],ncells[x])})))
 	return(list(all_counts,meta))
 }
-
 
 #' Simulate multiple discrete population in multiple batches
 #' 
