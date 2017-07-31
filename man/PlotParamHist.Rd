@@ -4,7 +4,7 @@
 \alias{PlotParamHist}
 \title{Plotting the histograms of kon,koff,s values}
 \usage{
-PlotParamHist(params, samplename)
+PlotParamHist(params, samplename, saving = F)
 }
 \arguments{
 \item{params}{a matrix of 3 columns, the first one is kon, the second is koff and the third is s}

@@ -4,7 +4,7 @@
 \alias{PlotTsne}
 \title{Perform tSNE}
 \usage{
-PlotTsne(meta, data, plotname, label, discrete = T)
+PlotTsne(meta, data, plotname, label, discrete = T, saving = F)
 }
 \arguments{
 \item{meta:}{simulation parameters}
