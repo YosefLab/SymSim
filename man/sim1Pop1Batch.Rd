@@ -30,9 +30,11 @@ sim1Pop1Batch(evf_mean, evf_sd, ncells, randseed, gene_effects, bimod, alpha,
 
 \item{lenbias}{the magnitude of length bias (a number between 0 and 2)}
 
-\item{batch}{the constant to multiply all transcripts by}
-
 \item{noise}{the standard deviation of a normal distribution where the log(noise) is sampled from}
+
+\item{batch_mean}{The mean batch effect from which the batch effect of each gene is sampled from}
+
+\item{batch_sd}{The standard deviation of batch effect from which the batch effect of each gene is sampled from}
 }
 \value{
 list a list of 4 elements: evf, true counts, sampled counts and biased counts.

@@ -22,19 +22,21 @@ Npop1Batch(phyla, nevf, evf_sd, ncells, randseed, gene_effects, bimod, alpha,
 
 \item{bimod}{the proportion of distance to move a point in the kon-koff space towards the center of the kon-koff space where the gene expression is bimodal}
 
-\item{alpha}{library prep capture efficiency, or dropout of transcript: the number of of captured transcript is distributed as the number of successes with probability of success alpha in X trials, where X is the true number of transcripts}
+\item{alpha}{a vector of length nbatches, library prep capture efficiency, or dropout of transcript: the number of of captured transcript is distributed as the number of successes with probability of success alpha in X trials, where X is the true number of transcripts}
 
-\item{alpha_sd}{the standard deviation of alpha (to add nsimoise for different efficiency for each cell)}
+\item{alpha_sd}{a vector of length nbatches, the standard deviation of alpha (to add nsimoise for different efficiency for each cell)}
 
 \item{nbins}{the number of bins for gc and length bias}
 
-\item{gcbias}{the magnitude of gc bias (a number between 0 and 2)}
+\item{gcbias}{a vector of length nbatches, the magnitude of gc bias (a number between 0 and 2)}
 
-\item{lenbias}{the magnitude of length bias (a number between 0 and 2)}
-
-\item{batch}{the constant to multiply all transcripts by}
+\item{lenbias}{a vector of length nbatches, the magnitude of length bias (a number between 0 and 2)}
 
 \item{noise}{the standard deviation of a normal distribution where the log(noise) is sampled from}
+
+\item{nbatch}{number of batches to simulate}
+
+\item{batch_mean}{a vector of length nbatch that specify the magnitude of batch effect for each batch}
 }
 \value{
 list a list of 2 elements: all_counts and meta. all_counts is a list of 3 matrices of nrow=number of genes and ncol=sum of number of cells in each population. The fist matrix is the real counts, the second matrix is the counts after dropout, and the third matrix is the biased counts. each row of meta correspond to 1 cell in the count matrix, and the most important information in it is the 'pop' column that tells which population a cell comes from

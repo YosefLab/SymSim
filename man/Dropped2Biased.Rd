@@ -18,7 +18,7 @@ Dropped2Biased(dropped_exprs, nbins, randseed, gcslope, lenslope, batch,
 
 \item{lenslope}{the slope of the length bias line (middle category is 1)}
 
-\item{batch}{a constant that increase or decreases the expression in the same batch by X fold}
+\item{batch}{a vector of length ngenes that increase or decreases the expression of the same genes in the same batch by X fold}
 
 \item{epsilon}{The standard deviation of the log error term that is multiplied to each gene}
 }
