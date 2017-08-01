@@ -206,7 +206,6 @@ sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
 	})
 	true_counts <- do.call(cbind,true_counts)
 	sampled_counts <- TrueCounts2Dropped(true_counts,alpha,alpha_sd)
-	batch <- exp(rnorm(ngenes,mean=0,sd=batch))
 	biased_counts <- Dropped2Biased(sampled_counts,nbins,randseed,gcbias,lenbias,batch,noise)
 	return(list(evfs,true_counts,sampled_counts,biased_counts))
 }
@@ -244,7 +243,9 @@ Npop1Batch <- function(phyla, nevf,
 	}
 	cor_evf_mean<-vcv.phylo(phyla,cor=T)
 	pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)
-    
+	ngenes <- length(gene_effects[[1]][,1])
+   	batch <- exp(rnorm(ngenes,mean=0,sd=batch))
+
 	#need to specify the cell population name for cell size because the cor_evf_mean is scrambled 
 	pop_change <- lapply(c(1:npop),function(pop){
 		evf_mean <- pop_evf_mean[,pop]
