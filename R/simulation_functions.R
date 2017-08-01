@@ -128,7 +128,8 @@ SampleExprs <- function(sim_dist,ncells){
 #' TrueCounts2Dropped()
 TrueCounts2Dropped <- function(sim_exprs,alpha,alpha_sd){
 	alphas <- rnorm(length(sim_exprs[1,]),mean=alpha,sd=alpha_sd)
-	alphas[alphas<0] <- 1e-4
+	alphas[alphas<0] <- 0	
+	alphas[alphas>1] <- 1
 	dropped_exprs <- lapply(c(1:length(alphas)),function(i){
 		X <- sim_exprs[,i]
 		sapply(X,function(Y){rbinom(n=1,size=Y,prob=alphas[i])})
