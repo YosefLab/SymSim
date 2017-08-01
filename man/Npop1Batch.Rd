@@ -5,7 +5,7 @@
 \title{Simulate multiple discrete population in 1 batch}
 \usage{
 Npop1Batch(phyla, nevf, evf_sd, ncells, randseed, gene_effects, bimod, alpha,
-  alpha_sd, nbins, gcbias, lenbias, batch, noise)
+  alpha_sd, nbins, gcbias, lenbias, batch, noise, pop_evf_mean = NA)
 }
 \arguments{
 \item{phyla}{a tree in the phylo format}

@@ -234,7 +234,7 @@ sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
 Npop1Batch <- function(phyla, nevf,
 	evf_sd, ncells, 
 	randseed, gene_effects, bimod, alpha, 
-	alpha_sd,nbins,gcbias,lenbias, batch, noise){
+	alpha_sd,nbins,gcbias,lenbias, batch, noise, pop_evf_mean =NA){
 
 	npop <- length(phyla$tip.label)
 	if(length(ncells)==1){ncells <- rep(ncells,npop)}
@@ -242,8 +242,10 @@ Npop1Batch <- function(phyla, nevf,
 		print('number of populations specified by cell size vector has to be the same as the number of tips in the tree')
 		stop()
 	}
-	cor_evf_mean<-vcv.phylo(phyla,cor=T)
-	pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)
+	if(pop_evf_mean==NA){
+		cor_evf_mean<-vcv.phylo(phyla,cor=T)
+		pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)		
+	}
 	ngenes <- length(gene_effects[[1]][,1])
    	batch <- exp(rnorm(ngenes,mean=0,sd=batch))
 
@@ -302,9 +304,9 @@ NpopNBatch <- function(phyla, nevf,nbatches,
 			evf_sd=evf_sd, ncells=ncells[i,],
 			randseed=randseed,gene_effects=gene_effects,bimod=bimod,alpha=alpha[i],
 			alpha_sd=alpha_sd[i],nbins=nbins,
-			gcbias=gcbias[i],lenbias=lenbias[i],batch=batch[i], noise=noise[i])
-			result[[2]]$batch <- rep(i,sum(ncells[i,]))
-			return(result)
+			gcbias=gcbias[i],lenbias=lenbias[i],batch=batch[i], noise=noise[i],pop_evf_mean=pop_evf_mean)
+		result[[2]]$batch <- rep(i,sum(ncells[i,]))
+		return(result)
 	})
 	all_counts <- lapply(c(1:3),function(i){
 		do.call(cbind,lapply(data,function(X){X[[1]][[i]]}))
