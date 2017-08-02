@@ -1,1 +1,5 @@
 This package can be installed with devtools. First, pull the package with git clone. Then, import devtools. Finally, do load_all('SCsimR').
+
+Download the precomputed kinetic model simulation (allsim.20170706.robj) through this link: 
+https://www.odrive.com/s/0fa6bcf6-e930-464a-98e5-1b7a8261ccd6-59811b2a
+
