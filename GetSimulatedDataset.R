@@ -12,10 +12,7 @@ load('match_params.robj')
 load_all('SCsimR')
 library(repr)
 options(repr.plot.width=5, repr.plot.height=4)
-ngenes=100
-ncells=100
-nevf=10
-randseed=0
+ngenes=5000
 
 simname <- '20170801'
 
