@@ -141,7 +141,7 @@ MasterEqn_heatmap <- function(FUN,data,filename,funcname,transformer,saving=F){
 		labs(colour = funcname)
 	})
 	if(saving==T){ggsave(filename, marrangeGrob(grobs = plist, nrow=1, ncol=1))}else{
-		print(plist)
+		return(plist)
 	}
 }
 
