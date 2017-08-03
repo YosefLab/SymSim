@@ -24,7 +24,7 @@ PlotTsne <- function(meta,data,plotname,label,discrete=T,saving=F){
 	p <- p + geom_point()
 	p <- p + geom_point(aes(colour = plot_tsne[['label']]))+labs(color=label)
 	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}else{print(p)}
-	return(plot_tsne)
+	return(list(plot_tsne,p))
 }
 
 #' Perform PCA  
@@ -52,5 +52,5 @@ PlotPCA <- function(meta,data,plotname,label,discrete=T,saving=F){
 	p <- p + geom_point()
 	p <- p + geom_point(aes(colour = plot_pca[['label']]))+labs(color=label)
 	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}else{print(p)}
-	return(plot_pca)
+	return(list(plot_pca,p))
 }

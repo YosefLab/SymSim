@@ -5,3 +5,4 @@ R/scone.R
 R/.DS_Store
 R/sysdata.rda
 R/unfinished_functions.R 
+inst/doc

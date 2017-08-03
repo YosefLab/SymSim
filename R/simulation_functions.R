@@ -385,10 +385,10 @@ MatchParams <- function(sim_master,allparams,log_count_bin,counts,plotting=TRUE,
 	rownames(matchedlogdist)=rownames(truelogdist);colnames(matchedlogdist)=colnames(truelogdist)
 	match_params1 <- allparams[best_matches[,1],] 
 	if(plotting==T){
-		ord <- PlotCountHeatmap(truelogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.true.logged.jpeg',sep=''))
-		ord2 <- PlotCountHeatmap(matchedlogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.sim.logged.jpeg',sep=''))
-		PlotParamHist(match_params1,samplename)
+		p1 <- PlotCountHeatmap(truelogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.true.logged.jpeg',sep=''))
+		p2 <- PlotCountHeatmap(matchedlogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.sim.logged.jpeg',sep=''))
+		p3 <-(match_params1,samplename)
 	}
-	return(match_params1)
+	return(list(match_params1,p1,p2,p3))
 }
 

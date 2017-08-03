@@ -8,7 +8,7 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1.9000
-Imports: 
+Imports:
     ggplot2, 
     Rtsne,
     RColorBrewer, 
@@ -25,4 +25,7 @@ Suggests:
     edgeR,
     scran,
     monocle,
-    scone
+    scone,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
