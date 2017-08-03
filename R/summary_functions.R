@@ -89,6 +89,6 @@ PlotParamHist<-function(params,samplename,saving=F){
         p3 <- ggplot(df,aes(x=value)) +
             geom_histogram(data=subset(df,variable == 's'),aes(y = ..density..), binwidth=density(df$value)$bw) +
             geom_density(data=subset(df,variable == 's'),fill="blue", alpha = 0.2) 
-        if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{p <- grid.arrange(p1, p2, p3, ncol=1)}
+        if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{p <- arrangeGrob(p1, p2, p3, ncol=1)}
         return(p)
 }
