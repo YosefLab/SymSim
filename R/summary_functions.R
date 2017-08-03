@@ -69,8 +69,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     ggtitle('distribution of mRNA counts') +
     labs(colour = 'Percentage of Cells',x='Counts',y='Genes') +
     scale_y_discrete(breaks=NULL)
-    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{print(p)}
-    return(p)
+    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{return(p)}
 }
 #' Plotting the histograms of kon,koff,s values
 #'
