@@ -16,9 +16,6 @@ PlotCountHeatmap(log_real, mean_counts, given_ord = NA, zeropropthres = 0.8,
 
 \item{filename}{the name of the output plot}
 }
-\value{
-a matrix where the rows are the genes and columns are the number of samples within a count category
-}
 \description{
 takes an expression matrix and makes a 2D histogram on the log scale where each row is a gene and the number of samples in a bin is shown by the intensity of the color
 }
