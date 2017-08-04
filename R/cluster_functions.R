@@ -23,7 +23,7 @@ PlotTsne <- function(meta,data,plotname,label,discrete=T,saving=F){
 	p <- ggplot(plot_tsne, aes(x, y))
 	p <- p + geom_point()
 	p <- p + geom_point(aes(colour = plot_tsne[['label']]))+labs(color=label)
-	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}else{print(p)}
+	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}
 	return(list(plot_tsne,p))
 }
 
@@ -51,6 +51,6 @@ PlotPCA <- function(meta,data,plotname,label,discrete=T,saving=F){
 	p <- ggplot(plot_pca, aes(x, y))
 	p <- p + geom_point()
 	p <- p + geom_point(aes(colour = plot_pca[['label']]))+labs(color=label)
-	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}else{print(p)}
+	if(saving==T){ggsave(p,filename=plotname,device='jpeg',width=5,height=4)}
 	return(list(plot_pca,p))
 }
