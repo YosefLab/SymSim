@@ -1,4 +1,4 @@
-required_packages <- c('devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','fAsianOptions','fOptions','fBasics','timeSeries','timeDate','Biobase' )
+required_packages <- c('roxygen2','devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','fAsianOptions','fOptions','fBasics','timeSeries','timeDate' )
 install_packages <- rownames(installed.packages())
 need_install <- setdiff(required_packages,install_packages)
 if(length(need_install)>0){install.packages(need_install)}
@@ -14,7 +14,7 @@ library(repr)
 options(repr.plot.width=5, repr.plot.height=4)
 ngenes=5000
 
-simname <- '20170804'
+simname <- '20170801'
 
 phyla<-rcoal(5)
 jpeg(paste(simname,'tree.jpeg',sep=''))
@@ -38,7 +38,7 @@ lapply(seq(0,1,0.1),function(bimod){
 					evf_sd=evf_sd, ncells=rep(500,5),
 					randseed=0,gene_effects=gene_effects,bimod=bimod,alpha=alpha,
 					alpha_sd=0.05,nbins=10,gcbias=0.1,lenbias=0.1,batch=batch, noise=0.1)
-				save(result,file=paste(simname, '.bimod=',bimod,'.alpha=',alpha,'.evf_sd=',evf_sd,'.batch=',batch,'1batch.robj',sep=''))
+				save(result,file=paste(simname, '.bimod=',bimod,'.alpha=',alpha,'.evf_sd=',evf_sd,'.batch=',batch,'1batch.robj'))
 			})
 		})
 	})
@@ -54,7 +54,7 @@ lapply(seq(0,1,0.1),function(bimod){
 					randsee=0,gene_effects=gene_effects,bimod=bimod,alpha=rep(alpha,3),
 					alpha_sd=rep(0.05,3),nbins=10,gcbias=rep(0.1,3),lenbias=rep(0.1,3),
 					batch=rep(batch,3),noise=rep(0.1,3),same_evf_mean=T)
-				save(result,file=paste(simname, '.bimod=',bimod,'.alpha=',alpha,'.evf_sd=',evf_sd,'.batch=',batch,'3batches.robj',sep=''))
+				save(result,file=paste(simname, '.bimod=',bimod,'.alpha=',alpha,'.evf_sd=',evf_sd,'.batch=',batch,'3batches.robj'))
 			})
 		})
 	})
