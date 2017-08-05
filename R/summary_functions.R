@@ -46,7 +46,6 @@ LogDist <- function(counts,log_count_bins){
 #' @param mean_counts the average expression for each gene, used for sorting purpose
 #' @param zeropropthres the genes with zeroproportion greater than this number is not plotted (default to 0.8)
 #' @param filename the name of the output plot
-#' @return a matrix where the rows are the genes and columns are the number of samples within a count category
 #' @examples
 #' Sim_LogDist()
 PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename,saving=F){
@@ -70,8 +69,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     ggtitle('distribution of mRNA counts') +
     labs(colour = 'Percentage of Cells',x='Counts',y='Genes') +
     scale_y_discrete(breaks=NULL)
-    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{print(p)}
-    return(ord)
+    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{return(p)}
 }
 #' Plotting the histograms of kon,koff,s values
 #'
@@ -91,5 +89,6 @@ PlotParamHist<-function(params,samplename,saving=F){
         p3 <- ggplot(df,aes(x=value)) +
             geom_histogram(data=subset(df,variable == 's'),aes(y = ..density..), binwidth=density(df$value)$bw) +
             geom_density(data=subset(df,variable == 's'),fill="blue", alpha = 0.2) 
-        if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{grid.arrange(p1, p2, p3, ncol=1)}
+        if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{p <- arrangeGrob(p1, p2, p3, ncol=1)}
+        return(p)
 }

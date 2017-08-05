@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 required_packages <- c('roxygen2','devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','fAsianOptions','fOptions','fBasics','timeSeries','timeDate','ape' ,'reshape2','labeling')
+=======
+required_packages <- c('roxygen2','devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','fAsianOptions','fOptions','fBasics','timeSeries','timeDate' )
+>>>>>>> 7eb85e0cf9186cbbe0ecc8de4f99dd2436f6b3fe
 install_packages <- rownames(installed.packages())
 need_install <- setdiff(required_packages,install_packages)
 if(length(need_install)>0){install.packages(need_install)}
@@ -10,6 +14,11 @@ load('match_params.robj')
 
 
 load_all('SCsimR')
+<<<<<<< HEAD
+=======
+library(repr)
+options(repr.plot.width=5, repr.plot.height=4)
+>>>>>>> 7eb85e0cf9186cbbe0ecc8de4f99dd2436f6b3fe
 ngenes=5000
 
 simname <- '20170804.1batch.'

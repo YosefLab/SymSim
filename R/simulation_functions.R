@@ -261,9 +261,10 @@ Npop1Batch <- function(phyla, nevf,
 	all_counts<-lapply(c(1:3),function(i){
 		do.call(cbind,lapply(pop_change,function(X){X[[i+1]]}))	
 	})
+	evfs <- do.call(cbind,lapply(pop_change,function(X){X[[1]]}))
 	meta <- data.frame(beta=rep(bimod,sum(ncells)),sigma=rep(evf_sd,sum(ncells)),alpha=rep(alpha,sum(ncells)),
 	pop=do.call(c,lapply(c(1:length(ncells)),function(x){rep(colnames(cor_evf_mean)[x],ncells[x])})))
-	return(list(all_counts,meta))
+	return(list(all_counts,meta,evfs))
 }
 
 #' Simulate multiple discrete population in multiple batches
@@ -315,7 +316,8 @@ NpopNBatch <- function(phyla, nevf,nbatches,
 		do.call(cbind,lapply(data,function(X){X[[1]][[i]]}))
 	})
 	meta <- do.call(rbind,lapply(data,function(X){X[[2]]}))
-	return(list(all_counts,meta))
+	evfs <- do.call(rbind,lapply(data,function(X){X[[3]]}))
+	return(list(all_counts,meta,evfs))
 }
 
 
@@ -385,10 +387,10 @@ MatchParams <- function(sim_master,allparams,log_count_bin,counts,plotting=TRUE,
 	rownames(matchedlogdist)=rownames(truelogdist);colnames(matchedlogdist)=colnames(truelogdist)
 	match_params1 <- allparams[best_matches[,1],] 
 	if(plotting==T){
-		ord <- PlotCountHeatmap(truelogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.true.logged.jpeg',sep=''))
-		ord2 <- PlotCountHeatmap(matchedlogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.sim.logged.jpeg',sep=''))
-		PlotParamHist(match_params1,samplename)
+		p1 <- PlotCountHeatmap(truelogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.true.logged.jpeg',sep=''))
+		p2 <- PlotCountHeatmap(matchedlogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.sim.logged.jpeg',sep=''))
+		p3 <- PlotParamHist(match_params1,samplename)
 	}
-	return(match_params1)
+	return(list(match_params1,p1,p2,p3))
 }
 
