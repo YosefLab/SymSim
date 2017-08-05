@@ -92,3 +92,56 @@ PlotParamHist<-function(params,samplename,saving=F){
         if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{p <- arrangeGrob(p1, p2, p3, ncol=1)}
         return(p)
 }
+
+#' Plotting FNR 
+#'
+#' Make 2 plots: one is the FNR curves, and the other one is the barplots of AUC
+#' @param expr_matrix expression matrix
+#' @param data_name what to name the plot
+#' @param ncols number of colors in the color ramp
+
+plotFNR <- function(expr_matrix, data_name, ncols){
+    # filter out cells where less than 10% of all genes are expressed
+    notzero <- apply(expr_matrix,2,function(X){sum(X>0)>length(X)*0.1})
+    expr_matrix<-expr_matrix[,notzero]
+
+    # home keeping gene is defined as genes that are in the top half highest expressed genes
+    # taht are also in the top half lowest variance genes
+    highexprs <- c(1:length(expr_matrix[,1]))[rowMeans(expr_matrix)>quantile(rowMeans(expr_matrix),0.5)]
+    sd2 <- apply(expr_matrix,1,var)
+    lowvar <- c(1:length(expr_matrix[,1]))[sd2/rowMeans(expr_matrix)<quantile(sd2/rowMeans(expr_matrix),0.5,na.rm=T)]
+    hk <- intersect(highexprs,lowvar)
+
+    # Mean log10(x+1) expression
+    colfunc <- colorRampPalette(c("blue", "green", "red", "purple"))
+    allcol <- colfunc(ncols)
+
+    col_vec <- allcol[round(rescale2range(colSums(expr_matrix), 2000))]
+    mu_obs = rowMeans(log10(expr_matrix[hk,]+1))
+    drop_outs = expr_matrix[hk,] == 0
+
+    # Logistic Regression Model of Failure
+    ref.glms = list()
+    for (si in 1:dim(drop_outs)[2]){
+    fit = glm(cbind(drop_outs[,si],1 - drop_outs[,si]) ~ mu_obs,family=binomial(logit))
+    ref.glms[[si]] = fit$coefficients
+    }
+    #The list ref.glm contains the intercept and slope of each fit. 
+    # We can now visualize the fit curves and the corresponding Area Under the Curves (AUCs):
+
+    plot(NULL, main = sprintf("FNR Curves %s", data_name), ylim = c(0,1),xlim = c(0,2), 
+       ylab = "Failure Probability", xlab = "Mean log10 Expression")
+    x = (0:60)/10
+    AUC = NULL
+    for(si in 1:ncol(expr_matrix)){
+    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
+    AUC[si] = sum(y)/10
+    lines(x, 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1), type = 'l', lwd = 2, col=col_vec[si])
+}
+# Barplot of FNR AUC
+
+  o = order(AUC)
+  barplot(AUC[o], col=col_vec[o], border=col_vec[o], main="FNR AUC")
+  
+}
+
