@@ -170,7 +170,7 @@ Dropped2Biased <- function(dropped_exprs,nbins,randseed,gcslope,lenslope,batch,e
 		Y <- X * gc_bias * len_bias * batch * exp(jiggle)
 		return(Y)
 	})
-	return(biased_exprs)
+	return(biased_exprs, list(gc_bias, len_bias, batch, jiggle))
 }
 
 #' Simulate 1 homogenous population in 1 batch
@@ -208,7 +208,7 @@ sim1Pop1Batch <- function(evf_mean, evf_sd,ncells,randseed,gene_effects,
 	true_counts <- do.call(cbind,true_counts)
 	sampled_counts <- TrueCounts2Dropped(true_counts,alpha,alpha_sd)
 	biased_counts <- Dropped2Biased(sampled_counts,nbins,randseed,gcbias,lenbias,batch,noise)
-	return(list(evfs,true_counts,sampled_counts,biased_counts))
+	return(list(evfs,true_counts,sampled_counts,biased_counts[[1]],biased_counts[[2]]))
 }
 
 #' Simulate multiple discrete population in 1 batch
@@ -261,10 +261,11 @@ Npop1Batch <- function(phyla, nevf,
 	all_counts<-lapply(c(1:3),function(i){
 		do.call(cbind,lapply(pop_change,function(X){X[[i+1]]}))	
 	})
+	bias <- lapply(pop_change,function(X){X[[5]]})
 	evfs <- do.call(cbind,lapply(pop_change,function(X){X[[1]]}))
 	meta <- data.frame(beta=rep(bimod,sum(ncells)),sigma=rep(evf_sd,sum(ncells)),alpha=rep(alpha,sum(ncells)),
 	pop=do.call(c,lapply(c(1:length(ncells)),function(x){rep(colnames(cor_evf_mean)[x],ncells[x])})))
-	return(list(all_counts,meta,evfs))
+	return(list(all_counts,meta,evfs,bias))
 }
 
 #' Simulate multiple discrete population in multiple batches
@@ -317,7 +318,8 @@ NpopNBatch <- function(phyla, nevf,nbatches,
 	})
 	meta <- do.call(rbind,lapply(data,function(X){X[[2]]}))
 	evfs <- do.call(rbind,lapply(data,function(X){X[[3]]}))
-	return(list(all_counts,meta,evfs))
+	bias <- lapply(data,function(X){X[[4]]})
+	return(list(all_counts,meta,evfs,bias))
 }
 
 
