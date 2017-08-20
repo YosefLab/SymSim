@@ -170,7 +170,7 @@ Dropped2Biased <- function(dropped_exprs,nbins,randseed,gcslope,lenslope,batch,e
 		Y <- X * gc_bias * len_bias * batch * exp(jiggle)
 		return(Y)
 	})
-	return(list(biased_exprs, list(gc_bias, len_bias, batch, jiggle)))
+	return(list(biased_exprs, list(gc_bias, len_bias, batch)))
 }
 
 #' Simulate 1 homogenous population in 1 batch
