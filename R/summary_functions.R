@@ -93,6 +93,14 @@ PlotParamHist<-function(params,samplename,saving=F){
         return(p)
 }
 
+#' rescale2range
+#'
+#' Subfunction for Plotting FNR
+rescale2range <- function(vec, n){ # rescale the values in vec such that the lagest is n, and the smallest is 1.
+  a <- (n-1)/(max(vec)-min(vec))
+  return(a*vec+(1-a*min(vec)))
+}
+
 #' Plotting FNR 
 #'
 #' Make 2 plots: one is the FNR curves, and the other one is the barplots of AUC
@@ -144,4 +152,41 @@ plotFNR <- function(expr_matrix, data_name, ncols){
   barplot(AUC[o], col=col_vec[o], border=col_vec[o], main="FNR AUC")
   
 }
+#' Plotting GC bias and Length 
+#'
+#' @param filename the name of the simualted robj data file
+
+PlotGCLENbias <- function(filename,outputname){
+    load(filename)
+    GCbias <- result[[4]][[1]][[1]][[1]]
+    LNbias <- 1/result[[4]][[1]][[1]][[2]]
+    plots <- lapply(list(GCbias,LNbias),function(bias){
+        bybins <- lapply(c(1:10),function(i){
+            X<-result[[1]][[3]][as.numeric(factor(bias))==i,]
+            average<-rowMeans(X)
+            average <- average[average>0]
+            mu <- mean(log(average,base=2),na.rm=T)
+            sd <- sd(log(average,base=2),na.rm=T)
+            c(mu,sd,i)
+        })
+        bybins <- do.call(rbind,bybins)
+        colnames(bybins)<-c('mu','sd','bin')
+        temp <- as.data.frame(bybins)
+        pd <- position_dodge(0.1)
+        p1 <- ggplot(temp, aes(x=bin, y=mu)) + 
+            geom_errorbar(aes(ymin=mu-sd, ymax=mu+sd), width=.1, position=pd) +
+            geom_line(position=pd) +
+            geom_point(position=pd)
+        p2 <- ggplot(temp,aes(x=bin,y=sd/mu))+
+            geom_line(position=pd) +
+            geom_point(position=pd)
+        return(list(p1,p2))
+    })
+    plots<-do.call(c,plots)
+    names(plots) <- c('GC_mean','GC_fano','Len_mean','Len_fano')
+    recover()
+    ggsave(outputname, arrangeGrob(grobs = plots))
+    return(plots)
+}
+
 
