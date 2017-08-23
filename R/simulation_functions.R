@@ -57,7 +57,7 @@ EVF2TrueCounts <- function(allparams,matched_params,sim_master,evf,gene_effects,
 #' This function randomly generates the effect size of each evf on the dynamic expression parameters
 #' @param ngenes number of genes
 #' @param nevf number of evfs
-#' @param random seed (should produce same result if ngenes, nevf and randseed are all the same)
+#' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
 #' @param prob the probability that the effect size is not 0
 #' @param sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @return a list of 3 matrices, each of dimension ngenes * nevf
@@ -74,6 +74,79 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,sd){
 		return(do.call(rbind,effect))
 	})
 }
+
+#' Getting GeneEffects matrices 
+#'
+#' This function randomly generates the effect size of each evf on the dynamic expression parameters
+#' @param ngenes number of genes
+#' @param nevf number of evfs
+#' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
+#' @param modules a vector that sums up the ngenes, of the number of genes in each module
+#' @param prob the probability that the effect size is not 0
+#' @param sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @return a list of 3 matrices, each of dimension ngenes * nevf
+#' @examples 
+#' GeneEffects()
+
+GeneEffects_modules <- function(ngenes,nevf,modules,randseed,prob=1,sd){
+	set.seed(randseed)	
+	nmodules <- length(modules)
+	if(nmodules >= nevf){stop(paste('not enough evfs to support',nmodules,'modules (has to at least have the same number,)'))}
+	if(sum(modules) != ngenes){stop(paste('the number of genes in each module need to sum up to the number of total genes'))}
+	set.seed(randseed)
+	effect <- lapply(c('kon','koff','s'),function(param){
+		effect1 <- lapply(c(1:ngenes),function(i){
+			nonzero <- sample(size=nevf-nmodules,x=c(0,1),prob=c((1-prob),prob),replace=T)
+			nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=0,sd=sd)
+			return(nonzero)
+		})
+		effect1 <- do.call(rbind,effect1)
+		start_module <- c(0,cumsum(modules)[1:(nmodules-1)])
+		effect2 <- lapply(c(1:nmodules),function(i){
+			mod_effect <- rep(0,ngenes)
+			mod_effect[(start_module[i]+1):(start_module[i]+modules[i])] = rnorm(modules[i],mean=0,sd=sd)
+			return(mod_effect)
+		})
+		effect2 <- do.call(cbind,effect2)
+		cbind(effect1,effect2)
+	})
+	modules <- lapply(c(1:nmodules),function(i){rep(i,modules[i])})
+	modules <- do.call(c,modules)
+	return(list(effect,modules))
+}
+
+
+#' Getting GeneEffects matrices 
+#'
+#' This function randomly generates the effect size of each evf on the dynamic expression parameters
+#' @param ngenes number of genes
+#' @param nevf number of evfs
+#' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
+#' @param modules a vector that sums up the ngenes, of the number of genes in each module
+#' @param prob the probability that the effect size is not 0
+#' @param sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @return a list of 3 matrices, each of dimension ngenes * nevf
+#' @examples 
+#' GeneEffects()
+GeneEffects_corr <- function(ngenes,nevf,modules,randseed,prob,sd){
+	set.seed(randseed)
+	nmodules <- length(modules)
+	effect <- lapply(c('kon','koff','s'),function(param){
+		module_mean <- lapply(c(1:nmodules),function(i){
+			nonzero <- sample(size=nevf,x=c(0,1),prob=c((1-prob),prob),replace=T)
+			nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=0,sd=sd)
+			return(nonzero)
+		})
+		effect <- lapply(c(1:nmodules),function(i){
+			sapply(c(1:nevf),function(j){rnorm(modules[i],mean=module_mean[[i]][j],sd=sd)})
+		})
+		return(do.call(rbind,effect))
+	})
+	modules <- lapply(c(1:nmodules),function(i){rep(i,modules[i])})
+	modules <- do.call(c,modules)
+	return(list(effect,modules))
+}
+
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range by using first a logistic function and then adding/dividing by constant to their correct range
@@ -317,8 +390,10 @@ NpopNBatch <- function(phyla, nevf,nbatches,
 		do.call(cbind,lapply(data,function(X){X[[1]][[i]]}))
 	})
 	meta <- do.call(rbind,lapply(data,function(X){X[[2]]}))
-	evfs <- do.call(rbind,lapply(data,function(X){X[[3]]}))
+	evfs <- lapply(data,function(X){X[[3]]})
+	#batch, pop, evf
 	bias <- lapply(data,function(X){X[[4]]})
+	#batch, pop, gc, len, batch
 	return(list(all_counts,meta,evfs,bias))
 }
 
