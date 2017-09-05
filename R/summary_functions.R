@@ -152,10 +152,11 @@ plotFNR <- function(expr_matrix, data_name, ncols){
   barplot(AUC[o], col=col_vec[o], border=col_vec[o], main="FNR AUC")
   
 }
+
+
 #' Plotting GC bias and Length 
 #'
 #' @param filename the name of the simualted robj data file
-
 PlotGCLENbias <- function(filename,outputname){
     load(filename)
     GCbias <- result[[4]][[1]][[1]][[1]]
@@ -184,7 +185,6 @@ PlotGCLENbias <- function(filename,outputname){
     })
     plots<-do.call(c,plots)
     names(plots) <- c('GC_mean','GC_fano','Len_mean','Len_fano')
-    recover()
     ggsave(outputname, arrangeGrob(grobs = plots))
     return(plots)
 }

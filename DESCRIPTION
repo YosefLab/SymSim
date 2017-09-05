@@ -19,13 +19,11 @@ Imports:
     timeDate, 
     FNN, 
     reshape2,
-    Biobase
+    Biobase,
+    ape,
+    MASS,
+    phytools
 Suggests:
-    DESeq2,
-    edgeR,
-    scran,
-    monocle,
-    scone,
-    knitr,
-    rmarkdown
+   knitr,
+   rmarkdown
 VignetteBuilder: knitr
