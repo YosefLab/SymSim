@@ -14,15 +14,19 @@ Imports:
     RColorBrewer, 
     fAsianOptions, 
     fOptions, 
-    fBasics, 
+    fBasics,
+    labeling,
     timeSeries, 
     timeDate, 
     FNN, 
-    reshape2,
+    reshape,
+    gridExtra,
+    RColorBrewer,
     Biobase,
     ape,
     MASS,
-    phytools
+    phytools,
+    roxygen2,
 Suggests:
    knitr,
    rmarkdown
