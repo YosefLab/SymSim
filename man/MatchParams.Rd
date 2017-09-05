@@ -21,7 +21,7 @@ MatchParams(sim_master, allparams, log_count_bin, counts, plotting = TRUE,
 \item{samplename}{the prefix of the output plots}
 }
 \value{
-match_params1 the best matched parameters
+match_params the best matched parameters
 }
 \description{
 using kd-tree method find the simulated distribution that is closest to the observed distribution, and as diagnostic, plot the expression heat map of the true counts and the best-match simulated counts, and also the distribution of the parameters

@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulation_functions.R
 \name{evalImpulse}
 \alias{evalImpulse}
-\title{Test results of scaling normalization}
+\title{Compute value of impulse function given parameters.}
 \usage{
 evalImpulse(vecImpulseParam, vecTimepoints)
 }
@@ -13,22 +13,15 @@ Vector of impulse model parameters.}
 
 \item{vecTimepoints}{(numeric vector length number of time points) 
 Time points to be evaluated.}
-
-\item{sim_results}{output of sim1Pop1Batch, list a list of 4 elements: evf, true counts, sampled counts and biased counts.}
 }
 \value{
-cor_compare a matrix of ngenes * 2*(1+nmethods), each row is a gene, and the columns are the correlation between the true counts to dropped counts, dropped counts corrected, biased counts and dropped counts corrected
-Compute value of impulse function given parameters.
-
-Compute value of impulse function given parameters.
-Enforces lower bound on value of function to avoid numerical
-errors during model fitting.
-
 vecImpulseValue (vec number of vecTimepoints) 
 Model values for given time points.
 }
 \description{
-This function runs rpm, deseq, tmm, uq (quantile normalization), scran, and clt normalization
+Compute value of impulse function given parameters.
+Enforces lower bound on value of function to avoid numerical
+errors during model fitting.
 }
 \seealso{
 Compiled version: \link{evalImpulse_comp}
