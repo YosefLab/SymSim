@@ -4,7 +4,7 @@
 \alias{SimulateDataset}
 \title{Simulate count matrix from evf, gene effects and technical biases}
 \usage{
-SimulateDataset(ncells, ngenes, nbatch, nevf, Sigma = 0.5, phyla,
+SimulateDataset(ncells, ngenes, nbatch, nevf, Sigma = 0.3, phyla,
   alpha = 0.1, alpha_sd = 0.01, nbins = 10, gcslope = 0.1,
   lenslope = -1, batch_sd = 0.5, beta = 0.5, epsilon = 0.05,
   gene_effects_sd = 1, gene_effect_prob = 0.3, evf_type, randseed = 0,
@@ -36,8 +36,6 @@ SimulateDataset(ncells, ngenes, nbatch, nevf, Sigma = 0.5, phyla,
 \item{batch}{a matrix of ngenes rows and nbatch columns}
 
 \item{batch_id}{a vector of length ncells indicating which batch each cell comes from (randomly generated)}
-
-\item{meta1}{meta data generated from EVF function (population, depth in the tree, etc.)}
 }
 \description{
 Simulate count matrix from evf, gene effects and technical biases

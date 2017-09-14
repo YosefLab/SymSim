@@ -448,11 +448,10 @@ SimulateCounts <- function(ncells,ngenes,nevf,nbatch,evfs,gene_effects,
 #' @param lenbias a vector of length ngenes
 #' @param batch a matrix of ngenes rows and nbatch columns
 #' @param batch_id a vector of length ncells indicating which batch each cell comes from (randomly generated)
-#' @param meta1 meta data generated from EVF function (population, depth in the tree, etc.)
 #' @param epsilon a single float value the magnitude of independent noise for each gene in each cell
 
 SimulateDataset <- function(ncells,ngenes,nbatch,nevf,
-	Sigma=0.5,phyla,alpha=0.1,alpha_sd=0.01,nbins=10,
+	Sigma=0.3,phyla,alpha=0.1,alpha_sd=0.01,nbins=10,
 	gcslope=0.1,lenslope=-1,batch_sd=0.5,beta=0.5,epsilon=0.05,
 	gene_effects_sd=1,gene_effect_prob=0.3,evf_type,
 	randseed=0,plotname='temp.pdf'){
@@ -474,7 +473,7 @@ SimulateDataset <- function(ncells,ngenes,nbatch,nevf,
 	sim <- SimulateCounts(ncells,ngenes,nevf,nbatch,evfs=evf[[1]],
 		gene_effects,alphas,beta,gcbias=gcbias[,2],lenbias=lenbias[,2],batch,
 		batch_id ,meta1=evf[[2]],epsilon=epsilon)
-	meta_gene <- data.frame(gene_effects=gene_effects,gcbias=gcbias,lenbias=lenbias,batch=batch)
+	meta_gene <- data.frame(kon_effect=gene_effects[[1]],koff_effect=gene_effects[[2]],s_effect=gene_effects[[3]],gcbias=gcbias,lenbias=lenbias,batch=batch)
 	return(c(sim,list(meta_gene)))
 }
 
