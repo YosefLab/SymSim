@@ -45,14 +45,15 @@ MasterEqn2 <- function(rateParams){
 #' @return the simulated (true) expression matrix
 #' @examples 
 #' EVF2TrueCounts()
-EVF2TrueCounts <- function(allparams,matched_params,sim_master,evf,gene_effects,bimod){
-	nevf <- length(evf)
+EVF2TrueCounts <- function(allparams,param_realdata,sim_master,evf,gene_effects,bimod, scale_s){
+  if (missing(scale_s)) {scale_s <- 1}
+	nevf <- length(evf) # this evf is for only one cell
 	ngenes <- length(gene_effects[[1]][,1])
-	params <- Get_params(gene_effects,evf,match_params,bimod)
+	params <- Get_params(gene_effects,evf,param_realdata,bimod, scale_s)
 	best_matches <- FNN::knnx.index(data=allparams,query=params,k=1,algorithm=c('kd_tree'))
 	sim <- sim_master[best_matches]
 	sim_exprs <- SampleExprs(sim,1)
-	return(sim_exprs)
+	return(sim_exprs) # sim_exprs is gene expression values in only one cell
 }
 
 
@@ -63,16 +64,17 @@ EVF2TrueCounts <- function(allparams,matched_params,sim_master,evf,gene_effects,
 #' @param nevf number of evfs
 #' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
 #' @param prob the probability that the effect size is not 0
-#' @param sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @param geffect_mean the mean of the normal distribution where the non-zero effect sizes are dropped from 
+#' @param geffect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @return a list of 3 matrices, each of dimension ngenes * nevf
 #' @examples 
 #' GeneEffects()
-GeneEffects <- function(ngenes,nevf,randseed,prob,sd){
+GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
 	set.seed(randseed)
 	lapply(c('kon','koff','s'),function(param){
 		effect <- lapply(c(1:ngenes),function(i){
 			nonzero <- sample(size=nevf,x=c(0,1),prob=c((1-prob),prob),replace=T)
-			nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=0,sd=sd)
+			nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=geffect_mean,sd=geffect_sd)
 			return(nonzero)
 		})
 		return(do.call(rbind,effect))
@@ -81,30 +83,40 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,sd){
 
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
-#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range by using first a logistic function and then adding/dividing by constant to their correct range
+#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+#' by using first a logistic function and then adding/dividing by constant to their correct range
 #' @param evf a vector of length nevf, the cell specific extrinsic variation factor
-#' @param gene_effects a list of three matrices (generated using the GeneEffects function), each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
-#' @param param_dist the fitted parameter distribution to sample from 
+#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
+#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param param_realdata the fitted parameter distribution to sample from 
 #' @param bimod the bimodality constant
+#' @param scale_s transcription rate will be multiplied by this factor to increase cell size
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
-Get_params <- function(gene_effects,evf,param_dist,bimod){
-	nparams <- length(param_dist[,1])
-	params <- lapply(gene_effects,function(X){X %*% evf})
-	params <- do.call(cbind,params)
-	params <- apply(params,2,function(x){1/(1+exp(-x))})
-	params[,1] = sort(param_dist[,1])[ceiling(params[,1]*nparams)]
-	params[,2] = sort(param_dist[,2])[ceiling(params[,2]*nparams)]
-	params[,3] = sort(param_dist[,3])[ceiling(params[,3]*nparams)]
-	# params[,1] <- (params[,1]*7-1)
-	# params[,2] <- params[,2]*7-2
-	# params[,3] <- 10^(params[,3]*3)
-	params[,1] <- log(base=10,params[,1])
-	params[,2] <- log(base=10,params[,2])
-	params[,1] <- 10^(params[,1] - (params[,1]+0.5)*bimod)
-	params[,2] <- 10^(params[,2] - (params[,2]+1)*bimod)
-	return(params)
+# param_realdata is the parameter distribution from real data
+Get_params <- function(gene_effects,evf,param_realdata,bimod,scale_s){
+  if (missing(scale_s)){scale_s <- 1}
+  # generate parameters from evf and gene effects
+  # for all genes in one cell
+  params <- lapply(gene_effects,function(X){X %*% evf})
+  params <- do.call(cbind,params)
+  params <- apply(params,2,function(x){1/(1+exp(-x))}) 
+  
+  # map generated parameters to distribution of params from real data
+  # values in params calculated from sigmoid function are between 0-1
+  nparams <- length(param_realdata[,1])
+  params[,1] = sort(param_realdata[,1])[ceiling(params[,1]*nparams)]
+  params[,2] = sort(param_realdata[,2])[ceiling(params[,2]*nparams)]
+  params[,3] = sort(param_realdata[,3])[ceiling(params[,3]*nparams)]
+  
+  # increase the bimodality of data by parameter beta
+  params[,1] <- log(base=10,params[,1])
+  params[,2] <- log(base=10,params[,2])
+  params[,1] <- 10^(params[,1] - (params[,1]+0.5)*bimod)
+  params[,2] <- 10^(params[,2] - (params[,2]+1)*bimod)
+  params[,3] <- params[,3] * scale_s
+  return(params)
 }
 
 #' Sample read counts from master equation
@@ -142,6 +154,7 @@ TrueCounts2Dropped <- function(sim_exprs,alpha,alpha_sd){
 	dropped_exprs <- do.call(cbind,dropped_exprs)
 	return(dropped_exprs)
 }
+
 #' Add Bias Terms and batch effects on the dropped count matrix
 #'
 #' randomly sample GC and length content of the simulated genes, and bias the exrpession according to it. Also add batch effect that is applied to all the the cells in the same batch, and a random epsilon error term to every number  
@@ -225,6 +238,7 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
 #' @param samplename the prefix of the output plots 
 #' @return match_params the best matched parameters
 MatchParams <- function(sim_master,allparams,log_count_bin,counts,plotting=TRUE,samplename){
+  print("function MatchParams() is used")
 	simlogdist <- Sim_LogDist(sim_master,log_count_bin)
 	truelogdist <- LogDist(counts, log_count_bin)
 	outofrange <- is.na(rowMeans(truelogdist))
@@ -414,7 +428,7 @@ SimulateCounts <- function(ncells,ngenes,nevf,nbatch,evfs,gene_effects,
 	if(length(batch[,1])!=ngenes){print('ERROR: number of rows in batch effect is equal to the number of genes');stop()}
 	if(length(batch[1,])!=nbatch){print('ERROR: number of columns if batch effect is equal to the number of bathces');stop()}
 	true_counts <- lapply(c(1:ncells),function(celli){
-		true_counts <- EVF2TrueCounts(allparams,matched_params,sim_master,evfs[celli,],gene_effects,beta)
+		true_counts <- EVF2TrueCounts(allparams,param_realdata,sim_master,evfs[celli,],gene_effects,beta)
 		return(true_counts)
 	})
 	true_counts <- do.call(cbind,true_counts)
@@ -468,7 +482,8 @@ SimulateDataset <- function(ncells,ngenes,nbatch,nevf,
 	gcbias <- SampleBias(ngenes,slope=gcslope,nbins=nbins,randseed=seed[1])
 	lenbias <- SampleBias(ngenes,slope=lenslope,nbins=nbins,randseed=seed[2])
 	batch <- SampleBatch(ngenes,nbatch,batch_sd)
-	gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],sd=gene_effects_sd,prob=gene_effect_prob)
+	gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob, 
+	                            geffect_mean=0, geffect_sd=gene_effects_sd)
 	batch_id <- sample(c(1:nbatch),size=ncells,replace=T)
 	sim <- SimulateCounts(ncells,ngenes,nevf,nbatch,evfs=evf[[1]],
 		gene_effects,alphas,beta,gcbias=gcbias[,2],lenbias=lenbias[,2],batch,
