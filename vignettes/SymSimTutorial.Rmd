@@ -1,0 +1,122 @@
+---
+title: "SymSim: single cell RNAseq data simulator"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+#fig_width: 6 
+#fig_height: 4 
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r "setup", include=FALSE}
+require("knitr")
+opts_knit$set(root.dir = "~/Research/incoming/simulation/")
+opts_chunk$set(fig.width=4, fig.height=3) 
+```
+
+SymSim is an R package made to simulate single cell RNA-seq data. We use
+the kinetic model to sample the true transcript count for each gene in each
+cell, and the parameters of the kinetic model (k_on, k_off, s) are calculated
+from external variability factors (EVFs) and gene-specific effects (or gene
+effect). Each cell has an EVF vector which defines the identify of the cell.
+Each gene has an gene effect vector of the same length as the EVF vector,
+and can be thought of as the weights of EVFs. The EVFs allow us to simulate
+discrete or continuous populations. The gene effect vectors allow us to
+simulate differentially expressed genes or co-expressed gene modules.
+From true transcript counts to observed counts (which can be read counts
+or UMI counts) we consider capture efficiency, amplification bias, sequencing
+depth and batch effects. At different steps, users have control on the amount
+of extrinsic variation, intrinsic variation and technical variation.
+
+### Load required packages, load SymSim, load pre-computed simulations and data-matched parameters
+```{r, fig.show='hold',message=F,cache=F}
+required_packages <- c('devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','fOptions','fBasics','timeSeries','timeDate','Biobase' )
+install_packages <- rownames(installed.packages())
+need_install <- setdiff(required_packages,install_packages)
+if(length(need_install)>0){install.packages(need_install)}
+load_result <- lapply(required_packages, require, character.only = TRUE)
+
+library(devtools)
+load_all('SymSim')
+load('allsim.20170706.robj')
+load('param_realdata.robj')
+```
+
+# Main functions and input
+
+**SimulateTrueCounts( )** and **True2ObservedCounts( )** are the two major functions of the SymSim package. SimulateTrueCounts generates true transcript counts for the given number of genes and cells, where the cells can come from one single population, or multiple discrete populations, or continuous populations. True2ObservedCounts then simulates the library preparation and sequencing procedures, and convert the true transcript counts into observed read counts or UMI counts.
+
+The input parameters of the package allow users to control intrinsic variation, technical variation and biological variation in the data. Intrinsic variation is modeled through the kinetic model; technical variation takes into account dropouts, amplification biases including length bias and GC bias, and batch effects; biological variation is modeled by EVFs (extrinsic variation factors). 
+
+Parameters for function SimulateTrueCounts( ) are:  
+**ncells_total** total number of cells from all populations;  
+**min_popsize** number of cells in the rarest population;  
+**ngenes** number of genes;  
+**nevf** number of EVFs;  
+**evf_type** indicates the population structure of the cells, can be "one.population", "discrete" or "continuous";  
+**Sigma** controls heterogeneity each population;  
+**phyla** a tree which defines relationship between populations;  
+**gene_effects_sd** controls differences between genes;  
+**gene_effect_prob** probability of non-zero values in the gene effect vectors;  
+**bimod** adjusts the bimodality of gene expression, thus controls intrinsic variation.  
+
+The function returns a list of two elements:   
+**counts** a matrix containing the true transcript counts;  
+**meta** a dataframe containing the meta data of cells, i.e. population identity.
+
+Parameters for function True2ObservedCounts( ) are:  
+**true_counts** true transcript counts from function SimulateTrueCounts;  
+**meta_cell** cell identity from function SimulateTrueCounts;  
+**nbatch** number of batches the cells are sequenced on;  
+**protocol** protocol for library preparation, can be "ss2" (without UMIs) or "10x" (with UMIs);  
+**alpha_mean** mean capture effeciency of all cells;  
+**alpha_sd** standard deviation of capture efficiency of all cells;  
+**lenslope** controls the amount of gene length bias;  
+**nbins** number of bins to simulate gene length bias;  
+**gene_len** gene lengths;  
+**amp_bias_limit**  amount of amplification bias;  
+**batch_sd** amount of batch effects;  
+**rate_2PCR** PCR efficiency during amplification;   
+**nPCR**  number of PCR cycles;  
+**depth_mean** mean sequencing depth of all cells;  
+**depth_sd** standard deviation of sequencing depth of all cells.  
+
+# Simulate true counts
+First, we simulate the case where there is one population.
+```{r,cache=T}
+ngenes <- 300
+true_counts_res <- SimulateTrueCounts(ncells_total=200,ngenes=ngenes,nevf=10,
+                                evf_type="one.population",Sigma=0.5,gene_effects_sd=1,
+                                gene_effect_prob=0.3,bimod=0.3,randseed=0)
+tsne_true_counts <- PlotTsne(meta=true_counts_res[[2]],data=true_counts_res[[1]],label='pop',saving = F)
+tsne_true_counts[[2]]
+```
+
+When there are multiple populations, users need to provide a tree. A tree with five leaves (five populations) can be generated as follows:
+```{r,cache=T}
+phyla <- Phyla5()
+plot(phyla)
+```
+
+The true counts of the five populations can be simulated:
+```{r,cache=T}
+true_counts_res <- SimulateTrueCounts(ncells_total=200, min_popsize = 20, ngenes=ngenes, 
+                          nevf=10,evf_type="discrete",Sigma=0.5,phyla=phyla,
+                          gene_effects_sd=1,gene_effect_prob=0.3,
+                          bimod=0.3,randseed=0)
+tsne_true_counts <- PlotTsne(meta=true_counts_res[[2]],data=true_counts_res[[1]],label='pop',saving = F)
+tsne_true_counts[[2]]
+```
+
+# Simulate observed counts
+For the true counts from five discrete populations compulated above, taking them through the library preparation and sequencing procedures will yield true read counts (if protocol="ss2") or UMI counts (if protocol="10x"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
+```{r,cache=T}
+load("SymSim/gene_len_pool.RData")
+source("functions.R")
+gene_len <- sample(gene_len_pool[which(gene_len_pool>100)], ngenes, replace = FALSE)
+observed_counts_ss2 <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[2]], nbatch=1, protocol="ss2", alpha_mean=0.1, alpha_sd=0.02, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.2,0.2), batch_sd=0.5, epsilon=0.05, rate_2PCR=0.8, nPCR=16, depth_mean=500000, depth_sd=1000, randseed=0)
+tsne_ss2 <- PlotTsne(meta=observed_counts_ss2[[2]],data=observed_counts_ss2[[1]],label='pop',saving = F)
+tsne_ss2[[2]]
+```
+
