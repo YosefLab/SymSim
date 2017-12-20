@@ -12,13 +12,11 @@ PlotTsne <- function(meta,data,plotname,label,discrete=T,saving=F){
     data <- data[,uniqcols];meta <- meta[uniqcols,] 
     uniqrows<-c(1:length(data[,1]))[!duplicated(data)]
     data <- data[uniqrows,]
-	data_tsne=Rtsne(t(data))
+	data_tsne=Rtsne(t(data),perplexity=ncols(data))
 	if(discrete==T){
-		plot_tsne=data.frame(alpha=meta[,'alpha'],beta=meta[,'beta'],sigma=meta[,'sigma'],
-		pop=meta[,'pop'],label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2])		
+		plot_tsne=data.frame(meta,label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2])		
 	}else{
-		plot_tsne=data.frame(alpha=meta[,'alpha'],beta=meta[,'beta'],sigma=meta[,'sigma'],
-		pop=meta[,'pop'],label=meta[,label],x=data_tsne$Y[,1],y=data_tsne$Y[,2])
+		plot_tsne=data.frame(meta,label=meta[,label],x=data_tsne$Y[,1],y=data_tsne$Y[,2])
 	}
 	p <- ggplot(plot_tsne, aes(x, y))
 	p <- p + geom_point()
@@ -42,11 +40,9 @@ PlotPCA <- function(meta,data,plotname,label,discrete=T,saving=F){
     data <- data[uniqrows,]
 	data_pc=prcomp(t(data))
 	if(discrete==T){
-		plot_pca=data.frame(alpha=meta[,'alpha'],beta=meta[,'beta'],sigma=meta[,'sigma'],
-		pop=meta[,'pop'],label=factor(meta[,label]),x=data_pc$x[,1],y=data_pc$x[,2])		
+		plot_pca=data.frame(meta,label=factor(meta[,label]),x=data_pc$x[,1],y=data_pc$x[,2])		
 	}else{
-		plot_pca=data.frame(alpha=meta[,'alpha'],beta=meta[,'beta'],sigma=meta[,'sigma'],
-		pop=meta[,'pop'],label=meta[,label],x=data_pc$x[,1],y=data_pc$x[,2])
+		plot_pca=data.frame(meta,label=meta[,label],x=data_pc$x[,1],y=data_pc$x[,2])
 	}
 	p <- ggplot(plot_pca, aes(x, y))
 	p <- p + geom_point()
