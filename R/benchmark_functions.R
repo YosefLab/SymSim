@@ -12,12 +12,32 @@ PlotTsne <- function(meta,data,plotname,label,discrete=T,saving=F){
     data <- data[,uniqcols];meta <- meta[uniqcols,] 
     uniqrows<-c(1:length(data[,1]))[!duplicated(data)]
     data <- data[uniqrows,]
+<<<<<<< HEAD
 	data_tsne=Rtsne(t(data),perplexity=ncols(data))
 	if(discrete==T){
 		plot_tsne=data.frame(meta,label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2])		
 	}else{
 		plot_tsne=data.frame(meta,label=meta[,label],x=data_tsne$Y[,1],y=data_tsne$Y[,2])
+=======
+	data_tsne=Rtsne(t(data))
+	
+	# if(discrete==T){
+	# 	plot_tsne=data.frame(alpha=meta[,'alpha'],beta=meta[,'beta'],sigma=meta[,'sigma'],
+	# 	pop=meta[,'pop'],label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2])		
+	# }else{
+	# 	plot_tsne=data.frame(alpha=meta[,'alpha'],beta=meta[,'beta'],sigma=meta[,'sigma'],
+	# 	pop=meta[,'pop'],label=meta[,label],x=data_tsne$Y[,1],y=data_tsne$Y[,2])
+	# }
+	
+	if(discrete==T){
+	  plot_tsne=data.frame(alpha=meta[,'alpha'],
+	                       pop=meta[,'pop'],label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2])		
+	}else{
+	  plot_tsne=data.frame(alpha=meta[,'alpha'],
+	                       pop=meta[,'pop'],label=meta[,label],x=data_tsne$Y[,1],y=data_tsne$Y[,2])
+>>>>>>> 19e5f8e3fac96ea08ca82e8dd85b6cd93e114b1d
 	}
+	
 	p <- ggplot(plot_tsne, aes(x, y))
 	p <- p + geom_point()
 	p <- p + geom_point(aes(colour = plot_tsne[['label']]))+labs(color=label)
