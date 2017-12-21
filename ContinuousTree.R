@@ -8,10 +8,10 @@ Sigma <- 1
 
 PlotRoot2Leave<-function(temp,tips,edges,root,internal){
   edgenames <-apply(temp[,c(1,2)],1,function(X){paste0(X,collapse = '.')})
-  paths <- lapply(tips,function(tip){
+   paths <- lapply(tips,function(tip){
     path<-GetPath(tip,edges,root,tips,internal)
     if(dim(path)[1]!=1){
-      path_enames <- apply(path[,c(2,3)],1,function(X){paste0(X,collapse='.')})
+    path_enames <- apply(path[,c(2,3)],1,function(X){paste0(X,collapse='.')})
     }else{
       path_enames <- paste0(path[1,c(2,3)],collapse='.')
     }
@@ -140,17 +140,17 @@ SampleSubtree <- function(par,depth,anc_state,edges,ncells,Sigma,neutral=NA){
     if(sum(edges[,2]==children[j])==0){
       if(is.na(neutral[1])){
         result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma)}else{
-          t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
+         t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
           result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma,t_sample)
         }
-      result <- result[c(1:(length(result[,1]-1))),]
+     result <- result[c(1:(length(result[,1]-1))),]
     }else{
       if(is.na(neutral[1])){
         result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma)}else{
-          t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
+         t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
           result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma,t_sample)
         }
-      anc_state <- result[length(result[,1]),4]
+     anc_state <- result[length(result[,1]),4]
       result <- result[c(1:(length(result[,1]-1))),]
       depth <- depth + edge[4]
       result1 <- SampleSubtree(children[j],depth,anc_state,edges,ncells,Sigma,neutral)

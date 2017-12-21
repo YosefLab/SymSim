@@ -110,6 +110,10 @@ rescale2range <- function(vec, n){ # rescale the values in vec such that the lag
 #' @param ncols number of colors in the color ramp
 
 plotFNR <- function(expr_matrix, data_name, ncols){
+    rescale2range <- function(vec, n){ # rescale the values in vec such that the lagest is n, and the smallest is 1.
+      a <- (n-1)/(max(vec)-min(vec))
+      return(a*vec+(1-a*min(vec)))
+    }
     # filter out cells where less than 10% of all genes are expressed
     notzero <- apply(expr_matrix,2,function(X){sum(X>0)>length(X)*0.1})
     expr_matrix<-expr_matrix[,notzero]

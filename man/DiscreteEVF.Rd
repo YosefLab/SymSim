@@ -4,7 +4,7 @@
 \alias{DiscreteEVF}
 \title{Generating EVFs for cells sampled from tip populations from a tree}
 \usage{
-DiscreteEVF(phyla, ncells, Sigma, nevf)
+DiscreteEVF(phyla, ncells, Sigma, nevf, seed)
 }
 \arguments{
 \item{phyla}{tree for cell developement}
