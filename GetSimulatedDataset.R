@@ -2,7 +2,7 @@ library('devtools')
 library('ape')
 library('MASS')
 load_all('SCsimR')
-load('allsim.20170706.robj')
+# load('allsim.20170706.robj')
 load('match_params.robj')
 source('ContinuousTree.R')
 
@@ -11,6 +11,9 @@ ngenes <- 20000
 nbatch <- 3
 nevf <-10
 phyla <- Phyla5()
+
+SimulateTrueCounts(ncells, ngenes, nevf,Sigma=0.1,phyla,alpha=0.1,
+	alpha_sd=0.01,bimod=0.5,epsilon=0.05,gene_effects_sd=1,gene_effect_prob=0.3,'Discrete',randseed=0)
 
 simname <- '20170905.allgenes'
 for(beta in seq(0.5,1,0.1)){

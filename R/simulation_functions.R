@@ -44,10 +44,8 @@ MasterEqn2 <- function(rateParams){
 #' @param alphas a vector of length ncells
 #' @param beta a single float value between 0 and 1 determining the bimodality of entire dataset
 
-SimulateTrueCounts <- function(ncells, ngenes, nevf,Sigma=0.1,phyla,alpha=0.1,
-    alpha_sd=0.01,bimod=0.5,epsilon=0.05,
-	gene_effects_sd=1,gene_effect_prob=0.3,evf_type,
-	randseed=0){
+SimulateTrueCounts <- function(ncells, ngenes, nevf,Sigma=0.1,phyla,bimod=0.5,
+	gene_effects_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,evf_type,randseed=0){
 	set.seed(randseed)
 	seed <- sample(c(1:1e5),size=2)
 	if(evf_type=='Discrete'){
@@ -57,7 +55,7 @@ SimulateTrueCounts <- function(ncells, ngenes, nevf,Sigma=0.1,phyla,alpha=0.1,
 		evf <- ContinuousEVF(phyla,ncells,nevf1=nevf/2,nevf2=nevf/2,
 			tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
 	}
-	gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],sd=gene_effects_sd,prob=gene_effect_prob)
+	gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=gene_effects_mean,geffect_sd=gene_effects_sd)
 	ngenes <- length(gene_effects[[1]][,1])
 	params <- Get_params(gene_effects,evf[[1]],match_params,bimod)
 	counts <- lapply(c(1:ncells),function(i){
