@@ -4,7 +4,7 @@
 \alias{GeneEffects}
 \title{Getting GeneEffects matrices}
 \usage{
-GeneEffects(ngenes, nevf, randseed, prob, sd)
+GeneEffects(ngenes, nevf, randseed, prob, geffect_mean, geffect_sd)
 }
 \arguments{
 \item{ngenes}{number of genes}
@@ -13,7 +13,9 @@ GeneEffects(ngenes, nevf, randseed, prob, sd)
 
 \item{prob}{the probability that the effect size is not 0}
 
-\item{sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
+\item{geffect_mean}{the mean of the normal distribution where the non-zero effect sizes are dropped from}
+
+\item{geffect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
 
 \item{randomseed}{(should produce same result if ngenes, nevf and randseed are all the same)}
 }
