@@ -1,4 +1,4 @@
-# SymSim
+# SCsimR
 R package for simulating single cell RNA sequencing
 
 ### Instruction & example scripts
