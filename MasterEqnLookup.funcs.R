@@ -136,7 +136,7 @@ MasterEqn_heatmap <- function(FUN,data,filename,funcname,transformer,saving=F){
 	plist = lapply(plot_data,function(X){
 		ggplot(X, aes(x=log(kon,base=10),y=log(koff,base=10),fill = value)) + 
 		geom_tile() +
-		scale_fill_gradientn(colours = rainbow(10),trans = transformer ) + 
+		scale_fill_gradientn(colours = colorRampPalette(c( "blue", "yellow", "red"))(10), trans = transformer ) + 
 		ggtitle(paste('heatmap of ',funcname,', s=',X$s[1],sep='')) +
 		labs(colour = funcname)
 	})

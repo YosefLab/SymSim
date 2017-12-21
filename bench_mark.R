@@ -2,7 +2,8 @@
 # Clustering 
 #######################
 
-required_packages <- c('devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','fAsianOptions','fOptions','fBasics','timeSeries','timeDate','Biobase','repr' )
+required_packages <- c('devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer',
+                       'fOptions','fBasics','timeSeries','timeDate','Biobase','repr' )
 install_packages <- rownames(installed.packages())
 need_install <- setdiff(required_packages,install_packages)
 if(length(need_install)>0){install.packages(need_install)}
@@ -10,10 +11,11 @@ if(length(need_install)>0){install.packages(need_install)}
 load_result <- lapply(required_packages, require, character.only = TRUE)
 
 load('allsim.20170706.robj')
-load('match_params.robj')
-
+load('param_realdata.robj')
 load_all('SCsimR')
-# param_names <- c('bimod','alpha','evf_sd','batch','3batches')
+
+
+
 param_names <- c('bimod','alpha','evf_sd','batch','robj')
 
 
