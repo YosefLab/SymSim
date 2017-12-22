@@ -101,7 +101,6 @@ Get_params <- function(gene_effects,evf,match_params,bimod){
 #' @examples 
 #' Get_params()
 Get_params2 <- function(gene_effects,evf,bimod,ranges){
-  nparams <- length(match_params[,1])
   params <- lapply(gene_effects,function(X){evf %*% t(X)})
   scaled_params <- lapply(c(1:3),function(i){
     X <- params[[i]]
@@ -329,7 +328,8 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname
 #' @param nevf Number of EVFs per cell
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
-DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf){
+DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
+  set.seed(seed)
 	npop <- length(phyla$tip.label) # number of populations
 	# set the number of cells in each population
 	# first give each population min_popsize cells
@@ -369,7 +369,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf){
 
 # this function needs substantial work!
 # also need to make the size of clusters different
-SimulateTrueCounts <- function(ncells_total,min_popsize=ncells_total,ngenes,
+SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
                             bimod=0.3,randseed=0){
@@ -383,13 +383,13 @@ SimulateTrueCounts <- function(ncells_total,min_popsize=ncells_total,ngenes,
     })
     evf_res <- list(evfs=do.call(rbind, evfs), meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
-    evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,Sigma,nevf)
+    evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,Sigma,nevf,seed=seed[1])
   }else if(evf_type=='continuous'){
     evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
-                             tip=1,Sigma,plotting=T,plotname)		
+                             tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
   }
-  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=gene_effects_mean,geffect_sd=gene_effects_sd)
-  params <- Get_params2(gene_effects,evf[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
+  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
+  params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells),function(j){
       y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
