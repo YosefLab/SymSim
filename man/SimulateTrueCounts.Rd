@@ -2,18 +2,19 @@
 % Please edit documentation in R/simulation_functions.R
 \name{SimulateTrueCounts}
 \alias{SimulateTrueCounts}
-\title{Simulate true counts by sampling from a beta-poisson distribution}
+\title{Simulate count matrix from evf, gene effects and technical biases}
 \usage{
-SimulateTrueCounts(ncells, ngenes, nevf, Sigma = 0.1, phyla, alpha = 0.1,
-  alpha_sd = 0.01, bimod = 0.5, epsilon = 0.05, gene_effects_sd = 1,
-  gene_effect_prob = 0.3, evf_type, randseed = 0)
+SimulateTrueCounts(ncells_total, min_popsize = ncells_total, ngenes,
+  nevf = 10, evf_type = "one.population", Sigma = 0.3, phyla = NULL,
+  gene_effects_sd = 1, gene_effect_prob = 0.3, bimod = 0.3,
+  randseed = 0)
 }
 \arguments{
-\item{ncells}{number of cells}
-
 \item{ngenes}{number of genes}
 
 \item{nevf}{number of evfs}
+
+\item{ncells}{number of cells}
 
 \item{nbatch}{number of batches}
 
@@ -24,7 +25,17 @@ SimulateTrueCounts(ncells, ngenes, nevf, Sigma = 0.1, phyla, alpha = 0.1,
 \item{alphas}{a vector of length ncells}
 
 \item{beta}{a single float value between 0 and 1 determining the bimodality of entire dataset}
+
+\item{gcbias}{a vector of length ngenes}
+
+\item{lenbias}{a vector of length ngenes}
+
+\item{batch}{a matrix of ngenes rows and nbatch columns}
+
+\item{batch_id}{a vector of length ncells indicating which batch each cell comes from (randomly generated)}
+
+\item{epsilon}{a single float value the magnitude of independent noise for each gene in each cell}
 }
 \description{
-This function generates evf, gene effect and true counts
+Simulate count matrix from evf, gene effects and technical biases
 }
