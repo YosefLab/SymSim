@@ -395,8 +395,9 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
       return(x)
     })
   })
+  cell_meta <- cbind( cellid=paste('cell',seq(1,ncells),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
-  return(list(counts,gene_effects,evf_res,params))
+  return(list(counts,gene_effects,cell_meta,params))
 }
 
 # Batch_True2ObservedCounts <- function(){
