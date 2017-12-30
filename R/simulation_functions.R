@@ -365,7 +365,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param randseed random seed
-#' @return a list of 4 elements, the first element is true counts, second is cell level meta information, including a matrix of evf and a vector of cell identity, the third is the gene level meta information, and the fourth is the parameters kon, koff and s used to simulation the true counts
+#' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 
 SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
