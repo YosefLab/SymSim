@@ -26,7 +26,8 @@ Depends:
     MASS,
     phytools,
     roxygen2,
-    repr
+    repr,
+    SummarizedExperiment
 Suggests:
    knitr,
    rmarkdown

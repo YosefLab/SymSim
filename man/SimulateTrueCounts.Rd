@@ -7,7 +7,7 @@
 SimulateTrueCounts(ncells_total, min_popsize, ngenes, nevf = 10,
   evf_type = "one.population", Sigma = 0.3, phyla = NULL,
   gene_effects_sd = 1, gene_effect_prob = 0.3, bimod = 0.3,
-  randseed = 0)
+  randseed = 0, SE = F)
 }
 \arguments{
 \item{ncells_total}{number of cells}
@@ -30,12 +30,14 @@ SimulateTrueCounts(ncells_total, min_popsize, ngenes, nevf = 10,
 
 \item{randseed}{random seed}
 
+\item{SE}{return summerized experiment rather than a list of elements, default is False}
+
 \item{randomseed}{(should produce same result if ngenes, nevf and randseed are all the same)}
 
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
 }
 \value{
-a list of 4 elements, the first element is true counts, second is cell level meta information, including a matrix of evf and a vector of cell identity, the third is the gene level meta information, and the fourth is the parameters kon, koff and s used to simulation the true counts
+a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 }
 \description{
 Generate both evf and gene effect and simulate true transcript counts

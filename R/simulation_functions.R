@@ -124,7 +124,6 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param nPCR the number of PCR cycles
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="ss2") or UMI counts (if protocol="10x)
-#' @examples 
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
                           rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
   ngenes <- length(gene_len)
@@ -365,12 +364,13 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param randseed random seed
+#' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 
 SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
-                            bimod=0.3,randseed=0){
+                            bimod=0.3,randseed=0,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
   if(evf_type=='one.population'){
@@ -397,7 +397,14 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
   })
   cell_meta <- cbind( cellid=paste('cell',seq(1,ncells),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
-  return(list(counts,gene_effects,cell_meta,params))
+  if(SE==T){
+      se <- SummarizedExperiment(assays=list(counts = as.matrix(counts),
+        logcounts = log2(as.matrix(counts) + 1)),colData=cell_meta)
+      rowData(se)$gene_id <- paste('gene',seq(1,ngenes))
+      return(se)
+    }else{
+      return(list(counts,gene_effects,cell_meta,params))      
+    }
 }
 
 # Batch_True2ObservedCounts <- function(){
@@ -425,17 +432,21 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
 #' @param nPCR the number of PCR cycles, default is 16
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
+#' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 
-True2ObservedCounts <- function(true_counts,meta_cell,nbatch=1,protocol,alpha_mean=0.1,alpha_sd=0.02,
+True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,alpha_mean=0.1,alpha_sd=0.02,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR=16,depth_mean, depth_sd,randseed=0){  
+  if(!is.null(SE)){
+    meta_cell <- colData(SE)
+    true_counts <- assays(SE)$count
+  }
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
   rate_2cap_vec[which(rate_2cap_vec < 0.01)] <- 0.01
   depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
   depth_vec[which(depth_vec < 500)] <- 500
-  
   observed_counts <- matrix(0, ngenes, ncells)
   for (icell in 1:ncells){
     observed_counts[, icell] <- amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
@@ -444,7 +455,11 @@ True2ObservedCounts <- function(true_counts,meta_cell,nbatch=1,protocol,alpha_me
   }
   meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
   meta_cell <- cbind(meta_cell, meta_cell2)
-  return(list(observed_counts, meta_cell))
+  if(is.null(SE)){return(list(observed_counts, meta_cell))}else{
+    assays(SE)$observed_counts <- observed_counts
+    colData(SE)<-meta_cell
+    return(SE)
+  }
 }
 
 #' Simulate technical biases 
