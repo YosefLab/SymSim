@@ -349,6 +349,31 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 	return(list(evfs,meta))
 }
 
+#' Generating EVFs that is differential in one population and not in all other populations
+#' @param de_pop the population that has a differential DE
+#' @param de_evf_mean the mean of evf of the DE population (mean for all other populations are zero)
+#' @param cell_pop the population id for each cell from the discrete evf simulation
+#' @param nevf Number of EVFs per cell (taht are DE)
+#' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
+#' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
+DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
+  set.seed(seed)
+  if(length(de_evf_mean)!=nevf){
+    stop("the number of de mean DE evf has to the same as number of DE evfs")
+  }
+  npop <- length(unique(cell_pop))
+  evfs <- lapply(c(1:nevf),function(j){
+    pop_evf_mean<-rep(0,npop)
+    pop_evf_mean[de_pop] <-  de_evf_mean[j]
+    evf <- sapply(cell_pop,function(i){
+      rnorm(1,pop_evf_mean[i],Sigma)
+    })
+    return(evf)
+  })
+  evfs <- do.call(cbind,evfs)
+  return(list(evfs,meta=cell_pop))
+}
+
 
 
 #' Generate both evf and gene effect and simulate true transcript counts
@@ -370,7 +395,8 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
-                            bimod=0.3,randseed=0,SE=F){
+                            bimod=0.3,randseed,SE=F,
+                            sim_de=F,de_pop=2,de_evf_mean=c(0.2,0.3),de_nevf=2){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
   if(evf_type=='one.population'){
@@ -382,11 +408,17 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
     evf_res <- list(evfs=do.call(rbind, evfs), meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,Sigma,nevf,seed=seed[1])
+    if(sim_de==T){
+      evf_de <- DE_EVF(de_pop=de_pop,de_evf_mean=de_evf_mean,cell_pop=evf_res[[2]][,1],Sigma=Sigma,
+        nevf=de_nevf,seed=seed[2])
+      evf_res[[1]] <- cbind(evf_res[[1]],evf_de[[1]])
+      nevf <- nevf+de_nevf
+    }
   }else if(evf_type=='continuous'){
     evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
                              tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
   }
-  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
+  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
   params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
@@ -400,6 +432,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
   if(SE==T){
       se <- SummarizedExperiment(assays=list(counts = as.matrix(counts),
         logcounts = log2(as.matrix(counts) + 1)),colData=cell_meta)
+      rowData(se) <- gene_effects
       rowData(se)$gene_id <- paste('gene',seq(1,ngenes))
       return(se)
     }else{
