@@ -7,9 +7,9 @@
 DE_EVF(de_pop, de_evf_mean, cell_pop, Sigma, nevf, seed)
 }
 \arguments{
-\item{de_pop}{the population that has a differential DE}
+\item{de_pop}{the population that has a differential DE, it can be either a list (each element of the list is the populations that should be DE) of a vector}
 
-\item{de_evf_mean}{the mean of evf of the DE population (mean for all other populations are zero)}
+\item{de_evf_mean}{the mean of evf of the DE population (mean for all other populations are zero), it can be either a list or a vector. If it is a list the de_pop also have to be the same length list and each element in the de_pop have the same length as each element in the evf_mean list}
 
 \item{cell_pop}{the population id for each cell from the discrete evf simulation}
 

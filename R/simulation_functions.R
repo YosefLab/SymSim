@@ -350,8 +350,8 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 }
 
 #' Generating EVFs that is differential in one population and not in all other populations
-#' @param de_pop the population that has a differential DE
-#' @param de_evf_mean the mean of evf of the DE population (mean for all other populations are zero)
+#' @param de_pop the population that has a differential DE, it can be either a list (each element of the list is the populations that should be DE) of a vector
+#' @param de_evf_mean the mean of evf of the DE population (mean for all other populations are zero), it can be either a list or a vector. If it is a list the de_pop also have to be the same length list and each element in the de_pop have the same length as each element in the evf_mean list
 #' @param cell_pop the population id for each cell from the discrete evf simulation
 #' @param nevf Number of EVFs per cell (taht are DE)
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
@@ -364,7 +364,7 @@ DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
   npop <- length(unique(cell_pop))
   evfs <- lapply(c(1:nevf),function(j){
     pop_evf_mean<-rep(0,npop)
-    pop_evf_mean[de_pop[j]] <-  de_evf_mean[j]
+    pop_evf_mean[de_pop[[j]]] <-  de_evf_mean[[j]]
     evf <- sapply(cell_pop,function(i){
       rnorm(1,pop_evf_mean[i],Sigma)
     })
@@ -396,7 +396,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
                             bimod=0.3,randseed,SE=F,
-                            sim_de=F,de_pop=2,de_evf_mean=c(0.2,0.3),de_nevf=2){
+                            sim_de=F,de_pop=c(1,2),de_evf_mean=c(0.1,0.1),de_nevf=2){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
   if(evf_type=='one.population'){
