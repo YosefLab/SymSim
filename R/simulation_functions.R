@@ -358,13 +358,13 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
 DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
   set.seed(seed)
-  if(length(de_evf_mean)!=nevf){
-    stop("the number of de mean DE evf has to the same as number of DE evfs")
+  if(length(de_evf_mean)!=nevf|length(de_pop)!=nevf){
+    stop("the number of de mean DE evf, or the population the evf is active in has to the same as number of DE evfs")
   }
   npop <- length(unique(cell_pop))
   evfs <- lapply(c(1:nevf),function(j){
     pop_evf_mean<-rep(0,npop)
-    pop_evf_mean[de_pop] <-  de_evf_mean[j]
+    pop_evf_mean[de_pop[j]] <-  de_evf_mean[j]
     evf <- sapply(cell_pop,function(i){
       rnorm(1,pop_evf_mean[i],Sigma)
     })
