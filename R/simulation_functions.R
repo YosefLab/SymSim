@@ -448,7 +448,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
       return(x)
     })
   })
-  cell_meta <- cbind( cellid=paste('cell',seq(1,ncells),sep='_'),evf_res[[2]],evf_res[[1]])
+  cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
   if(SE==T){
       se <- SummarizedExperiment(assays=list(counts = as.matrix(counts),
