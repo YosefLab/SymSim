@@ -56,41 +56,58 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
 		return(do.call(rbind,effect))
 	})
 }
-
-#' Getting the parameters for simulating gene expression from EVf and gene effects
-#'
-#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
-#' by using first a logistic function and then adding/dividing by constant to their correct range
-#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
-#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
-#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
-#' @param param_realdata the fitted parameter distribution to sample from 
-#' @param bimod the bimodality constant
-#' @param scale_s transcription rate will be multiplied by this factor to increase cell size
-#' @return params a matrix of ngenes * 3
-#' @examples 
-#' Get_params()
-Get_params <- function(gene_effects,evf,match_params,bimod){
-  nparams <- length(match_params[,1])
-  params <- lapply(gene_effects,function(X){evf %*% t(X)})
-  scaled_params <- lapply(c(1:3),function(i){
-    X <- params[[i]]
-    temp <- apply(X,2,function(x){1/(1+exp(-x))})
-    temp2 <- ceiling(temp*nparams)
-    sorted <- sort(match_params[,i])
-    temp3 <- apply(temp2,2,function(x){sorted[x]})
-    return(temp3)
+#' sample from smoothed density function
+#' @param nsample number of samples needed
+#' @param den_fun density function estimated from density() from R default
+SampleDen <- function(nsample,den_fun){
+  probs <- den_fun$y/sum(den_fun$y)
+  bw <- den_fun$x[2]-den_fun$x[1]
+  bin_id <- sample(size=nsample,x=c(1:length(probs)),prob=probs,replace=T)
+  counts <- table(bin_id)
+  sampled_bins <- as.numeric(names(counts))
+  samples <- lapply(c(1:length(counts)),function(j){
+    runif(n=counts[j],min=(den_fun$x[sampled_bins[j]]-0.5*bw),max=(den_fun$x[sampled_bins[j]]+0.5*bw))
   })
-  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- log(base=10,x); x <- 10^(x - (x+0.5)*bimod)})
-  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- log(base=10,x); x <- 10^(x - (x+1)*bimod)})
-  scaled_params <- lapply(scaled_params,t)
-  return(scaled_params)
+  samples <- do.call(c,samples)
+  return(samples)
 }
 
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
 #' by using first a logistic function and then adding/dividing by constant to their correct range
+#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
+#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
+#' @param match_param_den the fitted parameter distribution density to sample from 
+#' @param bimod the bimodality constant
+#' @return params a matrix of ngenes * 3
+#' @examples 
+#' Get_params()
+Get_params <- function(gene_effects,evf,match_param_den,bimod){
+  nparams <- dim(gene_effects[[1]])[1]*dim(evf)[1]
+  params <- lapply(gene_effects,function(X){evf %*% t(X)})
+  scaled_params <- lapply(c(1:3),function(i){
+    X <- params[[i]]
+    # X=matrix(data=c(1:10),ncol=2) 
+    # this line is to check that the row and columns did not flip
+    temp <- alply(X, 1, function(Y){Y})
+    values <- do.call(c,temp)
+    ranks <- rank(values)
+    sorted <- sort(SampleDen(nsample=max(ranks),den_fun=match_param_den[[i]]))
+    temp3 <- matrix(data=sorted[ranks],ncol=length(X[1,]),byrow=T)
+    return(temp3)
+  })
+  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - (x+0.5)*bimod)})
+  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - (x+1)*bimod)})
+  scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x<-abs(x)})
+  scaled_params <- lapply(scaled_params,t)
+  return(scaled_params)
+}
+#' Getting the parameters for simulating gene expression from EVf and gene effects
+#'
+#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+#' by using first a logistic function and then adding/dividing by constant to their correct range
 #' @param evf a vector of length nevf, the cell specific extrinsic variation factor
 #' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
 #' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
@@ -100,6 +117,7 @@ Get_params <- function(gene_effects,evf,match_params,bimod){
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
+
 Get_params2 <- function(gene_effects,evf,bimod,ranges){
   params <- lapply(gene_effects,function(X){evf %*% t(X)})
   scaled_params <- lapply(c(1:3),function(i){
@@ -387,6 +405,7 @@ DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
 #' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param randseed random seed
 #' @param SE return summerized experiment rather than a list of elements, default is False
@@ -395,7 +414,8 @@ DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
 SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
-                            bimod=0.3,randseed,SE=F,
+                            match_params_den,bimod=0.3,
+                            randseed,SE=F,
                             sim_de=F,de_pop=c(1,2),de_evf_mean=c(0.1,0.1),de_nevf=2){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
@@ -419,7 +439,8 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                              tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
   }
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
-  params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
+  # params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
+  params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
       y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
