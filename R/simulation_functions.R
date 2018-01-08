@@ -157,6 +157,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   trans_idx <- trans_idx[inds[[1]]]
   
   captured_vec <- expanded_vec; captured_vec[runif(length(captured_vec)) > rate_2cap] <- 0
+  if (sum(captured_vec) < 1) {return(rep(0, ngenes))}
   captured_vec[length(captured_vec)] <- 1
   inds[[2]] <- which(captured_vec > 0); captured_vec <- captured_vec[inds[[2]]]
   trans_idx <- trans_idx[inds[[2]]]
