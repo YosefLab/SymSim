@@ -194,4 +194,6 @@ PlotGCLENbias <- function(filename,outputname){
     return(plots)
 }
 
+cv <- function(x) {return(sd(x)/mean(x))}
 
+fano <- function(x) {return((sd(x))^2/mean(x))}
