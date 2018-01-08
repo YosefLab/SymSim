@@ -70,7 +70,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     labs(colour = 'Percentage of Cells',x='log10(Count) bins',y='Genes') +
     scale_y_discrete(breaks=NULL) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) ##
-    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{return(p)}
+    if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{return(list(ord,p))}
 }
 #' Plotting the histograms of kon,koff,s values
 #'
