@@ -169,6 +169,8 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     eff <- runif(length(temp))*amp_rate
     v1 <- temp*(1-eff)
     round_down <- (v1-floor(v1)) < runif(length(v1))
+    if (any(is.na(round_down))) {stop(sprintf("there is NA values in round_down, capture rate=%4.2f, total true counts=%d", 
+                                              rate_2cap, sum(true_counts_1cell)))}
     v1[round_down] <- floor(v1[round_down]); v1[!round_down] <- ceiling(v1[!round_down])
     temp <- v1 + 2*(temp-v1)
   }
