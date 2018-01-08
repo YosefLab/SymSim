@@ -48,7 +48,7 @@ LogDist <- function(counts,log_count_bins){
 #' @param filename the name of the output plot
 #' @examples
 #' Sim_LogDist()
-PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename,saving=F){
+PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename,saving=F, data_name){
     mean_counts=mean_counts[log_real[,1]<zeropropthres]
     log_real=log_real[log_real[,1]<zeropropthres,]
     colnames(log_real)[1]='.0'
@@ -66,7 +66,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     plot_real$Gene <- factor( plot_real$X1, levels = genenames[ord])
     p <- ggplot(plot_real, aes(X2, Gene)) + geom_tile(aes(fill = freq)) +
     scale_fill_gradient(low = "white", high = "black",trans='identity')+
-    ggtitle('distribution of mRNA counts') +
+    ggtitle(sprintf('distribution of mRNA counts of %s', data_name)) +
     labs(colour = 'Percentage of Cells',x='log10(Count) bins',y='Genes') +
     scale_y_discrete(breaks=NULL) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) ##
