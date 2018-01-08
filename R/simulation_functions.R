@@ -507,7 +507,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
-  rate_2cap_vec[which(rate_2cap_vec < 0.01)] <- 0.01
+  rate_2cap_vec[which(rate_2cap_vec < 0.0001)] <- 0.0001
   depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
   depth_vec[which(depth_vec < 500)] <- 500
   observed_counts <- matrix(0, ngenes, ncells)
