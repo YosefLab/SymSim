@@ -128,6 +128,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
   })
   scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - (x+0.5)*bimod)})
   scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - (x+1)*bimod)})
+  # scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x <- 10^x})
   scaled_params <- lapply(scaled_params,t)
   return(scaled_params)
 }
@@ -411,12 +412,15 @@ DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
 #' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 
+
 SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
                             match_params_den,bimod=0.3,
                             randseed,SE=F,
-                            sim_de=F,de_pop=c(1,2),de_evf_mean=c(0.1,0.1),de_nevf=2){
+                            param_match=T,
+                            sim_de=F,de_pop=c(1,2),de_evf_mean=c(0.1,0.1),de_nevf=2,
+                            ranges=list(c(-2,4),c(-1,5),c(1,10000))){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
   if(evf_type=='one.population'){
@@ -436,11 +440,13 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
     }
   }else if(evf_type=='continuous'){
     evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
-                             tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
+                             tip=1,Sigma,plotting=T,plotname,seed=seed[1])    
   }
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
-  # params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
-  params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)
+  if(param_match==T){
+    params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)}else{
+        params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
+    }
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
       y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
@@ -460,6 +466,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
       return(list(counts,gene_effects,cell_meta,params))      
     }
 }
+
 
 # Batch_True2ObservedCounts <- function(){
 
