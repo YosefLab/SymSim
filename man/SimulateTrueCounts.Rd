@@ -6,8 +6,9 @@
 \usage{
 SimulateTrueCounts(ncells_total, min_popsize, ngenes, nevf = 10,
   evf_type = "one.population", Sigma = 0.3, phyla = NULL,
-  gene_effects_sd = 1, gene_effect_prob = 0.3, bimod = 0.3,
-  randseed = 0, SE = F)
+  gene_effects_sd = 1, gene_effect_prob = 0.3, match_params_den,
+  bimod = 0.3, randseed, SE = F, sim_de = F, de_pop = c(1, 2),
+  de_evf_mean = c(0.1, 0.1), de_nevf = 2)
 }
 \arguments{
 \item{ncells_total}{number of cells}
@@ -25,6 +26,8 @@ SimulateTrueCounts(ncells_total, min_popsize, ngenes, nevf = 10,
 \item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package}
 
 \item{gene_effect_prob}{the probability that the effect size is not 0}
+
+\item{match_params_den}{empirical density function of the kon,koff and s parameter estimated from real data}
 
 \item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
 

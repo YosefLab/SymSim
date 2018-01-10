@@ -4,7 +4,7 @@
 \alias{Get_params}
 \title{Getting the parameters for simulating gene expression from EVf and gene effects}
 \usage{
-Get_params(gene_effects, evf, match_params, bimod)
+Get_params(gene_effects, evf, match_param_den, bimod)
 }
 \arguments{
 \item{gene_effects}{a list of three matrices (generated using the GeneEffects function), 
@@ -12,11 +12,9 @@ each corresponding to one kinetic parameter. Each matrix has nevf columns, and n
 
 \item{evf}{a vector of length nevf, the cell specific extrinsic variation factor}
 
+\item{match_param_den}{the fitted parameter distribution density to sample from}
+
 \item{bimod}{the bimodality constant}
-
-\item{param_realdata}{the fitted parameter distribution to sample from}
-
-\item{scale_s}{transcription rate will be multiplied by this factor to increase cell size}
 }
 \value{
 params a matrix of ngenes * 3
