@@ -56,41 +56,58 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
 		return(do.call(rbind,effect))
 	})
 }
-
-#' Getting the parameters for simulating gene expression from EVf and gene effects
-#'
-#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
-#' by using first a logistic function and then adding/dividing by constant to their correct range
-#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
-#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
-#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
-#' @param param_realdata the fitted parameter distribution to sample from 
-#' @param bimod the bimodality constant
-#' @param scale_s transcription rate will be multiplied by this factor to increase cell size
-#' @return params a matrix of ngenes * 3
-#' @examples 
-#' Get_params()
-Get_params <- function(gene_effects,evf,match_params,bimod){
-  nparams <- length(match_params[,1])
-  params <- lapply(gene_effects,function(X){evf %*% t(X)})
-  scaled_params <- lapply(c(1:3),function(i){
-    X <- params[[i]]
-    temp <- apply(X,2,function(x){1/(1+exp(-x))})
-    temp2 <- ceiling(temp*nparams)
-    sorted <- sort(match_params[,i])
-    temp3 <- apply(temp2,2,function(x){sorted[x]})
-    return(temp3)
+#' sample from smoothed density function
+#' @param nsample number of samples needed
+#' @param den_fun density function estimated from density() from R default
+SampleDen <- function(nsample,den_fun){
+  probs <- den_fun$y/sum(den_fun$y)
+  bw <- den_fun$x[2]-den_fun$x[1]
+  bin_id <- sample(size=nsample,x=c(1:length(probs)),prob=probs,replace=T)
+  counts <- table(bin_id)
+  sampled_bins <- as.numeric(names(counts))
+  samples <- lapply(c(1:length(counts)),function(j){
+    runif(n=counts[j],min=(den_fun$x[sampled_bins[j]]-0.5*bw),max=(den_fun$x[sampled_bins[j]]+0.5*bw))
   })
-  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- log(base=10,x); x <- 10^(x - (x+0.5)*bimod)})
-  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- log(base=10,x); x <- 10^(x - (x+1)*bimod)})
-  scaled_params <- lapply(scaled_params,t)
-  return(scaled_params)
+  samples <- do.call(c,samples)
+  return(samples)
 }
 
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
 #' by using first a logistic function and then adding/dividing by constant to their correct range
+#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
+#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
+#' @param match_param_den the fitted parameter distribution density to sample from 
+#' @param bimod the bimodality constant
+#' @return params a matrix of ngenes * 3
+#' @examples 
+#' Get_params()
+Get_params <- function(gene_effects,evf,match_param_den,bimod){
+  nparams <- dim(gene_effects[[1]])[1]*dim(evf)[1]
+  params <- lapply(gene_effects,function(X){evf %*% t(X)})
+  scaled_params <- lapply(c(1:3),function(i){
+    X <- params[[i]]
+    # X=matrix(data=c(1:10),ncol=2) 
+    # this line is to check that the row and columns did not flip
+    temp <- alply(X, 1, function(Y){Y})
+    values <- do.call(c,temp)
+    ranks <- rank(values)
+    sorted <- sort(SampleDen(nsample=max(ranks),den_fun=match_param_den[[i]]))
+    temp3 <- matrix(data=sorted[ranks],ncol=length(X[1,]),byrow=T)
+    return(temp3)
+  })
+  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - (x+0.5)*bimod)})
+  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - (x+1)*bimod)})
+  scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x<-abs(x)})
+  scaled_params <- lapply(scaled_params,t)
+  return(scaled_params)
+}
+#' Getting the parameters for simulating gene expression from EVf and gene effects
+#'
+#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+#' by using first a logistic function and then adding/dividing by constant to their correct range
 #' @param evf a vector of length nevf, the cell specific extrinsic variation factor
 #' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
 #' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
@@ -100,6 +117,7 @@ Get_params <- function(gene_effects,evf,match_params,bimod){
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
+
 Get_params2 <- function(gene_effects,evf,bimod,ranges){
   params <- lapply(gene_effects,function(X){evf %*% t(X)})
   scaled_params <- lapply(c(1:3),function(i){
@@ -125,7 +143,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="ss2") or UMI counts (if protocol="10x)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
-                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
+                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ, depth_scale=1){
   ngenes <- length(gene_len)
   if (protocol=="ss2"){load("SymSim/len2nfrag.RData")} else 
     if(protocol=="10x"){load("SymSim/len2prob3pri.RData")} # where should we keep the vairables?
@@ -139,6 +157,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   trans_idx <- trans_idx[inds[[1]]]
   
   captured_vec <- expanded_vec; captured_vec[runif(length(captured_vec)) > rate_2cap] <- 0
+  if (sum(captured_vec) < 1) {return(rep(0, ngenes))}
   captured_vec[length(captured_vec)] <- 1
   inds[[2]] <- which(captured_vec > 0); captured_vec <- captured_vec[inds[[2]]]
   trans_idx <- trans_idx[inds[[2]]]
@@ -151,6 +170,8 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     eff <- runif(length(temp))*amp_rate
     v1 <- temp*(1-eff)
     round_down <- (v1-floor(v1)) < runif(length(v1))
+    if (any(is.na(round_down))) {stop(sprintf("there is NA values in round_down, capture rate=%4.2f, total true counts=%d", 
+                                              rate_2cap, sum(true_counts_1cell)))}
     v1[round_down] <- floor(v1[round_down]); v1[!round_down] <- ceiling(v1[!round_down])
     temp <- v1 + 2*(temp-v1)
   }
@@ -349,6 +370,31 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 	return(list(evfs,meta))
 }
 
+#' Generating EVFs that is differential in one population and not in all other populations
+#' @param de_pop the population that has a differential DE, it can be either a list (each element of the list is the populations that should be DE) of a vector
+#' @param de_evf_mean the mean of evf of the DE population (mean for all other populations are zero), it can be either a list or a vector. If it is a list the de_pop also have to be the same length list and each element in the de_pop have the same length as each element in the evf_mean list
+#' @param cell_pop the population id for each cell from the discrete evf simulation
+#' @param nevf Number of EVFs per cell (taht are DE)
+#' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
+#' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
+DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
+  set.seed(seed)
+  if(length(de_evf_mean)!=nevf|length(de_pop)!=nevf){
+    stop("the number of de mean DE evf, or the population the evf is active in has to the same as number of DE evfs")
+  }
+  npop <- length(unique(cell_pop))
+  evfs <- lapply(c(1:nevf),function(j){
+    pop_evf_mean<-rep(0,npop)
+    pop_evf_mean[de_pop[[j]]] <-  de_evf_mean[[j]]
+    evf <- sapply(cell_pop,function(i){
+      rnorm(1,pop_evf_mean[i],Sigma)
+    })
+    return(evf)
+  })
+  evfs <- do.call(cbind,evfs)
+  return(list(evfs,meta=cell_pop))
+}
+
 
 
 #' Generate both evf and gene effect and simulate true transcript counts
@@ -362,6 +408,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 #' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param randseed random seed
 #' @param SE return summerized experiment rather than a list of elements, default is False
@@ -370,7 +417,9 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
                             nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
                             gene_effects_sd=1,gene_effect_prob=0.3,
-                            bimod=0.3,randseed=0,SE=F){
+                            match_params_den,bimod=0.3,
+                            randseed,SE=F,
+                            sim_de=F,de_pop=c(1,2),de_evf_mean=c(0.1,0.1),de_nevf=2){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
   if(evf_type=='one.population'){
@@ -382,12 +431,19 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
     evf_res <- list(evfs=do.call(rbind, evfs), meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,Sigma,nevf,seed=seed[1])
+    if(sim_de==T){
+      evf_de <- DE_EVF(de_pop=de_pop,de_evf_mean=de_evf_mean,cell_pop=evf_res[[2]][,1],Sigma=Sigma,
+        nevf=de_nevf,seed=seed[2])
+      evf_res[[1]] <- cbind(evf_res[[1]],evf_de[[1]])
+      nevf <- nevf+de_nevf
+    }
   }else if(evf_type=='continuous'){
     evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
                              tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
   }
-  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
-  params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
+  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
+  # params <- Get_params2(gene_effects,evf_res[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
+  params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
       y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
@@ -395,11 +451,12 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
       return(x)
     })
   })
-  cell_meta <- cbind( cellid=paste('cell',seq(1,ncells),sep='_'),evf_res[[2]],evf_res[[1]])
+  cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
   if(SE==T){
       se <- SummarizedExperiment(assays=list(counts = as.matrix(counts),
         logcounts = log2(as.matrix(counts) + 1)),colData=cell_meta)
+      rowData(se) <- gene_effects
       rowData(se)$gene_id <- paste('gene',seq(1,ngenes))
       return(se)
     }else{
@@ -436,7 +493,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
 
 True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,alpha_mean=0.1,alpha_sd=0.02,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
-                                rate_2PCR=0.8,nPCR=16,depth_mean, depth_sd,randseed=0){  
+                                rate_2PCR=0.8,nPCR=16,depth_mean, depth_sd){  
   if(!is.null(SE)){
     meta_cell <- colData(SE)
     true_counts <- assays(SE)$count
@@ -444,9 +501,9 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
-  rate_2cap_vec[which(rate_2cap_vec < 0.01)] <- 0.01
+  rate_2cap_vec[which(rate_2cap_vec < 0.001)] <- 0.001
   depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
-  depth_vec[which(depth_vec < 500)] <- 500
+  depth_vec[which(depth_vec < 200)] <- 200
   observed_counts <- matrix(0, ngenes, ncells)
   for (icell in 1:ncells){
     observed_counts[, icell] <- amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
