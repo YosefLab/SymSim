@@ -143,7 +143,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="ss2") or UMI counts (if protocol="10x)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
-                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
+                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ, depth_scale=1){
   ngenes <- length(gene_len)
   if (protocol=="ss2"){load("SymSim/len2nfrag.RData")} else 
     if(protocol=="10x"){load("SymSim/len2prob3pri.RData")} # where should we keep the vairables?
@@ -501,9 +501,9 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
-  rate_2cap_vec[which(rate_2cap_vec < 0.01)] <- 0.01
+  rate_2cap_vec[which(rate_2cap_vec < 0.001)] <- 0.001
   depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
-  depth_vec[which(depth_vec < 500)] <- 500
+  depth_vec[which(depth_vec < 200)] <- 200
   observed_counts <- matrix(0, ngenes, ncells)
   for (icell in 1:ncells){
     observed_counts[, icell] <- amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
