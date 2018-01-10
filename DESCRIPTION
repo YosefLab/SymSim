@@ -24,7 +24,6 @@ Depends:
     Biobase,
     ape,
     MASS,
-    phytools,
     roxygen2,
     repr,
     SummarizedExperiment
