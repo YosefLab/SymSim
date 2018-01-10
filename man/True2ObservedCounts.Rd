@@ -7,7 +7,7 @@
 True2ObservedCounts(SE = NULL, true_counts, meta_cell, nbatch = 1, protocol,
   alpha_mean = 0.1, alpha_sd = 0.02, lenslope = 0.01, nbins = 20,
   gene_len, amp_bias_limit = c(-0.2, 0.2), rate_2PCR = 0.8, nPCR = 16,
-  depth_mean, depth_sd, randseed = 0)
+  depth_mean, depth_sd)
 }
 \arguments{
 \item{SE}{input, should be a summerized experiment rather than a list of elements, default is False}

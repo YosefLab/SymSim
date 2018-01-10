@@ -7,8 +7,9 @@
 SimulateTrueCounts(ncells_total, min_popsize, ngenes, nevf = 10,
   evf_type = "one.population", Sigma = 0.3, phyla = NULL,
   gene_effects_sd = 1, gene_effect_prob = 0.3, match_params_den,
-  bimod = 0.3, randseed, SE = F, sim_de = F, de_pop = c(1, 2),
-  de_evf_mean = c(0.1, 0.1), de_nevf = 2)
+  bimod = 0.3, randseed, SE = F, param_match = T, sim_de = F,
+  de_pop = c(1, 2), de_evf_mean = c(0.1, 0.1), de_nevf = 2,
+  ranges = list(c(-2, 4), c(-1, 5), c(1, 10000)))
 }
 \arguments{
 \item{ncells_total}{number of cells}
