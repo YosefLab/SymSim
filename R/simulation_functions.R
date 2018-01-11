@@ -56,19 +56,16 @@ SimulateTrueCounts <- function(ncells, ngenes, nevf,Sigma=0.1,phyla,bimod=0.5,
 			tip=1,Sigma,plotting=T,plotname,seed=seed[1])		
 	}
 	gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=gene_effects_mean,geffect_sd=gene_effects_sd)
-	ngenes <- length(gene_effects[[1]][,1])
-	params <- Get_params(gene_effects,evf[[1]],match_params,bimod)
-	counts <- lapply(c(1:ncells),function(i){
-		count <- sapply(c(1:ngenes),function(j){
+	params <- Get_params2(gene_effects,evf[[1]],bimod,list(c(-2,5),c(-2,5),c(0,3)))
+	counts <- lapply(c(1:ngenes),function(i){
+		count <- sapply(c(1:ncells),function(j){
 			y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
 			x <- rpois(1,y*params[[3]][i,j])
 			return(x)
 		})
 	})
-	counts <- do.call(cbind,counts)
-	meta_gene <- data.frame(kon_effect=gene_effects[[1]],koff_effect=gene_effects[[2]],s_effect=gene_effects[[3]])
-	meta_cell <- evf
-	return(list(counts,meta_gene,meta_cell))
+	counts <- do.call(rbind,counts)
+	return(list(counts,gene_effects,evf,params))
 }
 
 
@@ -122,9 +119,37 @@ Get_params <- function(gene_effects,evf,match_params,bimod){
 	})
 	scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- log(base=10,x); x <- 10^(x - (x+0.5)*bimod)})
 	scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- log(base=10,x); x <- 10^(x - (x+1)*bimod)})
+	scaled_params <- lapply(scaled_params,t)
 	return(scaled_params)
 }
 
+#' Getting the parameters for simulating gene expression from EVf and gene effects
+#'
+#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+#' by using first a logistic function and then adding/dividing by constant to their correct range
+#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
+#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
+#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param param_realdata the fitted parameter distribution to sample from 
+#' @param bimod the bimodality constant
+#' @param scale_s transcription rate will be multiplied by this factor to increase cell size
+#' @return params a matrix of ngenes * 3
+#' @examples 
+#' Get_params()
+Get_params2 <- function(gene_effects,evf,bimod,ranges){
+	nparams <- length(match_params[,1])
+	params <- lapply(gene_effects,function(X){evf %*% t(X)})
+	scaled_params <- lapply(c(1:3),function(i){
+		X <- params[[i]]
+		temp <- apply(X,2,function(x){1/(1+exp(-x))})
+		temp2 <- temp*(ranges[[i]][2]-ranges[[i]][1])+ranges[[i]][1]
+		return(temp2)
+	})
+	scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - (x+0.5)*bimod)})
+	scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - (x+1)*bimod)})
+	scaled_params <- lapply(scaled_params,t)
+	return(scaled_params)
+}
 
 #' Sample from true read counts to mimic capture/RT efficiency (only part of the transcripts are represented in the library)
 #'
@@ -144,7 +169,7 @@ TrueCounts2Dropped <- function(sim_exprs,alpha,alpha_sd){
 		sapply(X,function(Y){rbinom(n=1,size=Y,prob=alphas[i])})
 	})
 	dropped_exprs <- do.call(cbind,dropped_exprs)
-	return(dropped_exprs)
+	return(list(dropped_exprs,alphas))
 }
 
 #' Add Bias Terms and batch effects on the dropped count matrix

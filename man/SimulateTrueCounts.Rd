@@ -5,7 +5,8 @@
 \title{Simulate true counts by sampling from a beta-poisson distribution}
 \usage{
 SimulateTrueCounts(ncells, ngenes, nevf, Sigma = 0.1, phyla, bimod = 0.5,
-  gene_effects_sd = 1, gene_effect_prob = 0.3, evf_type, randseed = 0)
+  gene_effects_mean = 0, gene_effects_sd = 1, gene_effect_prob = 0.3,
+  evf_type, randseed = 0)
 }
 \arguments{
 \item{ncells}{number of cells}
