@@ -4,12 +4,14 @@
 \alias{DiscreteEVF}
 \title{Generating EVFs for cells sampled from tip populations from a tree}
 \usage{
-DiscreteEVF(phyla, ncells, Sigma, nevf, seed)
+DiscreteEVF(phyla, ncells_total, min_popsize, Sigma, nevf, seed)
 }
 \arguments{
 \item{phyla}{tree for cell developement}
 
-\item{ncells}{number of cells}
+\item{ncells_total}{number of cells from all populations}
+
+\item{min_popsize}{size of the rarest population}
 
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
