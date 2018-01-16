@@ -427,7 +427,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=3)
   if(evf_type=='one.population'){
-    evf_mean=rep(0,nevf); evf_sd=rep(Sigma,nevf)
+    evf_mean=rep(1,nevf); evf_sd=rep(Sigma,nevf)
     evfs <- lapply(c(1:ncells_total),function(celli){
       evf <- sapply(c(1:nevf),function(ievf){rnorm(1,evf_mean[ievf],evf_sd[ievf])})
       return(evf)
@@ -448,7 +448,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
   if(param_match==T){
     params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)}else{
-        params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
+    params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
     }
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
