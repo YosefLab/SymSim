@@ -144,7 +144,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="ss2") or UMI counts (if protocol="10x)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
-                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ, depth_scale=1){
+                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
   ngenes <- length(gene_len)
   if (protocol=="ss2"){load("SymSim/len2nfrag.RData")} else 
     if(protocol=="10x"){load("SymSim/len2prob3pri.RData")} # where should we keep the vairables?
@@ -346,22 +346,36 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname
 #' @param phyla tree for cell developement
 #' @param ncells_total number of cells from all populations
 #' @param min_popsize size of the rarest population
-#' @param nevf Number of EVFs per cell
+#' @param i_minpop to specify which population has the smallest size
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
+#' @param nevf Number of EVFs per cell
+#' @param evf_center the value used to generated evf means. Suggested value is 1
+#' @param percent_DEevf the percentage of differential EVFs out of all evfs (nevf)
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
-DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
+DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf, evf_center, percent_DEevf, seed){
   set.seed(seed)
 	npop <- length(phyla$tip.label) # number of populations
 	# set the number of cells in each population
 	# first give each population min_popsize cells
-	# then randomly distribute the rest of cells to all populations except the smallest (first) one
+	# then randomly distribute the rest of cells to all populations except the smallest one (given by i_minpop)
 	ncells_pop <- rep(min_popsize, npop)
 	if (ncells_total <= min_popsize*npop) {
 	  stop("The size of the smallest population is too big for the total number of cells")}
-	temp <- sample(2:npop, (ncells_total-min_popsize*npop), replace = T)
-	ncells_pop[2:npop] <- ncells_pop[2:npop] + table(temp)
-	cor_evf_mean<-vcv.phylo(phyla,cor=T)
-	pop_evf_mean<-mvrnorm(nevf,rep(0,npop),cor_evf_mean)	
+	larger_pops <- setdiff(1:npop, i_minpop)
+	temp <- sample(larger_pops, (ncells_total-min_popsize*npop), replace = T)
+	ncells_pop[larger_pops] <- ncells_pop[larger_pops] + table(temp)
+	
+	cor_evf_mean <- vcv.phylo(phyla,cor=T)
+	nevfDE <- ceiling(nevf*percent_DEevf)
+	if (nevfDE<5) {warning("The number of DE evfs is less than 5; in the case of a small number of DE evfs, the structure of generated data 
+	                       may not closely follow the input tree. One can either increase nevf or percent_DEevf to avoid this warning.")}
+	pop_evf_mean_DE <- mvrnorm(nevfDE,rep(evf_center,npop),cor_evf_mean)
+	if (nevf > nevfDE)
+	{nonDE_evf_centers <- rnorm(nevf-nevfDE, evf_center, 0.1)
+	pop_evf_mean_nonDE <- lapply(1:(nevf-nevfDE), function(i) return(rnorm(npop, mean = nonDE_evf_centers[i], sd=0.1)))
+	pop_evf_mean_nonDE <- do.call(rbind, pop_evf_mean_nonDE)          
+	pop_evf_mean <- rbind(pop_evf_mean_DE, pop_evf_mean_nonDE)} else if(nevf==nevfDE){pop_evf_mean <- pop_evf_mean_DE}
+	
 	evfs <- lapply(c(1:npop),function(ipop){
 		evf <- sapply(c(1:nevf),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean[ievf,ipop],Sigma)})
 		return(evf)
@@ -371,42 +385,18 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 	return(list(evfs,meta))
 }
 
-#' Generating EVFs that is differential in one population and not in all other populations
-#' @param de_pop the population that has a differential DE, it can be either a list (each element of the list is the populations that should be DE) of a vector
-#' @param de_evf_mean the mean of evf of the DE population (mean for all other populations are zero), it can be either a list or a vector. If it is a list the de_pop also have to be the same length list and each element in the de_pop have the same length as each element in the evf_mean list
-#' @param cell_pop the population id for each cell from the discrete evf simulation
-#' @param nevf Number of EVFs per cell (taht are DE)
-#' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
-#' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
-DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
-  set.seed(seed)
-  if(length(de_evf_mean)!=nevf|length(de_pop)!=nevf){
-    stop("the number of de mean DE evf, or the population the evf is active in has to the same as number of DE evfs")
-  }
-  npop <- length(unique(cell_pop))
-  evfs <- lapply(c(1:nevf),function(j){
-    pop_evf_mean<-rep(0,npop)
-    pop_evf_mean[de_pop[[j]]] <-  de_evf_mean[[j]]
-    evf <- sapply(cell_pop,function(i){
-      rnorm(1,pop_evf_mean[i],Sigma)
-    })
-    return(evf)
-  })
-  evfs <- do.call(cbind,evfs)
-  return(list(evfs,meta=cell_pop))
-}
-
-
 
 #' Generate both evf and gene effect and simulate true transcript counts
 #' @param ncells_total number of cells
 #' @param min_popsize the number of cells 
+#' @param i_minpop specifies which population has the smallest size
 #' @param ngenes number of genes
+#' @param evf_center the value which evf mean is generated from
 #' @param nevf number of evfs
 #' @param evf_type string that is one of the following: 'one.population','discrete','continuous'
+#' @param percent_DEevf percentage of differential evfs between populations
 #' @param Sigma parameter of the std of evf values within the same population
 #' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
-#' @param randomseed (should produce same result if ngenes, nevf and randseed are all the same)
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
@@ -414,38 +404,28 @@ DE_EVF <- function(de_pop, de_evf_mean,  cell_pop, Sigma,nevf,seed){
 #' @param randseed random seed
 #' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
-
-
-SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
-                            nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
-                            gene_effects_sd=1,gene_effect_prob=0.3,
-                            match_params_den,bimod=0.3,
-                            randseed,SE=F,
-                            param_match=T,
-                            sim_de=F,de_pop=c(1,2),de_evf_mean=c(0.1,0.1),de_nevf=2,
-                            ranges=list(c(-2,4),c(-1,5),c(1,10000))){
+SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
+                               evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
+                               Sigma=0.5,phyla=NULL,gene_effects_sd=1,gene_effect_prob=0.3,
+                               match_params_den,bimod=0.3,param_match=T,randseed,SE=F,
+                               ranges=list(c(-2,4),c(-1,5),c(1,10000))){
   set.seed(randseed)
-  seed <- sample(c(1:1e5),size=3)
+  seed <- sample(c(1:1e5),size=2)
   if(evf_type=='one.population'){
-    evf_mean=rep(1,nevf); evf_sd=rep(Sigma,nevf)
+    evf_mean=rep(evf_center,nevf); evf_sd=rep(Sigma,nevf)
     evfs <- lapply(c(1:ncells_total),function(celli){
       evf <- sapply(c(1:nevf),function(ievf){rnorm(1,evf_mean[ievf],evf_sd[ievf])})
       return(evf)
     })
     evf_res <- list(evfs=do.call(rbind, evfs), meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
-    evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,Sigma,nevf,seed=seed[1])
-    if(sim_de==T){
-      evf_de <- DE_EVF(de_pop=de_pop,de_evf_mean=de_evf_mean,cell_pop=evf_res[[2]][,1],Sigma=Sigma,
-        nevf=de_nevf,seed=seed[2])
-      evf_res[[1]] <- cbind(evf_res[[1]],evf_de[[1]])
-      nevf <- nevf+de_nevf
-    }
+    evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
+                           nevf,evf_center=evf_center,percent_DEevf=percent_DEevf,seed=seed[1])
   }else if(evf_type=='continuous'){
     evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
                              tip=1,Sigma,plotting=T,plotname,seed=seed[1])    
   }
-  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
+  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
   if(param_match==T){
     params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)}else{
     params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
