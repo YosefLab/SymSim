@@ -407,8 +407,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
                                Sigma=0.5,phyla=NULL,gene_effects_sd=1,gene_effect_prob=0.3,
-                               match_params_den,bimod=0.3,param_match=T,randseed,SE=F,
-                               ranges=list(c(-2,4),c(-1,5),c(1,10000))){
+                               match_params_den,bimod=0.3,param_match=T,randseed,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=2)
   if(evf_type=='one.population'){
