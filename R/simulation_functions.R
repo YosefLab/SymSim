@@ -381,6 +381,12 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 		return(evf)
 	})
 	evfs <- do.call(rbind,evfs)
+	
+	#pcares <- prcomp(evfs, scale.=T)
+	#plotPCAbasic(PCAres = pcares, col_vec = do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})), 
+	#             figuretitle = "evfs")
+	#legend("bottomright", legend = 1:5, col = 1:5, pch = 20)
+	
 	meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
 	return(list(evfs,meta))
 }

@@ -274,3 +274,13 @@ plotFNRreal <- function(expr_matrix, hk, data_name, col_vec){
     lines(x, 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1), type = 'l', lwd = 2, col=col_vec[si])
   }
 }
+
+
+plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
+  variance_perc <- 100*(PCAres$sdev)^2/sum((PCAres$sdev)^2)
+  plot(PCAres$x[,1], PCAres$x[,2], col=col_vec, pch=20,
+       xlab=sprintf("PC1 %4.2f%%", variance_perc[1]), 
+       ylab=sprintf("PC2 %4.2f%%", variance_perc[2]),
+       main=figuretitle)
+}
+
