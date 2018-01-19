@@ -158,7 +158,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   trans_idx <- trans_idx[inds[[1]]]
   
   captured_vec <- expanded_vec; captured_vec[runif(length(captured_vec)) > rate_2cap] <- 0
-  if (sum(captured_vec) < 1) {return(rep(0, ngenes))}
+  if (sum(captured_vec[1:(length(captured_vec)-1)]) < 1) {return(rep(0, ngenes))}
   captured_vec[length(captured_vec)] <- 1
   inds[[2]] <- which(captured_vec > 0); captured_vec <- captured_vec[inds[[2]]]
   trans_idx <- trans_idx[inds[[2]]]
@@ -487,7 +487,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
- rate_2cap_vec[which(rate_2cap_vec < 0.0001)] <- 0.0001
+ rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
  depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
   depth_vec[which(depth_vec < 200)] <- 200
   observed_counts <- matrix(0, ngenes, ncells)
