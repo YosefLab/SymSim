@@ -4,7 +4,8 @@
 \alias{PlotTsne}
 \title{Perform tSNE}
 \usage{
-PlotTsne(meta, data, plotname, label, evf_type = "discrete", saving = F)
+PlotTsne(meta, data, plotname, label, evf_type = "discrete", saving = F,
+  perplexity = 10)
 }
 \arguments{
 \item{meta:}{simulation parameters}
