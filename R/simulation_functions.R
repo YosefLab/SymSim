@@ -381,6 +381,12 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 		return(evf)
 	})
 	evfs <- do.call(rbind,evfs)
+	
+	#pcares <- prcomp(evfs, scale.=T)
+	#plotPCAbasic(PCAres = pcares, col_vec = do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})), 
+	#             figuretitle = "evfs")
+	#legend("bottomright", legend = 1:5, col = 1:5, pch = 20)
+	
 	meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
 	return(list(evfs,meta))
 }
@@ -407,7 +413,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
                                Sigma=0.5,phyla=NULL,gene_effects_sd=1,gene_effect_prob=0.3,
-                               match_params_den,bimod=0.3,param_match=T,randseed,SE=F){
+                               bimod=0.3,param_realdata="zeisel.imputed",randseed,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=2)
   if(evf_type=='one.population'){
@@ -425,9 +431,18 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                              tip=1,Sigma,plotting=T,plotname,seed=seed[1])    
   }
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
-  if(param_match==T){
+  if(!is.null(param_realdata)){
+    if(param_realdata=="zeisel.imputed"){
+      load('SymSim/match_params.zeisel_imputed.robj')
+      match_params[,1]=log(base=10,match_params[,1])
+      match_params[,2]=log(base=10,match_params[,2])
+      match_params[,3]=log(base=10,match_params[,3])
+      match_params_den <- lapply(c(1:3),function(i){
+        density(match_params[,i],n=2000)
+      })
+    }
     params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)}else{
-    params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
+      params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
     }
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
@@ -464,7 +479,6 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param ncells_total number of cells
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
 #' @param nbatches number of batches (so far only 1)
-#' @param true_counts_1cell the true transcript counts for one cell (one vector)
 #' @param protocol a string, can be "ss2" or "10x"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
