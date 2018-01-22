@@ -226,7 +226,6 @@ plotFNRsim <- function(current_counts, true_counts, x_use="true", titlestr){
       {data <- data.frame(exprs=log(real+1,10), fn=fn)}
     data <- data[real!=0,]
     model <- glm(fn~exprs,family=binomial(link='logit'),data=data)
-    print(i)
     return(model$coefficients)
   })
   

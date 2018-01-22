@@ -37,8 +37,6 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, nbatch = 1, protocol,
 \item{ncells_total}{number of cells}
 
 \item{nbatches}{number of batches (so far only 1)}
-
-\item{true_counts_1cell}{the true transcript counts for one cell (one vector)}
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts
