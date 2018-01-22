@@ -7,7 +7,7 @@
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
   evf_center = 1, nevf = 10, evf_type = "one.population",
   percent_DEevf = 0.5, Sigma = 0.5, phyla = NULL, gene_effects_sd = 1,
-  gene_effect_prob = 0.3, match_params_den, bimod = 0.3, param_match = T,
+  gene_effect_prob = 0.3, bimod = 0.3, param_realdata = "zeisel.imputed",
   randseed, SE = F)
 }
 \arguments{
@@ -33,8 +33,6 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 
 \item{gene_effect_prob}{the probability that the effect size is not 0}
 
-\item{match_params_den}{empirical density function of the kon,koff and s parameter estimated from real data}
-
 \item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
 
 \item{randseed}{random seed}
@@ -42,6 +40,8 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 \item{SE}{return summerized experiment rather than a list of elements, default is False}
 
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
+
+\item{match_params_den}{empirical density function of the kon,koff and s parameter estimated from real data}
 }
 \value{
 a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
