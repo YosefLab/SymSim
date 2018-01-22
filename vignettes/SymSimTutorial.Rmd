@@ -109,11 +109,18 @@ plot(phyla)
 The true counts of the five populations can be simulated:
 ```{r,cache=T}
 true_counts_res <- SimulateTrueCounts(ncells_total=400, min_popsize=40, i_minpop=1, ngenes=ngenes, 
-                                      evf_center=1, nevf=10, evf_type="discrete", percent_DEevf=0.6, Sigma=0.1, 
+                                      evf_center=1, nevf=10, evf_type="discrete", percent_DEevf=0.5, Sigma=0.2, 
                                       phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0.3,
                                       randseed=0, param_realdata = "zeisel.imputed", SE=F)
-tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=true_counts_res[[1]], label='pop', saving = F)
-tsne_true_counts[[2]]
+
+pcaRes <-  prcomp(true_counts_res[[3]][, 3:12], scale. = T)
+plotPCAbasic(pcaRes, col_vec = true_counts_res[[3]][,2], figuretitle = "evfs")
+legend("bottomright", legend = 1:5, col = 1:5, pch=20)
+
+pca_counts <- prcomp(t(true_counts_res[[1]]), scale. = T)
+tsne_after_pca <- PlotTsne(meta = true_counts_res[[3]], data= t(pca_counts$x[, 1:10]), label = "pop", saving = F)
+tsne_after_pca[[2]]
+
 ```
 
 # Simulate observed counts
@@ -125,7 +132,8 @@ gene_len <- sample(gene_len_pool[which(gene_len_pool>100)], ngenes, replace = FA
 observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="ss2", 
                                        alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, 
                                        amp_bias_limit=c(-0.2, 0.2), rate_2PCR=0.8, nPCR=16, depth_mean=3e5, depth_sd=3e3)
-tsne_ss2 <- PlotTsne(meta=observed_counts[[2]], data=observed_counts[[1]], label='pop', saving = F)
-tsne_ss2[[2]]
+pca_observed_counts <- prcomp(t(observed_counts[[1]][which(rowSums(observed_counts[[1]])>0),]), scale. = T)
+tsne_after_pca_ss2 <- PlotTsne(meta=observed_counts[[2]], data= t(pca_observed_counts$x[, 1:10]), label = "pop", saving = F)
+tsne_after_pca_ss2[[2]]
 ```
 
