@@ -31,6 +31,9 @@ if(protocol=='10x'){
 
 true_counts <- true_counts_res[[1]]
 obs_counts <- observed_counts[[1]]
+zero_rows <- rowSums(obs_counts)==0
+zero_cols <- colSums(obs_counts)==0
+
 
 #####################################################################
 ####### Plotting heatmap
@@ -65,8 +68,12 @@ ggplot2.multiplot(p1[[2]], p2[[2]],p4[[2]], cols=2)
 ####### Plotting FNR curves
 #####################################################################
 par(mfrow=c(3,3))
-plotFNRsim(current_counts =obs_counts , true_counts = true_counts, x_use = "true", titlestr = paste(plotname,'x true counts'))
-plotFNRsim(current_counts = obs_counts, true_counts = true_counts, x_use = "observed", titlestr = paste(plotname,'x observed counts'))
+plotFNRsim(current_counts =obs_counts[!zero_rows,!zero_cols],
+ true_counts = true_counts[!zero_rows,!zero_cols],
+ x_use = "true", titlestr = paste(plotname,'x true counts'))
+plotFNRsim(current_counts = obs_counts[!zero_rows,!zero_cols],
+ true_counts = true_counts[!zero_rows,!zero_cols],
+  x_use = "observed", titlestr = paste(plotname,'x observed counts'))
 
 if(protocol=='10x'){
 	exp_counts <- Cortex_counts
