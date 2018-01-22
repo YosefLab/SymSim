@@ -436,7 +436,6 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
       load('SymSim/match_params.zeisel_imputed.robj')
       match_params[,1]=log(base=10,match_params[,1])
       match_params[,2]=log(base=10,match_params[,2])
-      match_params[,3]=log(base=10,match_params[,3])
       match_params_den <- lapply(c(1:3),function(i){
         density(match_params[,i],n=2000)
       })
