@@ -429,7 +429,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
                            nevf,evf_center=evf_center,percent_DEevf=percent_DEevf,seed=seed[1])
   }else if(evf_type=='continuous'){
-    evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
+    evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=ceiling(nevf/2),nevf2=nevf-ceiling(nevf/2),
                              tip=1,Sigma,plotting=T,plotname,seed=seed[1])    
   }
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
