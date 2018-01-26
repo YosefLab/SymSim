@@ -319,3 +319,104 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
+
+ks.dist<- function (spec1, spec2, f = NULL, mel = FALSE, plot = FALSE, 
+    type = "l", lty = c(1, 2), col = c(2, 4), flab = NULL, alab = "Cumulated amplitude", 
+    flim = NULL, alim = NULL, title = TRUE, legend = TRUE) 
+{
+    leg <- c(as.character(deparse(substitute(spec1))), as.character(deparse(substitute(spec2))))
+    if (is.matrix(spec1) && ncol(spec1) == 2) 
+        s1 <- spec1[, 2]
+    else s1 <- spec1
+    if (is.matrix(spec2) && ncol(spec2) == 2) 
+        s2 <- spec2[, 2]
+    else s2 <- spec2
+    n1 <- length(s1)
+    n2 <- length(s2)
+    if (n1 != n2) 
+        stop("spec1 and spec2 must have the same length")
+    if (any(is.na(s1)) | any(is.na(s2))) {
+        D <- F <- NA
+        warning("The data set contains 'NA' values. The returned values have been set to NA.", 
+            call. = FALSE)
+        res <- list(D = D, F = F)
+        return(res)
+    }
+    else {
+        if (any(s1 < 0) | any(s2 < 0)) 
+            stop("spectra (spec 1 and/or spec 2) do not have to be in dB")
+        if (sum(s1) == 0) {
+            warning(paste("Caution!, spec1 is a null spectrum"), 
+                call. = FALSE)
+        }
+        if (sum(s2) == 0) {
+            warning(paste("Caution!, spec2 is a null spectrum"), 
+                call. = FALSE)
+        }
+        s1 <- s1/sum(s1)
+        s2 <- s2/sum(s2)
+        cum.s1 <- cumsum(s1)
+        cum.s2 <- cumsum(s2)
+        diff <- abs(cum.s1 - cum.s2)
+        D <- max(diff)
+        if (!is.null(f) & mel) {
+            f <- 2 * mel(f/2)
+        }
+        if (is.null(f)) {
+            if (is.vector(spec1) & is.vector(spec2)) {
+                if (plot) 
+                  warning("'f' is missing, F cannot be computed - No plot produced", 
+                    call. = FALSE)
+                else warning("'f' is missing, F cannot be computed", 
+                  call. = FALSE)
+                res <- list(D = D, F = NA)
+                return(res)
+            }
+            else {
+                if (is.matrix(spec1)) 
+                  f <- spec1[nrow(spec1), 1] * 2000 * nrow(spec1)/(nrow(spec1) - 
+                    1)
+                else if (is.matrix(spec2)) 
+                  f <- spec2[nrow(spec2), 1] * 2000 * nrow(spec2)/(nrow(spec2) - 
+                    1)
+            }
+        }
+        x <- seq(0, f/2 * (n1 - 1)/n1, length.out = n1)/1000
+        pos <- which.max(diff)
+        F <- x[pos]
+        res <- list(D = D, F = F)
+        if (plot) {
+            if (mel) {
+                w <- " kmel"
+            }
+            else {
+                w <- " kHz"
+            }
+            if (is.null(alim)) 
+                alim <- c(0, 1)
+            if (is.null(flim)) 
+                flim <- c(0, f/2000)
+            if (is.null(flab)) {
+                if (mel) 
+                  flab <- "Frequency (kmel)"
+                else flab <- "Frequency (kHz)"
+            }
+            x <- seq(0, (f/2) * (n1 - 1)/n1, length.out = n1)/1000
+            plot(x = x, y = cum.s1, col = col[1], lty = lty[1], 
+                type = type, xaxs = "i", xlab = flab, xlim = flim, 
+                yaxs = "i", ylim = alim, ylab = alab, ...)
+            lines(x = x, y = cum.s2, col = col[2], lty = lty[2], 
+                type = type)
+            segments(x0 = F, y0 = cum.s1[pos], x1 = F, y1 = cum.s2[pos], 
+                lwd = 2)
+            if (title) 
+                title(main = paste("D = ", round(D, 3), "\\n F = ", 
+                  round(F, 3), w))
+            if (legend) 
+                legend("topleft", col = col, lty = lty, legend = leg, 
+                  bty = "n")
+            invisible(res)
+        }
+        else return(res)
+    }
+}
