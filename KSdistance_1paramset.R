@@ -21,7 +21,9 @@ ks_distances <- lapply(filenames,function(filename){
 	protocol <- sim_params$protocol[k]
 
 	if(protocol=='10x'){
-		load('ExperimentalData/expression_mRNA_17-Aug-2014.robj')
+		counts <- read.csv('data/zeisel/data_train',sep=' ',as.is=T);counts <- t(counts)
+		label <- read.csv('data/zeisel/label_train',sep=' ',as.is=T);label <- label[,1]
+		counts <- counts[,label==5]
 		Cortex_counts <- counts
 	}else if(protocol=='ss2'){
 		load('ExperimentalData/realdata_exprs_heatmap.robj')
@@ -36,6 +38,7 @@ ks_distances <- lapply(filenames,function(filename){
 
 	if(protocol=='10x'){
 		exp_counts <- Cortex_counts
+
 		expname <- '10x Cortex data'
 	}else if(protocol=='ss2'){
 		exp_counts <- expr_matrix_ss2_4heatmap
@@ -52,6 +55,13 @@ ks_distances <- lapply(filenames,function(filename){
 	fano2 <- fano2[!is.na(fano2)]
 	minlen <- min(length(fano1),length(fano2))-1
 	fano_dist <- ks.dist(spec1=fano1[c(1:minlen)],spec2=fano2[c(1:minlen)])$D
-	return(c(mean_dist,nonzero_dist,fano_dist))
+	return(c(k,mean_dist,nonzero_dist,fano_dist))
 })
-save(ks_distances,filename=paste(outputname,'.ks_dist.robj',sep=''))
+ks_distances <- do.call(rbind,ks_distances)
+# k_temp <- sapply(filenames,function(filename){
+# 	k <- strsplit(filename,'_')[[1]][2]
+# 	k <- strsplit(k,'.',fixed=T)[[1]][1]
+# 	as.numeric(k)
+# })
+# ks_distances <- cbind(k_temp,ks_distances)
+save(sim_params,ks_distances,file=paste(outputname,'.ks_dist.robj',sep=''))
