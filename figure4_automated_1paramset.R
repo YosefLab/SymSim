@@ -22,8 +22,8 @@ sim_params[k,]
 protocol <- sim_params$protocol[k]
 
 if(protocol=='10x'){
-	counts <- read.csv('data/zeisel/data_train',sep=' ',as.is=T);counts <- t(counts)
-	label <- read.csv('data/zeisel/label_train',sep=' ',as.is=T);label <- label[,1]
+	counts <- read.csv('ExperimentalData/data_train',sep=' ',as.is=T);counts <- t(counts)
+	label <- read.csv('ExperimentalData/label_train',sep=' ',as.is=T);label <- label[,1]
 	counts <- counts[,label==5]
 	Cortex_counts <- counts
 	Cortex_counts <- counts
