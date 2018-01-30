@@ -299,6 +299,28 @@ Phyla5 <- function(plotting=F){
 	return(phyla)
 }
 
+Phyla3 <- function(plotting=F){
+  # par(mfrow=c(2,2))
+  phyla<-rtree(2)
+  phyla <- compute.brlen(phyla,1)
+  tip<-rtree(2)
+  tip <- compute.brlen(phyla,1)
+  phyla<-bind.tree(phyla,tip,1)
+  phyla <- compute.brlen(phyla,c(1,1,1,2))
+  edges <- cbind(phyla$edge,phyla$edge.length)
+  edges <- cbind(c(1:length(edges[,1])),edges)
+  connections <- table(c(edges[,2],edges[,3]))
+  root <- as.numeric(names(connections)[connections==2])
+  tips <- as.numeric(names(connections)[connections==1])
+  phyla$tip.label <- as.character(tips)
+  
+  if(plotting==T){
+    plot(phyla,show.tip.label = F,lwd=2)
+    tiplabels(cex=2)
+    nodelabels(cex=2)
+  }
+  return(phyla)
+}
 
 #' Generating EVFs for cells sampled along the trajectory of cell development
 #' @param phyla tree for cell developement
