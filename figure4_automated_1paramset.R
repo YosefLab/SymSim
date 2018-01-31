@@ -22,11 +22,9 @@ sim_params[k,]
 protocol <- sim_params$protocol[k]
 
 if(protocol=='10x'){
-	counts <- read.csv('ExperimentalData/data_train',sep=' ',as.is=T);counts <- t(counts)
-	label <- read.csv('ExperimentalData/label_train',sep=' ',as.is=T);label <- label[,1]
-	counts <- counts[,label==5]
-	Cortex_counts <- counts
-	Cortex_counts <- counts
+		load('expression_mRNA_17-Aug-2014.robj')
+		counts <- counts[,as.numeric(meta[1,])==3 & !is.na(as.numeric(meta[1,])==3)]
+		Cortex_counts <- counts
 }else if(protocol=='ss2'){
 	load('ExperimentalData/130cells.raw.counts.robj')
 	Tcells_counts <- counts
@@ -125,7 +123,7 @@ abline(c(0,0),c(1,1),col='red')
 #####################################################################
 
 hist(colSums(obs_counts),col='coral')
-hist(colSums(exp_counts)/length(exp_counts[,1])*1000,col='coral4')
+hist(colSums(exp_counts)/length(exp_counts[,1])*10000,col='coral4')
 
 dev.off()
 })
