@@ -13,6 +13,8 @@ allcol <- colfunc(ncols)
 #####################################################################
 dir <- args[1]
 outputname <- args[2]
+param_file <- args[3]
+load(param_file)
 filenames <- list.files(dir)
 ks_distances <- lapply(filenames,function(filename){
 	load(paste(dir,filename,sep=''))
@@ -21,9 +23,8 @@ ks_distances <- lapply(filenames,function(filename){
 	protocol <- sim_params$protocol[k]
 
 	if(protocol=='10x'){
-		counts <- read.csv('ExperimentalData/data_train',sep=' ',as.is=T);counts <- t(counts)
-		label <- read.csv('ExperimentalData/label_train',sep=' ',as.is=T);label <- label[,1]
-		counts <- counts[,label==5]
+		load('expression_mRNA_17-Aug-2014.robj')
+		counts <- counts[,as.numeric(meta[1,])==3 & !is.na(as.numeric(meta[1,])==3)]
 		Cortex_counts <- counts
 	}else if(protocol=='ss2'){
 		load('ExperimentalData/realdata_exprs_heatmap.robj')
