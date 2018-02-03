@@ -332,7 +332,7 @@ Phyla3 <- function(plotting=F){
 #' @param plotting Whether to plot the trajectory or not
 #' @param plotname The 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
-ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname,seed){
+ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname='cont_evf.pdf',seed){
 	set.seed(seed)
 	edges <- cbind(phyla$edge,phyla$edge.length)
 	edges <- cbind(c(1:length(edges[,1])),edges)
@@ -362,7 +362,7 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname
   	evfs <- cbind(neutral[,4],neutral2,evfs_wimpuls)
   	colnames(evfs)<-c(rep('neutral',nevf1),rep('impulse',nevf2))
   	meta <- data.frame(pop=apply(neutral[,c(1:2)],1,function(X){paste0(X,collapse='_')}),depth=neutral[,3])
-  	return(list(evfs[c(1:ncells),],meta[c(1:ncells),]))
+    return(list(evfs[c(1:ncells),],meta[c(1:ncells),]))
 }
 
 #' Generating EVFs for cells sampled from tip populations from a tree
@@ -451,8 +451,9 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
                            nevf,evf_center=evf_center,percent_DEevf=percent_DEevf,seed=seed[1])
   }else if(evf_type=='continuous'){
-    evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=ceiling(nevf/2),nevf2=nevf-ceiling(nevf/2),
-                             tip=1,Sigma,plotting=T,plotname,seed=seed[1])    
+    n_de <- round(nevf*percent_DEevf)
+    evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf-n_de,nevf2=n_de,
+                             tip=1,Sigma,plotting=T,seed=seed[1])    
   }
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
   if(!is.null(param_realdata)){
