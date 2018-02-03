@@ -85,8 +85,8 @@ SampleDen <- function(nsample,den_fun){
 #' @examples 
 #' Get_params()
 Get_params <- function(gene_effects,evf,match_param_den,bimod){
-  nparams <- dim(gene_effects[[1]])[1]*dim(evf)[1]
-  params <- lapply(gene_effects,function(X){evf %*% t(X)})
+  # nparams <- dim(gene_effects[[1]])[1]*dim(evf[[1]])[1]
+  params <- lapply(1:3, function(iparam){evf[[iparam]] %*% t(gene_effects[[iparam]])})
   scaled_params <- lapply(c(1:3),function(i){
     X <- params[[i]]
     # X=matrix(data=c(1:10),ncol=2) 
@@ -98,8 +98,8 @@ Get_params <- function(gene_effects,evf,match_param_den,bimod){
     temp3 <- matrix(data=sorted[ranks],ncol=length(X[1,]),byrow=T)
     return(temp3)
   })
-  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - bimod)})
-  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - bimod)})
+  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - (x+0.5)*bimod)})
+  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - (x+1)*bimod)})
   scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x<-abs(x)})
   scaled_params <- lapply(scaled_params,t)
   return(scaled_params)
@@ -377,42 +377,47 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
 DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf, evf_center, percent_DEevf, seed){
   set.seed(seed)
-	npop <- length(phyla$tip.label) # number of populations
-	# set the number of cells in each population
-	# first give each population min_popsize cells
-	# then randomly distribute the rest of cells to all populations except the smallest one (given by i_minpop)
-	ncells_pop <- rep(min_popsize, npop)
-	if (ncells_total <= min_popsize*npop) {
-	  stop("The size of the smallest population is too big for the total number of cells")}
-	larger_pops <- setdiff(1:npop, i_minpop)
-	temp <- sample(larger_pops, (ncells_total-min_popsize*npop), replace = T)
-	ncells_pop[larger_pops] <- ncells_pop[larger_pops] + table(temp)
-	
-	vcv_evf_mean <- vcv.phylo(phyla,cor=F)
-  vcv_evf_mean <- vcv_evf_mean / mean(vcv_evf_mean)
-	nevfDE <- ceiling(nevf*percent_DEevf)
-	if (nevfDE<5) {warning("The number of DE evfs is less than 5; in the case of a small number of DE evfs, the structure of generated data 
+  npop <- length(phyla$tip.label) # number of populations
+  # set the number of cells in each population
+  # first give each population min_popsize cells
+  # then randomly distribute the rest of cells to all populations except the smallest one (given by i_minpop)
+  ncells_pop <- rep(min_popsize, npop)
+  if (ncells_total <= min_popsize*npop) {
+    stop("The size of the smallest population is too big for the total number of cells")}
+  larger_pops <- setdiff(1:npop, i_minpop)
+  temp <- sample(larger_pops, (ncells_total-min_popsize*npop), replace = T)
+  ncells_pop[larger_pops] <- ncells_pop[larger_pops] + table(temp)
+  
+  cor_evf_mean <- vcv.phylo(phyla,cor=T)
+  nevfDE <- ceiling(nevf*3*percent_DEevf)
+  nevfDE_per_param <- c(floor(nevfDE/3), floor(nevfDE/3), nevfDE-floor(nevfDE/3)*2)
+  #param_names <- c("kon", "koff", "s")
+  names(nevfDE_per_param) <- paste("nDEevf", param_names, sep="_")
+  if (nevfDE<5) {warning("The number of DE evfs is less than 5; in the case of a small number of DE evfs, the structure of generated data 
 	                       may not closely follow the input tree. One can either increase nevf or percent_DEevf to avoid this warning.")}
-	pop_evf_mean_DE <- mvrnorm(nevfDE,rep(evf_center,npop),vcv_evf_mean)
-	if (nevf > nevfDE)
-	{nonDE_evf_centers <- rnorm(nevf-nevfDE, evf_center, 0.1)
-	pop_evf_mean_nonDE <- lapply(1:(nevf-nevfDE), function(i) return(rnorm(npop, mean = nonDE_evf_centers[i], sd=0.1)))
-	pop_evf_mean_nonDE <- do.call(rbind, pop_evf_mean_nonDE)          
-	pop_evf_mean <- rbind(pop_evf_mean_DE, pop_evf_mean_nonDE)} else if(nevf==nevfDE){pop_evf_mean <- pop_evf_mean_DE}
-	
-	evfs <- lapply(c(1:npop),function(ipop){
-		evf <- sapply(c(1:nevf),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean[ievf,ipop],Sigma)})
-		return(evf)
-	})
-	evfs <- do.call(rbind,evfs)
-	
-	#pcares <- prcomp(evfs, scale.=T)
-	#plotPCAbasic(PCAres = pcares, col_vec = do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})), 
-	#             figuretitle = "evfs")
-	#legend("bottomright", legend = 1:5, col = 1:5, pch = 20)
-	
-	meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
-	return(list(evfs,meta))
+  
+  evfs <- lapply(1:3, function(iparam){
+    pop_evf_mean_DE <- mvrnorm(nevfDE_per_param[iparam],rep(evf_center,npop),cor_evf_mean)
+    if (nevf > nevfDE_per_param[iparam]){
+      nonDE_evf_centers <- rnorm(nevf-nevfDE_per_param[iparam], evf_center, 0.1)
+      pop_evf_mean_nonDE <- lapply(1:(nevf-nevfDE_per_param[iparam]), 
+                                   function(i) return(rnorm(npop, mean = nonDE_evf_centers[i], sd=0.1)))
+      pop_evf_mean_nonDE <- do.call(rbind, pop_evf_mean_nonDE)          
+      pop_evf_mean <- rbind(pop_evf_mean_DE, pop_evf_mean_nonDE)} else 
+        if(nevf==nevfDE_per_param[iparam]){pop_evf_mean <- pop_evf_mean_DE}
+    evfs_per_param <- lapply(c(1:npop),function(ipop){
+      evf <- sapply(c(1:nevf),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean[ievf,ipop],Sigma)})
+      return(evf)
+    })
+    evfs_per_param <- do.call(rbind,evfs_per_param)
+    colnames(evfs_per_param) <- sprintf("%s_evf%d", param_names[iparam], 1:nevf)
+    return(evfs_per_param)
+  })
+  # mean_DEevf <- mean(evfs[, 1:nevfDE]); mean_nonDEevf <- mean(evfs[, (nevfDE+1):nevf])
+  # evfs[, 1:nevfDE] <- evfs[, 1:nevfDE] + (mean_nonDEevf-mean_DEevf)
+  
+  meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
+  return(list(evfs,meta,nevfDE_per_param))
 }
 
 
@@ -440,13 +445,17 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                                bimod=0.3,param_realdata="zeisel.imputed",randseed,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=2)
+  param_names <- c("kon", "koff", "s")
   if(evf_type=='one.population'){
     evf_mean=rep(evf_center,nevf); evf_sd=rep(Sigma,nevf)
-    evfs <- lapply(c(1:ncells_total),function(celli){
-      evf <- sapply(c(1:nevf),function(ievf){rnorm(1,evf_mean[ievf],evf_sd[ievf])})
-      return(evf)
-    })
-    evf_res <- list(evfs=do.call(rbind, evfs), meta=data.frame(pop=rep(1, ncells_total)))
+    evfs <- lapply(1:3, function(iparam){
+      evfs_per_param <- lapply(c(1:ncells_total),function(celli){
+        evf <- sapply(c(1:nevf),function(ievf){rnorm(1,evf_mean[ievf],evf_sd[ievf])})
+        return(evf)})
+      evfs_per_param <- do.call(rbind, evfs_per_param)
+      colnames(evfs_per_param) <- sprintf("%s_evf%d", param_names[iparam], 1:nevf)
+      return(evfs_per_param)})
+    evf_res <- list(evfs=evfs, meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
                            nevf,evf_center=evf_center,percent_DEevf=percent_DEevf,seed=seed[1])
@@ -477,14 +486,19 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
   cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
   if(SE==T){
-      se <- SummarizedExperiment(assays=list(counts = as.matrix(counts),
-        logcounts = log2(as.matrix(counts) + 1)),colData=cell_meta)
-      rowData(se) <- gene_effects
-      rowData(se)$gene_id <- paste('gene',seq(1,ngenes))
-      return(se)
-    }else{
-      return(list(counts,gene_effects,cell_meta,params))      
-    }
+    se <- SummarizedExperiment(assays=list(counts = as.matrix(counts),
+                                           logcounts = log2(as.matrix(counts) + 1)),colData=cell_meta)
+    rowData(se) <- gene_effects
+    rowData(se)$gene_id <- paste('gene',seq(1,ngenes))
+    return(se)
+  }else{
+    if (evf_type=="discrete")
+      return(list(counts=counts,gene_effects=gene_effects,cell_meta=cell_meta,
+                  params=params,nDEevf_per_param=evf_res[[3]]))
+    else
+      return(list(counts=counts,gene_effects=gene_effects,cell_meta=cell_meta,
+                  params=params))
+  }
 }
 
 
