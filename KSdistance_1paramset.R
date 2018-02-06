@@ -7,15 +7,18 @@ args = commandArgs(trailingOnly=TRUE)
 ncols <- 2000
 colfunc <- colorRampPalette(c("blue", "green", "red", "purple"))
 allcol <- colfunc(ncols)
-
+# /data/yosef2/users/xiuwei/simulation/Rvariables/exp_design6/ exp6.KSdist.robj
 #####################################################################
 ####### Loading Old Simulation
 #####################################################################
 dir <- args[1]
 outputname <- args[2]
-param_file <- args[3]
-load(param_file)
+# param_file <- args[3]
+# load(param_file)
 filenames <- list.files(dir)
+
+filename=filenames[1]
+load(paste(dir,filename,sep=''))
 ks_distances <- lapply(filenames,function(filename){
 	load(paste(dir,filename,sep=''))
 	k <- strsplit(filename,'_')[[1]][2]; k <- strsplit(k,'.',fixed=T)[[1]][1];k=as.numeric(k)
@@ -23,7 +26,7 @@ ks_distances <- lapply(filenames,function(filename){
 	protocol <- sim_params$protocol[k]
 
 	if(protocol=='10x'){
-		load('expression_mRNA_17-Aug-2014.robj')
+		load('ExperimentalData/expression_mRNA_17-Aug-2014.robj')
 		counts <- counts[,as.numeric(meta[1,])==3 & !is.na(as.numeric(meta[1,])==3)]
 		Cortex_counts <- counts
 	}else if(protocol=='ss2'){
