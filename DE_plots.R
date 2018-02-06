@@ -1,3 +1,4 @@
+library('devtools')
 load_all("SymSim")
 dir <- '/data/yosef2/users/xiuwei/simulation/Rvariables/exp_3pop0205/'
 
@@ -65,7 +66,7 @@ lapply(files,function(filename){
 		return(mean_FC)
 	})
 
-	pdf(file=paste(filename,'.DE_params.pdf'))
+	pdf(file=paste('DE_plots/',filename,'.DE.params.pdf',sep=''))
 	par(mfrow=c(2,3))
 	for( parami in c(1:3)){
 		nonDE_FC <- log(rowMeans(nonDEgenes[[parami]][,meta[,2]==pop1])/rowMeans(nonDEgenes[[parami]][,meta[,2]==pop2]))
@@ -144,7 +145,7 @@ lapply(files,function(filename){
 		return(mean_FC)
 	})
 
-	pdf(file=paste(filename,'.DE.counts.pdf'))
+	pdf(file=paste('DE_plots/',filename,'.DE.counts.pdf',sep=''))
 	par(mfrow=c(2,3))
 	for( parami in c(1:3)){
 		nonDE_FC <- log(rowMeans(nonDEgenes[[parami]][,meta[,2]==pop1])/rowMeans(nonDEgenes[[parami]][,meta[,2]==pop2]))
