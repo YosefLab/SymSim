@@ -22,7 +22,8 @@ lapply(files,function(filename){
 	DE_evfs <- lapply(c('kon','koff','s'),function(i){
 		k <- c(1:length(temp))[grep(i,temp)]
 		nonDE <- k[grep('non_DE',temp[k])]
-		DE <- k[!k%in%nonDE]
+		# this is temporary for datasets simulated with mistakenly marked EVFs
+		DE <- k[k%in%nonDE]
 		DE <- DE+1-min(k)
 		return(DE)
 	})

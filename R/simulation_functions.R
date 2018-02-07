@@ -460,7 +460,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
   vcv_evf_mean <- vcv.phylo(phyla,cor=T)
   nevfDE <- ceiling(nevf*percent_DEevf)
   param_names <- c("kon", "koff", "s")
-  param_type <- c(rep('DE',nevfDE),rep('non_DE',(nevf-nevfDE)))
+  param_type <- c(rep('nonDE',nevfDE),rep('DE',(nevf-nevfDE)))
   if (nevfDE<5) {warning("The number of DE evfs is less than 5; in the case of a small number of DE evfs, the structure of generated data 
 	                       may not closely follow the input tree. One can either increase nevf or percent_DEevf to avoid this warning.")}
   
