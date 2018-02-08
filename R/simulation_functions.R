@@ -97,10 +97,15 @@ Get_params <- function(gene_effects,evf,match_param_den,bimod){
     temp3 <- matrix(data=sorted[ranks],ncol=length(X[1,]),byrow=T)
     return(temp3)
   })
-  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - bimod)})
-  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - bimod)})
-  scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x<-abs(x)})
-  scaled_params <- lapply(scaled_params,t)
+  
+  bimod_perc <- 1
+  ngenes <- dim(scaled_params[[1]])[2]; bimod_vec <- numeric(ngenes)
+  bimod_vec[1:ceiling(ngenes*bimod_perc)] <- bimod
+  bimod_vec <- c(rep(bimod, ngenes/2), rep(0, ngenes/2))
+  scaled_params[[1]] <- apply(t(scaled_params[[1]]),2,function(x){x <- 10^(x - bimod_vec)})
+  scaled_params[[2]] <- apply(t(scaled_params[[2]]),2,function(x){x <- 10^(x - bimod_vec)})
+  scaled_params[[3]] <- t(apply(scaled_params[[3]],2,function(x){x<-abs(x)}))
+  
   return(scaled_params)
 }
 #' Getting the parameters for simulating gene expression from EVf and gene effects
