@@ -107,6 +107,38 @@ Get_params <- function(gene_effects,evf,match_param_den,bimod){
 #'
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
 #' by using first a logistic function and then adding/dividing by constant to their correct range
+#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
+#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
+#' @param match_param_den the fitted parameter distribution density to sample from 
+#' @param bimod the bimodality constant
+#' @return params a matrix of ngenes * 3
+#' @examples 
+#' Get_params()
+Get_params3 <- function(gene_effects,evf,match_params,bimod){
+  X <- evf[[1]] %*% t(gene_effects[[1]])
+  temp <- alply(X, 1, function(Y){Y})
+  values <- do.call(c,temp)
+  ranks <- rank(values)
+  PC1 <- prcomp(t(match_params))$rotation[,1]
+  PC1 <- order(PC1)
+  temp <- sample(c(1:length(PC1)),length(values),replace=T)
+  temp <- sort(temp)
+  PC1 <- PC1[temp]
+  params <- match_params[PC1,]
+  scaled_params <- lapply(c(1:3),function(i){
+        matrix(data=params[ranks,i],ncol=length(X[1,]),byrow=T)
+  })
+  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - bimod)})
+  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - bimod)})
+  scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x<-abs(x)})
+  scaled_params <- lapply(scaled_params,t)
+  return(scaled_params)
+}
+#' Getting the parameters for simulating gene expression from EVf and gene effects
+#'
+#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
+#' by using first a logistic function and then adding/dividing by constant to their correct range
 #' @param evf a vector of length nevf, the cell specific extrinsic variation factor
 #' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
 #' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
@@ -131,6 +163,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
   scaled_params <- lapply(scaled_params,t)
   return(scaled_params)
 }
+
 
 #' This function simulates the amplification, library prep, and the sequencing processes.
 #' @param true_counts_1cell the true transcript counts for one cell (one vector)
@@ -501,7 +534,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
                                Sigma=0.5,phyla=NULL,gene_effects_sd=1,gene_effect_prob=0.3,
-                               bimod=0.3,param_realdata="zeisel.imputed",randseed,SE=F){
+                               bimod=0.3,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=2)
   param_names <- c("kon", "koff", "s")
@@ -537,9 +570,12 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
         density(match_params[,i],n=2000)
       })
     }
-    params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)}else{
-      params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
-    }
+    if(joint==F){
+      params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)      
+    }else{params <- Get_params3(gene_effects,evf_res[[1]],match_params,bimod)}
+  }else{
+    params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
+  }
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
       y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
