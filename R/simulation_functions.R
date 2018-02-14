@@ -172,19 +172,19 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 
 #' This function simulates the amplification, library prep, and the sequencing processes.
 #' @param true_counts_1cell the true transcript counts for one cell (one vector)
-#' @param protocol a string, can be "ss2" or "10x"
+#' @param protocol a string, can be "ss2" or "umi"
 #' @param rate_2cap the capture efficiency for this cell
 #' @param gene_len gene lengths for the genes/transcripts, sampled from real human transcript length
 #' @param amp_bias amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high
 #' @param nPCR the number of PCR cycles
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
-#' @return read counts (if protocol="ss2") or UMI counts (if protocol="10x)
+#' @return read counts (if protocol="ss2") or UMI counts (if protocol="umi)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
                           rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
   ngenes <- length(gene_len)
   if (protocol=="ss2"){load("SymSim/len2nfrag.RData")} else 
-    if(protocol=="10x"){load("SymSim/len2prob3pri.RData")} # where should we keep the vairables?
+    if(protocol=="umi"){load("SymSim/len2prob3pri.RData")} # where should we keep the vairables?
   inds <- vector("list",2)
   # expand the original vector and apply capture efficiency
   # maintain a transcript index vector: which transcript the molecule belongs to
@@ -239,7 +239,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     if (SEQ_efficiency >= 1) {read_count <- frag_vec} else{
       read_count <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)}) }
     return(read_count)
-  } else if (protocol=="10x"){
+  } else if (protocol=="umi"){
     # fragmentation: 
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
     {return(rbinom(n=1, size = PCRed_vec[igene], 
@@ -625,7 +625,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param ncells_total number of cells
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
 #' @param nbatches number of batches (so far only 1)
-#' @param protocol a string, can be "ss2" or "10x"
+#' @param protocol a string, can be "ss2" or "umi"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
 #' @param lenslope amount of length bias
