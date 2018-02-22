@@ -244,6 +244,14 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
     {return(rbinom(n=1, size = PCRed_vec[igene], 
                    prob = len2prob3pri[as.character(gene_len[trans_idx[igene]])] ))})
+    # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
+    for (iPCR in 1:3){
+      frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
+    }
+    for (iPCR in 4:8){
+      frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
+    }
+    
     SEQ_efficiency <- N_molecules_SEQ/sum(frag_vec)
     if (SEQ_efficiency >= 1){sequenced_vec <- frag_vec} else {
       sequenced_vec <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)})}
@@ -515,7 +523,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
                                impulse=T,vary='all',
-                               Sigma=0.5,phyla=NULL,gene_effects_sd=1,gene_effect_prob=0.3,
+                               Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0.3,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=2)
@@ -539,7 +547,8 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                              evf_center=evf_center,vary=vary,impulse=impulse,
                              Sigma,plotting=T,seed=seed[1])    
   }
-  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
+  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,
+                              geffect_mean=geffect_mean,geffect_sd=gene_effects_sd)
   if(!is.null(param_realdata)){
     if(param_realdata=="zeisel.imputed"){
       load('SymSim/match_params.zeisel_imputed.robj')
