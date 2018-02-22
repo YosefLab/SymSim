@@ -6,9 +6,10 @@
 \usage{
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
   evf_center = 1, nevf = 10, evf_type = "one.population",
-  percent_DEevf = 0.5, Sigma = 0.5, phyla = NULL, gene_effects_sd = 1,
-  gene_effect_prob = 0.3, bimod = 0.3, param_realdata = "zeisel.imputed",
-  randseed, SE = F)
+  percent_DEevf = 0.5, impulse = T, vary = "all", Sigma = 0.5,
+  phyla = NULL, gene_effects_sd = 1, gene_effect_prob = 0.3,
+  bimod = 0.3, param_realdata = "zeisel.imputed", joint = F, randseed,
+  SE = F)
 }
 \arguments{
 \item{ncells_total}{number of cells}

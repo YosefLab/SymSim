@@ -369,7 +369,7 @@ Phyla3 <- function(plotting=F){
 #' @param plotting Whether to plot the trajectory or not
 #' @param plotname The 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
-ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname='cont_evf.pdf',seed){
+ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,impulse=T,evf_center=1,vary='all',Sigma,plotting=T,plotname='cont_evf.pdf',seed){
 	set.seed(seed)
 	edges <- cbind(phyla$edge,phyla$edge.length)
 	edges <- cbind(c(1:length(edges[,1])),edges)
@@ -378,95 +378,71 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname
 	root <- as.numeric(names(connections)[connections==2])
 	tips <- as.numeric(names(connections)[connections==1])
 	internal <- as.numeric(names(connections)[connections==3])
-  nevf1 <- nevf1*3
-  nevf2 <- nevf2*3
-	neutral <- SampleSubtree(root,0,0,edges,ncells,Sigma)
-	neutral2 <- lapply(c(1:(nevf1-1)),function(evf_i){
-		SampleSubtree(root,0,0,edges,ncells,Sigma,neutral=neutral)		
-	})
-	neutral2 <- lapply(neutral2,function(X){X[,4]})
-	neutral2 <- do.call(cbind,neutral2)
- 	pdf(file = plotname,width=15,height=5)
-	evfs_wimpuls<- lapply(c(1:nevf2),function(evf_i){
-	    impulse <-ImpulseEVFpertip(phyla, edges,root,tips,internal, neutral, tip,Sigma)
-	    if(plotting==T){PlotRoot2Leave(impulse,tips,edges,root,internal)}
-	    return(impulse)
-  	})
-	dev.off()
-	re_order <- match(
-		apply(neutral[,c(1:3)],1,function(X){paste0(X,collapse='_')}),
-		apply(evfs_wimpuls[[1]][,c(1:3)],1,function(X){paste0(X,collapse='_')}))
-	evfs_wimpuls <- lapply(evfs_wimpuls,function(X){X[,4]})
-	evfs_wimpuls <- do.call(cbind,evfs_wimpuls)
-  evfs_wimpuls <- evfs_wimpuls[re_order,]
-	evfs <- cbind(neutral[,4],neutral2,evfs_wimpuls)
-	colnames(evfs)<-c(rep('neutral',nevf1),rep('impulse',nevf2))
-  param_i <- rep(c(1,2,3),(nevf1+nevf2)/3)
-  param_names <- c('kon','koff','s')
-  evfs <- lapply(c(1:3),function(iparam){
-    evfs_per_param <- evfs[,param_i==iparam]
-    param_type <- colnames(evfs_per_param)
-    colnames(evfs_per_param) <- sprintf("%s_%s_evf%d", param_names[iparam],param_type, c(1:((nevf1+nevf2)/3)))
-    return(evfs_per_param[c(1:ncells),])
+  if(vary=='all'){
+    n_DE_evfs =c(nevf2,nevf2,nevf2)
+    n_ND_evfs =c(nevf1,nevf1,nevf1)
+  }else if(vary=='kon'){
+    n_DE_evfs =c(nevf2,0,0)    
+    n_ND_evfs =c(nevf1,nevf2+nevf1,nevf2+nevf1)
+  }else if(vary=='koff'){
+    n_DE_evfs =c(0,nevf2,0)    
+    n_ND_evfs =c(nevf2+nevf1,nevf1,nevf2+nevf1)
+  }else if(vary=='s'){
+    n_DE_evfs =c(0,0,nevf2)    
+    n_ND_evfs =c(nevf1+nevf2,nevf1+nevf2,nevf1)
+  }else if(vary=='except_kon'){
+    n_DE_evfs =c(0,nevf2,nevf2)    
+    n_ND_evfs =c(nevf1+nevf2,nevf1,nevf1)
+  }else if(vary=='except_koff'){
+    n_DE_evfs =c(nevf2,0,nevf2)    
+    n_ND_evfs =c(nevf1,nevf2+nevf1,nevf1)
+  }else if(vary=='except_s'){
+    n_DE_evfs =c(nevf2,nevf2,0)    
+    n_ND_evfs =c(nevf1,nevf1,nevf1+nevf2)
+  }
+  neutral <- SampleSubtree(root,0,evf_center,edges,ncells,Sigma)
+  param_names <- c("kon", "koff", "s")
+  evfs <- lapply(c(1:3),function(parami){
+    nd_evf <- lapply(c(1:n_ND_evfs[parami]),function(ievf){
+      rnorm(ncells,evf_center,Sigma)
+    })
+    nd_evf <- do.call(cbind,nd_evf)
+    if(n_DE_evfs[parami]!=0){
+      #if there is more than 1 de_evfs for the parameter we are looking at
+      if(impulse==T){
+        pdf(file = plotname,width=15,height=5)
+        tip <- rep(tips,ceiling(n_DE_evfs[parami]/length(tips)))
+        de_evf <- lapply(c(1:n_DE_evfs[parami]),function(evf_i){
+            impulse <-ImpulseEVFpertip(phyla, edges,root,tips,internal, neutral, tip[evf_i],Sigma,evf_center=evf_center)
+            if(plotting==T){PlotRoot2Leave(impulse,tips,edges,root,internal)}
+            re_order <- match(
+            apply(neutral[,c(1:3)],1,function(X){paste0(X,collapse='_')}),
+            apply(impulse[,c(1:3)],1,function(X){paste0(X,collapse='_')}))            
+            return(impulse[re_order,])
+          })
+        dev.off()
+      }else{
+        de_evf <- lapply(c(1:n_DE_evfs[parami]),function(evf_i){
+          SampleSubtree(root,0,evf_center,edges,ncells,Sigma*50,neutral=neutral)    
+        })
+      }
+      de_evf <- lapply(de_evf,function(X){X[,4]})
+      de_evf <- do.call(cbind,de_evf)
+      de_evf <- de_evf[c(1:ncells),]
+      evfs <- cbind(nd_evf,de_evf)
+      colnames(evfs)<-c(
+        paste(param_names[parami],rep('nonDE',length(nd_evf[1,])),c(1:length(nd_evf[1,])),sep='_'),
+        paste(param_names[parami],rep('DE',length(de_evf[1,])),c(1:length(de_evf[1,])),sep='_'))
+    }else{
+      evfs <- nd_evf
+      colnames(evfs)<-paste(param_names[parami],rep('nonDE',length(nd_evf[1,])),c(1:length(nd_evf[1,])),sep='_')
+    }
+    return(evfs)
   })
 	meta <- data.frame(pop=apply(neutral[,c(1:2)],1,function(X){paste0(X,collapse='_')}),depth=neutral[,3])
   return(list(evfs,meta[c(1:ncells),]))
   # note previously the number of sampled evfs and meta isn't necessarily ncells? 
 }
-
-#' Generating EVFs for cells sampled along the trajectory of cell development
-#' @param phyla tree for cell developement
-#' @param ncells number of cells
-#' @param nevf1 Number of EVFs that do not have an impulse signal
-#' @param nevf2 Number of EVFs with an impulse signal
-#' @param tip The leaf that the path with impulse lead to
-#' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
-#' @param plotting Whether to plot the trajectory or not
-#' @param plotname The 
-#' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
-ContinuousEVF_s_only <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname='cont_evf.pdf',seed){
-  set.seed(seed)
-  edges <- cbind(phyla$edge,phyla$edge.length)
-  edges <- cbind(c(1:length(edges[,1])),edges)
-  edges[,4] <- edges[,4]/mean(vcv.phylo(phyla))
-  connections <- table(c(edges[,2],edges[,3]))
-  root <- as.numeric(names(connections)[connections==2])
-  tips <- as.numeric(names(connections)[connections==1])
-  internal <- as.numeric(names(connections)[connections==3])
-  neutral <- SampleSubtree(root,0,0,edges,ncells,Sigma)
-  neutral2 <- lapply(c(1:(nevf1+(nevf1+nevf2)*2-1)),function(evf_i){
-    SampleSubtree(root,0,0,edges,ncells,Sigma,neutral=neutral)    
-  })
-  neutral2 <- lapply(neutral2,function(X){X[,4]})
-  neutral2 <- do.call(cbind,neutral2)
-  pdf(file = plotname,width=15,height=5)
-  evfs_wimpuls<- lapply(c(1:nevf2),function(evf_i){
-      impulse <-ImpulseEVFpertip(phyla, edges,root,tips,internal, neutral, tip,Sigma)
-      if(plotting==T){PlotRoot2Leave(impulse,tips,edges,root,internal)}
-      return(impulse)
-    })
-  dev.off()
-  re_order <- match(
-    apply(neutral[,c(1:3)],1,function(X){paste0(X,collapse='_')}),
-    apply(evfs_wimpuls[[1]][,c(1:3)],1,function(X){paste0(X,collapse='_')}))
-  evfs_wimpuls <- lapply(evfs_wimpuls,function(X){X[,4]})
-  evfs_wimpuls <- do.call(cbind,evfs_wimpuls)
-  evfs_wimpuls <- evfs_wimpuls[re_order,]
-  evfs <- cbind(neutral[,4],neutral2,evfs_wimpuls)
-  colnames(evfs)<-c(rep('neutral',(nevf1*3+nevf2*2)),rep('impulse',nevf2))
-  param_i <- c(rep(1,(nevf1+nevf2)),rep(2,(nevf1+nevf2)),rep(3,(nevf1+nevf2)))
-  param_names <- c('kon','koff','s')
-  evfs <- lapply(c(1:3),function(iparam){
-    evfs_per_param <- evfs[,param_i==iparam]
-    param_type <- colnames(evfs_per_param)
-    colnames(evfs_per_param) <- sprintf("%s_%s_evf%d", param_names[iparam],param_type, c(1:(nevf1+nevf2)))
-    return(evfs_per_param[c(1:ncells),])
-  })
-  meta <- data.frame(pop=apply(neutral[,c(1:2)],1,function(X){paste0(X,collapse='_')}),depth=neutral[,3])
-  return(list(evfs,meta[c(1:ncells),]))
-  # note previously the number of sampled evfs and meta isn't necessarily ncells? 
-}
-
 #' Generating EVFs for cells sampled from tip populations from a tree
 #' @param phyla tree for cell developement
 #' @param ncells_total number of cells from all populations
@@ -538,6 +514,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
+                               impulse=T,vary='all',
                                Sigma=0.5,phyla=NULL,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0.3,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
@@ -559,11 +536,8 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
   }else if(evf_type=='continuous'){
     n_de <- round(nevf*percent_DEevf)
     evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf-n_de,nevf2=n_de,
-                             tip=1,Sigma,plotting=T,seed=seed[1])    
-  }else if(evf_type=='continuous_s'){
-    n_de <- round(nevf*percent_DEevf)
-    evf_res <- ContinuousEVF_s_only(phyla,ncells_total,nevf1=nevf-n_de,nevf2=n_de,
-                             tip=1,Sigma,plotting=T,seed=seed[1])    
+                             evf_center=evf_center,vary=vary,impulse=impulse,
+                             Sigma,plotting=T,seed=seed[1])    
   }
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,geffect_mean=0,geffect_sd=gene_effects_sd)
   if(!is.null(param_realdata)){

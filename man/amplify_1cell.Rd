@@ -10,7 +10,7 @@ amplify_1cell(true_counts_1cell, protocol, rate_2cap = 0.1, gene_len,
 \arguments{
 \item{true_counts_1cell}{the true transcript counts for one cell (one vector)}
 
-\item{protocol}{a string, can be "ss2" or "10x"}
+\item{protocol}{a string, can be "ss2" or "umi"}
 
 \item{rate_2cap}{the capture efficiency for this cell}
 
@@ -25,7 +25,7 @@ amplify_1cell(true_counts_1cell, protocol, rate_2cap = 0.1, gene_len,
 \item{N_molecules_SEQ}{number of molecules sent for sequencing; sequencing depth}
 }
 \value{
-read counts (if protocol="ss2") or UMI counts (if protocol="10x)
+read counts (if protocol="ss2") or UMI counts (if protocol="umi)
 }
 \description{
 This function simulates the amplification, library prep, and the sequencing processes.
