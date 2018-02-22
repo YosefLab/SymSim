@@ -14,7 +14,7 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, nbatch = 1, protocol,
 
 \item{meta_cell}{the meta information related to cells, will be combined with technical cell level information and returned}
 
-\item{protocol}{a string, can be "ss2" or "10x"}
+\item{protocol}{a string, can be "ss2" or "umi"}
 
 \item{alpha_mean}{the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency}
 
