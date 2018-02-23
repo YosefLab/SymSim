@@ -1,6 +1,6 @@
 library('devtools')
 load_all("SymSim")
-dir <- '/data/yosef2/users/xiuwei/simulation/Rvariables/exp_3pop0205/'
+dir <- '/data/yosef2/users/xiuwei/simulation/Rvariables/exp_3pop0212/'
 
 files <- list.files(dir)
 k <- sapply(strsplit(files,'_'),function(X){
@@ -8,11 +8,15 @@ k <- sapply(strsplit(files,'_'),function(X){
 	as.numeric(X)
 })
 files <- files[order(k)]
+files <- list.files()
+files <- files[grep('RData',files)]
+files <- files[grep('true',files)]
 
 pop1=1;pop2=3;check_params=T
 
 lapply(files,function(filename){
 	load(paste(dir,filename,sep=''))
+	load(paste(dir,gsub('true','obs',filename),sep=''))
 	true_counts <- true_counts_res[[1]]
 	GE <- true_counts_res[[2]]
 	meta <- true_counts_res[[3]]
@@ -21,9 +25,9 @@ lapply(files,function(filename){
 	temp <- colnames(meta)
 	DE_evfs <- lapply(c('kon','koff','s'),function(i){
 		k <- c(1:length(temp))[grep(i,temp)]
-		nonDE <- k[grep('non_DE',temp[k])]
+		nonDE <- k[grep('nonDE',temp[k])]
 		# this is temporary for datasets simulated with mistakenly marked EVFs
-		DE <- k[k%in%nonDE]
+		DE <- k[!k%in%nonDE]
 		DE <- DE+1-min(k)
 		return(DE)
 	})
