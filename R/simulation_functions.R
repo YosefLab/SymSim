@@ -594,6 +594,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
   }else{
     params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
   }
+  
   counts <- lapply(c(1:ngenes),function(i){
     count <- sapply(c(1:ncells_total),function(j){
       y <- rbeta(1,params[[1]][i,j],params[[2]][i,j])
