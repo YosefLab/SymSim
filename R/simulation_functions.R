@@ -17,17 +17,17 @@ MasterEqn2 <- function(rateParams){
   p_all=NA
   k=ceiling(s/5)
   for(i in c(0:1000)){
-  	if(sum(p_all,na.rm=T)>0.999){break}
-	  x=seq(i*k, ((i+1)*k-1), 1)
-	  y <- (x*log(s/d) + (-s/d) + lgamma(k_on/d+x) + lgamma(k_on/d+k_off/d)) -
-	    lfactorial(x) - lgamma(k_on/d+k_off/d+x) - lgamma(k_on/d)
-	  z <- sapply(x, function(xx)  Re(kummerM(s/d, k_off/d, (k_on/d+k_off/d+xx),lnchf=1)))
-	  logp <- y + z
-	  p=exp(logp)
-	  if (any(is.na(p))){
-	    p <- p[-which(is.na(p))]
-	  }
-	  p_all=c(p_all,p)  	
+    if(sum(p_all,na.rm=T)>0.999){break}
+    x=seq(i*k, ((i+1)*k-1), 1)
+    y <- (x*log(s/d) + (-s/d) + lgamma(k_on/d+x) + lgamma(k_on/d+k_off/d)) -
+      lfactorial(x) - lgamma(k_on/d+k_off/d+x) - lgamma(k_on/d)
+    z <- sapply(x, function(xx)  Re(kummerM(s/d, k_off/d, (k_on/d+k_off/d+xx),lnchf=1)))
+    logp <- y + z
+    p=exp(logp)
+    if (any(is.na(p))){
+      p <- p[-which(is.na(p))]
+    }
+    p_all=c(p_all,p)  	
   }
   return(p_all[-1]) # data_1gene is indices
 }
@@ -46,15 +46,15 @@ MasterEqn2 <- function(rateParams){
 #' @examples 
 #' GeneEffects()
 GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
-	set.seed(randseed)
-	lapply(c('kon','koff','s'),function(param){
-		effect <- lapply(c(1:ngenes),function(i){
-			nonzero <- sample(size=nevf,x=c(0,1),prob=c((1-prob),prob),replace=T)
-			nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=geffect_mean,sd=geffect_sd)
-			return(nonzero)
-		})
-		return(do.call(rbind,effect))
-	})
+  set.seed(randseed)
+  lapply(c('kon','koff','s'),function(param){
+    effect <- lapply(c(1:ngenes),function(i){
+      nonzero <- sample(size=nevf,x=c(0,1),prob=c((1-prob),prob),replace=T)
+      nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=geffect_mean,sd=geffect_sd)
+      return(nonzero)
+    })
+    return(do.call(rbind,effect))
+  })
 }
 #' sample from smoothed density function
 #' @param nsample number of samples needed
@@ -132,7 +132,7 @@ Get_params3 <- function(gene_effects,evf,match_params,bimod){
   PC1 <- PC1[temp]
   params <- match_params[PC1,]
   scaled_params <- lapply(c(1:3),function(i){
-        matrix(data=params[ranks,i],ncol=length(X[1,]),byrow=T)
+    matrix(data=params[ranks,i],ncol=length(X[1,]),byrow=T)
   })
   scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - bimod)})
   scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - bimod)})
@@ -297,19 +297,19 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
 #' 
 #' @author David Sebastian Fischer
 evalImpulse <- function(vecImpulseParam, vecTimepoints) {
-    # beta is vecImpulseParam[1] h0 is vecImpulseParam[2] h1 is
-    # vecImpulseParam[3] h2 is vecImpulseParam[4] t1 is vecImpulseParam[5]
-    # t2 is vecImpulseParam[6]
-    vecImpulseValue <- sapply(vecTimepoints, function(t) {
-        (1/vecImpulseParam[3]) * 
-            (vecImpulseParam[2] + (vecImpulseParam[3] - vecImpulseParam[2]) *
-                 (1/(1 + exp(-vecImpulseParam[1] * (t - vecImpulseParam[5]))))) *
-            (vecImpulseParam[4] + (vecImpulseParam[3] - vecImpulseParam[4]) *
-                 (1/(1 + exp(vecImpulseParam[1] * (t - vecImpulseParam[6])))))
-    })
-    vecImpulseValue[vecImpulseValue < 10^(-10)] <- 10^(-10)
-    
-    return(vecImpulseValue)
+  # beta is vecImpulseParam[1] h0 is vecImpulseParam[2] h1 is
+  # vecImpulseParam[3] h2 is vecImpulseParam[4] t1 is vecImpulseParam[5]
+  # t2 is vecImpulseParam[6]
+  vecImpulseValue <- sapply(vecTimepoints, function(t) {
+    (1/vecImpulseParam[3]) * 
+      (vecImpulseParam[2] + (vecImpulseParam[3] - vecImpulseParam[2]) *
+         (1/(1 + exp(-vecImpulseParam[1] * (t - vecImpulseParam[5]))))) *
+      (vecImpulseParam[4] + (vecImpulseParam[3] - vecImpulseParam[4]) *
+         (1/(1 + exp(vecImpulseParam[1] * (t - vecImpulseParam[6])))))
+  })
+  vecImpulseValue[vecImpulseValue < 10^(-10)] <- 10^(-10)
+  
+  return(vecImpulseValue)
 }
 
 
@@ -318,30 +318,30 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
 #' @param plotting True for plotting the tree on console, False for no plot 
 #' @return a tree object
 Phyla5 <- function(plotting=F){
-	# par(mfrow=c(2,2))
-	phyla<-rtree(2)
-	phyla <- compute.brlen(phyla,1)
-	tip<-rtree(2)
-	tip <- compute.brlen(phyla,1)
-	phyla<-bind.tree(phyla,tip,1)
-	# if(plotting==T){plot(phyla)}
-	phyla<-bind.tree(phyla,tip,2)
-	# if(plotting==T){plot(phyla)}
-	phyla<-bind.tree(phyla,tip,2)
-	# if(plotting==T){plot(phyla)}
-	phyla <- compute.brlen(phyla,c(1,1,1,1,1,0.2,0.2,3))
-	edges <- cbind(phyla$edge,phyla$edge.length)
-	edges <- cbind(c(1:length(edges[,1])),edges)
-	connections <- table(c(edges[,2],edges[,3]))
-	root <- as.numeric(names(connections)[connections==2])
-	tips <- as.numeric(names(connections)[connections==1])
-	phyla$tip.label <- as.character(tips)
-	if(plotting==T){
-	  plot(phyla,show.tip.label = F,lwd=2)
-	  tiplabels(cex=2)
-	  nodelabels(cex=2)
-	}
-	return(phyla)
+  # par(mfrow=c(2,2))
+  phyla<-rtree(2)
+  phyla <- compute.brlen(phyla,1)
+  tip<-rtree(2)
+  tip <- compute.brlen(phyla,1)
+  phyla<-bind.tree(phyla,tip,1)
+  # if(plotting==T){plot(phyla)}
+  phyla<-bind.tree(phyla,tip,2)
+  # if(plotting==T){plot(phyla)}
+  phyla<-bind.tree(phyla,tip,2)
+  # if(plotting==T){plot(phyla)}
+  phyla <- compute.brlen(phyla,c(1,1,1,1,1,0.2,0.2,3))
+  edges <- cbind(phyla$edge,phyla$edge.length)
+  edges <- cbind(c(1:length(edges[,1])),edges)
+  connections <- table(c(edges[,2],edges[,3]))
+  root <- as.numeric(names(connections)[connections==2])
+  tips <- as.numeric(names(connections)[connections==1])
+  phyla$tip.label <- as.character(tips)
+  if(plotting==T){
+    plot(phyla,show.tip.label = F,lwd=2)
+    tiplabels(cex=2)
+    nodelabels(cex=2)
+  }
+  return(phyla)
 }
 
 Phyla3 <- function(plotting=F){
@@ -379,14 +379,14 @@ Phyla3 <- function(plotting=F){
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
 ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,vary='all',
                           Sigma,plotting=T,plotname='cont_evf.pdf',seed){
-	set.seed(seed)
-	edges <- cbind(phyla$edge,phyla$edge.length)
-	edges <- cbind(c(1:length(edges[,1])),edges)
+  set.seed(seed)
+  edges <- cbind(phyla$edge,phyla$edge.length)
+  edges <- cbind(c(1:length(edges[,1])),edges)
   edges[,4] <- edges[,4]/mean(vcv.phylo(phyla))
-	connections <- table(c(edges[,2],edges[,3]))
-	root <- as.numeric(names(connections)[connections==2])
-	tips <- as.numeric(names(connections)[connections==1])
-	internal <- as.numeric(names(connections)[connections==3])
+  connections <- table(c(edges[,2],edges[,3]))
+  root <- as.numeric(names(connections)[connections==2])
+  tips <- as.numeric(names(connections)[connections==1])
+  internal <- as.numeric(names(connections)[connections==3])
   if(vary=='all'){
     N_DE_evfs =c(n_de_evf,n_de_evf,n_de_evf)
     N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf)
@@ -422,13 +422,13 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
         pdf(file = plotname,width=15,height=5)
         tip <- rep(tips,ceiling(N_DE_evfs[parami]/length(tips)))
         de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
-            impulse <-ImpulseEVFpertip(phyla, edges,root,tips,internal, neutral, tip[evf_i],Sigma,evf_center=evf_center)
-            if(plotting==T){PlotRoot2Leave(impulse,tips,edges,root,internal)}
-            re_order <- match(
+          impulse <-ImpulseEVFpertip(phyla, edges,root,tips,internal, neutral, tip[evf_i],Sigma,evf_center=evf_center)
+          if(plotting==T){PlotRoot2Leave(impulse,tips,edges,root,internal)}
+          re_order <- match(
             apply(neutral[,c(1:3)],1,function(X){paste0(X,collapse='_')}),
             apply(impulse[,c(1:3)],1,function(X){paste0(X,collapse='_')}))            
-            return(impulse[re_order,])
-          })
+          return(impulse[re_order,])
+        })
         dev.off()
       }else{
         de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
@@ -448,7 +448,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
     }
     return(evfs)
   })
-	meta <- data.frame(pop=apply(neutral[,c(1:2)],1,function(X){paste0(X,collapse='_')}),depth=neutral[,3])
+  meta <- data.frame(pop=apply(neutral[,c(1:2)],1,function(X){paste0(X,collapse='_')}),depth=neutral[,3])
   return(list(evfs,meta[c(1:ncells),]))
   # note previously the number of sampled evfs and meta isn't necessarily ncells? 
 }
@@ -462,12 +462,11 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
 #' @param evf_center the value used to generated evf means. Suggested value is 1
 #' @param percent_DEevf the percentage of differential EVFs out of all evfs (nevf)
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
-DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf, evf_center, percent_DEevf, seed){
+DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf, n_de_evf, vary='all', evf_center, seed){
   set.seed(seed)
-  npop <- length(phyla$tip.label) # number of populations
-  # set the number of cells in each population
-  # first give each population min_popsize cells
-  # then randomly distribute the rest of cells to all populations except the smallest one (given by i_minpop)
+  npop <- length(phyla$tip.label)
+  # set the number of cells in each population: first give each population min_popsize cells
+  # then randomly distribute the rest of cells to all populations except the smallest one
   ncells_pop <- rep(min_popsize, npop)
   if (ncells_total <= min_popsize*npop) {
     stop("The size of the smallest population is too big for the total number of cells")}
@@ -476,26 +475,48 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
   ncells_pop[larger_pops] <- ncells_pop[larger_pops] + table(temp)
   
   vcv_evf_mean <- vcv.phylo(phyla,cor=T)
-  nevfDE <- ceiling(nevf*percent_DEevf)
   param_names <- c("kon", "koff", "s")
-  param_type <- c(rep('nonDE',(nevf-nevfDE)),rep('DE',nevfDE))
-  if (nevfDE<5) {warning("The number of DE evfs is less than 5; in the case of a small number of DE evfs, the structure of generated data 
+  if(vary=='all'){
+    N_DE_evfs =c(n_de_evf,n_de_evf,n_de_evf)
+    N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf)
+  }else if(vary=='kon'){
+    N_DE_evfs =c(n_de_evf,0,0)    
+    N_ND_evfs =c(n_nd_evf,n_de_evf+n_nd_evf,n_de_evf+n_nd_evf)
+  }else if(vary=='koff'){
+    N_DE_evfs =c(0,n_de_evf,0)    
+    N_ND_evfs =c(n_de_evf+n_nd_evf,n_nd_evf,n_de_evf+n_nd_evf)
+  }else if(vary=='s'){
+    N_DE_evfs =c(0,0,n_de_evf)    
+    N_ND_evfs =c(n_nd_evf+n_de_evf,n_nd_evf+n_de_evf,n_nd_evf)
+  }else if(vary=='except_kon'){
+    N_DE_evfs =c(0,n_de_evf,n_de_evf)    
+    N_ND_evfs =c(n_nd_evf+n_de_evf,n_nd_evf,n_nd_evf)
+  }else if(vary=='except_koff'){
+    N_DE_evfs =c(n_de_evf,0,n_de_evf)    
+    N_ND_evfs =c(n_nd_evf,n_de_evf+n_nd_evf,n_nd_evf)
+  }else if(vary=='except_s'){
+    N_DE_evfs =c(n_de_evf,n_de_evf,0)    
+    N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf+n_de_evf)
+  }
+  
+  if (sum(N_DE_evfs) < 5) {warning("The number of DE evfs is less than 5; in the case of a small number of DE evfs, the structure of generated data 
 	                       may not closely follow the input tree. One can either increase nevf or percent_DEevf to avoid this warning.")}
   
   evfs <- lapply(1:3, function(iparam){
-    pop_evf_mean_DE <- mvrnorm(nevfDE,rep(evf_center,npop),vcv_evf_mean)
+    pop_evf_mean_DE <- mvrnorm(N_DE_evfs[iparam],rep(evf_center,npop),vcv_evf_mean)
     pop_evf_DE <- lapply(c(1:npop),function(ipop){
-      evf <- sapply(c(1:nevfDE),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean_DE[ievf,ipop],Sigma)})
+      evf <- sapply(c(1:N_DE_evfs[iparam]),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean_DE[ievf,ipop],Sigma)})
       return(evf)
     })
     pop_evf_DE <- do.call(rbind,pop_evf_DE)
     pop_evf_nonDE <- lapply(c(1:npop),function(ipop){
-      evf <- sapply(c(1:(nevf-nevfDE)),function(ievf){rnorm(ncells_pop[ipop],evf_center,Sigma)})
+      evf <- sapply(c(1:(N_ND_evfs[iparam])),function(ievf){rnorm(ncells_pop[ipop],evf_center,Sigma)})
       return(evf)
-      })
+    })
     pop_evf_nonDE <- do.call(rbind,pop_evf_nonDE)
     evfs_per_param <- cbind(pop_evf_nonDE,pop_evf_DE)
-    colnames(evfs_per_param) <- sprintf("%s_%s_evf%d", param_names[iparam],param_type, 1:nevf)
+    param_type <- c(rep('nonDE',N_ND_evfs[iparam]),rep('DE',N_DE_evfs[iparam]))
+    colnames(evfs_per_param) <- sprintf("%s_%s_evf%d", param_names[iparam],param_type, 1:(N_ND_evfs[iparam]+N_DE_evfs[iparam]))
     return(evfs_per_param)
   })
   meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
@@ -522,10 +543,10 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf,
 #' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
-                               evf_center=1,nevf=10,evf_type="one.population",percent_DEevf=0.5,
-                               impulse=T,vary='all',
+                               evf_center=1,evf_type="one.population",nevf=10,
+                               n_nd_evf=nevf,n_de_evf=0,impulse=T,vary='all',
                                Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
-                               bimod=0.3,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
+                               bimod=0.2,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
   seed <- sample(c(1:1e5),size=2)
   param_names <- c("kon", "koff", "s")
@@ -541,7 +562,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     evf_res <- list(evfs=evfs, meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
-                           nevf,evf_center=evf_center,percent_DEevf=percent_DEevf,seed=seed[1])
+                           n_nd_evf, n_de_evf, vary='all', evf_center=evf_center, seed=seed[1])
   }else if(evf_type=='continuous'){
     n_de <- round(nevf*percent_DEevf)
     evf_res <- ContinuousEVF(phyla,ncells_total,n_nd_evf=nevf-n_de,n_de_evf=n_de,
@@ -632,8 +653,8 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
- rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
- depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
+  rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
+  depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
   depth_vec[which(depth_vec < 200)] <- 200
   observed_counts <- matrix(0, ngenes, ncells)
   for (icell in 1:ncells){

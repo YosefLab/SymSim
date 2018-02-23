@@ -23,6 +23,7 @@ PlotTsne <- function(meta,data,plotname,label,evf_type="discrete",saving=F,perpl
   p <- p + geom_point()
   p <- p + geom_point(aes(colour = plot_tsne[['label']]))+labs(color=label)
   if(saving==T){ggsave(p,filename=plotname,device='pdf',width=5,height=4)}
+  if(saving==F){p <- p + ggtitle(plotname)}
   return(list(plot_tsne,p))
 }
 
