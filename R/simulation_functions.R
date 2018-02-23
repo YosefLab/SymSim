@@ -370,14 +370,15 @@ Phyla3 <- function(plotting=F){
 #' Generating EVFs for cells sampled along the trajectory of cell development
 #' @param phyla tree for cell developement
 #' @param ncells number of cells
-#' @param nevf1 Number of EVFs that do not have an impulse signal
-#' @param nevf2 Number of EVFs with an impulse signal
+#' @param n_nd_evf Number of EVFs that do not have an impulse signal
+#' @param n_de_evf Number of EVFs with an impulse signal
 #' @param tip The leaf that the path with impulse lead to
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
 #' @param plotting Whether to plot the trajectory or not
 #' @param plotname The 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
-ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,impulse=T,evf_center=1,vary='all',Sigma,plotting=T,plotname='cont_evf.pdf',seed){
+ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,vary='all',
+                          Sigma,plotting=T,plotname='cont_evf.pdf',seed){
 	set.seed(seed)
 	edges <- cbind(phyla$edge,phyla$edge.length)
 	edges <- cbind(c(1:length(edges[,1])),edges)
@@ -387,40 +388,40 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,impulse=T,evf_center=1,vary='
 	tips <- as.numeric(names(connections)[connections==1])
 	internal <- as.numeric(names(connections)[connections==3])
   if(vary=='all'){
-    n_DE_evfs =c(nevf2,nevf2,nevf2)
-    n_ND_evfs =c(nevf1,nevf1,nevf1)
+    N_DE_evfs =c(n_de_evf,n_de_evf,n_de_evf)
+    N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf)
   }else if(vary=='kon'){
-    n_DE_evfs =c(nevf2,0,0)    
-    n_ND_evfs =c(nevf1,nevf2+nevf1,nevf2+nevf1)
+    N_DE_evfs =c(n_de_evf,0,0)    
+    N_ND_evfs =c(n_nd_evf,n_de_evf+n_nd_evf,n_de_evf+n_nd_evf)
   }else if(vary=='koff'){
-    n_DE_evfs =c(0,nevf2,0)    
-    n_ND_evfs =c(nevf2+nevf1,nevf1,nevf2+nevf1)
+    N_DE_evfs =c(0,n_de_evf,0)    
+    N_ND_evfs =c(n_de_evf+n_nd_evf,n_nd_evf,n_de_evf+n_nd_evf)
   }else if(vary=='s'){
-    n_DE_evfs =c(0,0,nevf2)    
-    n_ND_evfs =c(nevf1+nevf2,nevf1+nevf2,nevf1)
+    N_DE_evfs =c(0,0,n_de_evf)    
+    N_ND_evfs =c(n_nd_evf+n_de_evf,n_nd_evf+n_de_evf,n_nd_evf)
   }else if(vary=='except_kon'){
-    n_DE_evfs =c(0,nevf2,nevf2)    
-    n_ND_evfs =c(nevf1+nevf2,nevf1,nevf1)
+    N_DE_evfs =c(0,n_de_evf,n_de_evf)    
+    N_ND_evfs =c(n_nd_evf+n_de_evf,n_nd_evf,n_nd_evf)
   }else if(vary=='except_koff'){
-    n_DE_evfs =c(nevf2,0,nevf2)    
-    n_ND_evfs =c(nevf1,nevf2+nevf1,nevf1)
+    N_DE_evfs =c(n_de_evf,0,n_de_evf)    
+    N_ND_evfs =c(n_nd_evf,n_de_evf+n_nd_evf,n_nd_evf)
   }else if(vary=='except_s'){
-    n_DE_evfs =c(nevf2,nevf2,0)    
-    n_ND_evfs =c(nevf1,nevf1,nevf1+nevf2)
+    N_DE_evfs =c(n_de_evf,n_de_evf,0)    
+    N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf+n_de_evf)
   }
   neutral <- SampleSubtree(root,0,evf_center,edges,ncells,Sigma)
   param_names <- c("kon", "koff", "s")
   evfs <- lapply(c(1:3),function(parami){
-    nd_evf <- lapply(c(1:n_ND_evfs[parami]),function(ievf){
+    nd_evf <- lapply(c(1:N_ND_evfs[parami]),function(ievf){
       rnorm(ncells,evf_center,Sigma)
     })
     nd_evf <- do.call(cbind,nd_evf)
-    if(n_DE_evfs[parami]!=0){
+    if(N_DE_evfs[parami]!=0){
       #if there is more than 1 de_evfs for the parameter we are looking at
       if(impulse==T){
         pdf(file = plotname,width=15,height=5)
-        tip <- rep(tips,ceiling(n_DE_evfs[parami]/length(tips)))
-        de_evf <- lapply(c(1:n_DE_evfs[parami]),function(evf_i){
+        tip <- rep(tips,ceiling(N_DE_evfs[parami]/length(tips)))
+        de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
             impulse <-ImpulseEVFpertip(phyla, edges,root,tips,internal, neutral, tip[evf_i],Sigma,evf_center=evf_center)
             if(plotting==T){PlotRoot2Leave(impulse,tips,edges,root,internal)}
             re_order <- match(
@@ -430,7 +431,7 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,impulse=T,evf_center=1,vary='
           })
         dev.off()
       }else{
-        de_evf <- lapply(c(1:n_DE_evfs[parami]),function(evf_i){
+        de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
           SampleSubtree(root,0,evf_center,edges,ncells,Sigma*50,neutral=neutral)    
         })
       }
@@ -543,7 +544,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                            nevf,evf_center=evf_center,percent_DEevf=percent_DEevf,seed=seed[1])
   }else if(evf_type=='continuous'){
     n_de <- round(nevf*percent_DEevf)
-    evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf-n_de,nevf2=n_de,
+    evf_res <- ContinuousEVF(phyla,ncells_total,n_nd_evf=nevf-n_de,n_de_evf=n_de,
                              evf_center=evf_center,vary=vary,impulse=impulse,
                              Sigma,plotting=T,seed=seed[1])    
   }
