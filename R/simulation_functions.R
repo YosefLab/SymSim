@@ -462,7 +462,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
 #' @param evf_center the value used to generated evf means. Suggested value is 1
 #' @param percent_DEevf the percentage of differential EVFs out of all evfs (nevf)
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
-DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf, n_de_evf, vary='all', evf_center, seed){
+DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf, n_de_evf, vary, evf_center, seed){
   set.seed(seed)
   npop <- length(phyla$tip.label)
   # set the number of cells in each population: first give each population min_popsize cells
@@ -503,20 +503,27 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 	                       may not closely follow the input tree. One can either increase nevf or percent_DEevf to avoid this warning.")}
   
   evfs <- lapply(1:3, function(iparam){
-    pop_evf_mean_DE <- mvrnorm(N_DE_evfs[iparam],rep(evf_center,npop),vcv_evf_mean)
-    pop_evf_DE <- lapply(c(1:npop),function(ipop){
-      evf <- sapply(c(1:N_DE_evfs[iparam]),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean_DE[ievf,ipop],Sigma)})
-      return(evf)
-    })
-    pop_evf_DE <- do.call(rbind,pop_evf_DE)
-    pop_evf_nonDE <- lapply(c(1:npop),function(ipop){
-      evf <- sapply(c(1:(N_ND_evfs[iparam])),function(ievf){rnorm(ncells_pop[ipop],evf_center,Sigma)})
-      return(evf)
-    })
-    pop_evf_nonDE <- do.call(rbind,pop_evf_nonDE)
+    if (N_ND_evfs[iparam] > 0) {
+      pop_evf_nonDE <- lapply(c(1:npop),function(ipop){
+        evf <- sapply(c(1:(N_ND_evfs[iparam])),function(ievf){rnorm(ncells_pop[ipop],evf_center,Sigma)})
+        return(evf)
+      })
+      pop_evf_nonDE <- do.call(rbind,pop_evf_nonDE)
+      colnames(pop_evf_nonDE) <- rep('nonDE',N_ND_evfs[iparam])
+    } else {pop_evf_nonDE <- NULL}
+    if (N_DE_evfs[iparam] > 0){
+      pop_evf_mean_DE <- mvrnorm(N_DE_evfs[iparam],rep(evf_center,npop),vcv_evf_mean)
+      pop_evf_DE <- lapply(c(1:npop),function(ipop){
+        evf <- sapply(c(1:N_DE_evfs[iparam]),function(ievf){rnorm(ncells_pop[ipop],pop_evf_mean_DE[ievf,ipop],Sigma)})
+        return(evf)
+      })
+      pop_evf_DE <- do.call(rbind,pop_evf_DE)
+      colnames(pop_evf_DE) <- rep('DE',N_DE_evfs[iparam])
+    } else {pop_evf_DE <- NULL}
+    
     evfs_per_param <- cbind(pop_evf_nonDE,pop_evf_DE)
-    param_type <- c(rep('nonDE',N_ND_evfs[iparam]),rep('DE',N_DE_evfs[iparam]))
-    colnames(evfs_per_param) <- sprintf("%s_%s_evf%d", param_names[iparam],param_type, 1:(N_ND_evfs[iparam]+N_DE_evfs[iparam]))
+    colnames(evfs_per_param) <- sprintf("%s_%s_evf%d", param_names[iparam],colnames(evfs_per_param), 
+                                        1:(N_ND_evfs[iparam]+N_DE_evfs[iparam]))
     return(evfs_per_param)
   })
   meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
@@ -562,7 +569,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     evf_res <- list(evfs=evfs, meta=data.frame(pop=rep(1, ncells_total)))
   } else if(evf_type=='discrete'){
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
-                           n_nd_evf, n_de_evf, vary='all', evf_center=evf_center, seed=seed[1])
+                           n_nd_evf, n_de_evf, vary=vary, evf_center=evf_center, seed=seed[1])
   }else if(evf_type=='continuous'){
     n_de <- round(nevf*percent_DEevf)
     evf_res <- ContinuousEVF(phyla,ncells_total,n_nd_evf=nevf-n_de,n_de_evf=n_de,
