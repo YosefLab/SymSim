@@ -4,8 +4,8 @@
 \alias{ContinuousEVF}
 \title{Generating EVFs for cells sampled along the trajectory of cell development}
 \usage{
-ContinuousEVF(phyla, ncells, nevf1, nevf2, tip, Sigma, plotting = T, plotname,
-  seed)
+ContinuousEVF(phyla, ncells, nevf1, nevf2, impulse = T, evf_center = 1,
+  vary = "all", Sigma, plotting = T, plotname = "cont_evf.pdf", seed)
 }
 \arguments{
 \item{phyla}{tree for cell developement}
@@ -16,13 +16,13 @@ ContinuousEVF(phyla, ncells, nevf1, nevf2, tip, Sigma, plotting = T, plotname,
 
 \item{nevf2}{Number of EVFs with an impulse signal}
 
-\item{tip}{The leaf that the path with impulse lead to}
-
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
 \item{plotting}{Whether to plot the trajectory or not}
 
 \item{plotname}{The}
+
+\item{tip}{The leaf that the path with impulse lead to}
 }
 \value{
 a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
