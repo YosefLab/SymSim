@@ -8,7 +8,6 @@ k <- sapply(strsplit(files,'_'),function(X){
 	as.numeric(X)
 })
 files <- files[order(k)]
-files <- list.files()
 files <- files[grep('RData',files)]
 files <- files[grep('true',files)]
 
@@ -105,7 +104,7 @@ lapply(files,function(filename){
 	temp <- colnames(meta)
 	DE_evfs <- lapply(c('kon','koff','s'),function(i){
 		k <- c(1:length(temp))[grep(i,temp)]
-		nonDE <- k[grep('non_DE',temp[k])]
+		nonDE <- k[grep('nonDE',temp[k])]
 		DE <- k[!k%in%nonDE]
 		DE <- DE+1-min(k)
 		return(DE)
@@ -120,7 +119,7 @@ lapply(files,function(filename){
 	})
 
 	DEgenes <- lapply(c(1:3),function(parami){
-		id <- rowSums(GE[[parami]][,DE_evfs[[parami]]]!=0) >= floor(length(DE_evfs[[parami]])/2)
+		id <- rowSums(GE[[parami]][,DE_evfs[[parami]]]!=0) > floor(length(DE_evfs[[parami]])/2)
 		if(check_params ==T){
 			de_genes <- params[[parami]][id,]				
 		}else{de_genes <- true_counts[id,]}
@@ -163,8 +162,8 @@ lapply(files,function(filename){
 		DE_p.value <- sapply(c(1:length(DEgenes[[parami]][,1])),function(i){
 		wilcox.test(DEgenes[[parami]][i,meta[,2]==pop1],DEgenes[[parami]][i,meta[,2]==pop2])$p.value
 		})	
-		plot(x=log(base=10,DE_p.value),y=(DE_FC),pch=16,col='red',main=c('kon','koff','s')[parami])
-		points(x=log(base=10,nonDE_p.value),y=(nonDE_FC),pch=16,col='blue')
+		plot(x=log(base=10,nonDE_p.value),y=(nonDE_FC),pch=16,col='blue',main=c('kon','koff','s')[parami])
+		points(x=log(base=10,DE_p.value),y=(DE_FC),pch=16,col='red')
 	}
 	for(i in c(1:3)){
 		plot(mean_FC[[i]],x=c(0:length(DE_evfs[[i]])),pch=16,type='o',main=c('kon','koff','s')[i])

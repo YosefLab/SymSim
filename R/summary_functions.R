@@ -198,10 +198,10 @@ PlotGCLENbias <- function(filename,outputname){
 #' @param filename the name of the simualted robj data file
 
 cv <- function(x) {return(sd(x)/mean(x))}
-
 fano <- function(x) {return((sd(x))^2/mean(x))}
 
 percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
+
 
 
 #' Plotting simulated FNR 
