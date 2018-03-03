@@ -1,3 +1,4 @@
+
 #############################################################
 # Master Equation Related Functions
 #############################################################
@@ -551,10 +552,11 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
-                               n_nd_evf=nevf,n_de_evf=0,impulse=T,vary='all',
+                               n_de_evf=0,impulse=T,vary='all',
                                Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0.2,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
+  n_nd_evf=nevf-n_de_evf
   seed <- sample(c(1:1e5),size=2)
   param_names <- c("kon", "koff", "s")
   if(evf_type=='one.population'){
@@ -624,20 +626,10 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 }
 
 
-# Batch_True2ObservedCounts <- function(){
-
-# }
-# mean_alpha_mean <- rnorm()
-# mean_lenslope <- rnorm()
-#   ....
-# lapply(c(1:nbatch),function(i){
-#   True2ObservedCounts(alpha_mean=mean_alpha_mean[i],)
-#   })
 
 #' Simulate observed count matrix given technical biases and the true counts
 #' @param ncells_total number of cells
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
-#' @param nbatches number of batches (so far only 1)
 #' @param protocol a string, can be "ss2" or "umi"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
@@ -650,7 +642,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param depth_sd std of sequencing depth
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 
-True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,alpha_mean=0.1,alpha_sd=0.02,
+True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.02,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR=16,depth_mean, depth_sd){  
   if(!is.null(SE)){

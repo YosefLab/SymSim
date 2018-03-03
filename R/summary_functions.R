@@ -28,9 +28,7 @@ BestMatchParams <- function(tech,counts,plotfilename){
   best_match <- c(1:length(dists))[rank(dists)%in% c(1:3)]
 
   best_params <- lapply(best_match,function(X){sim_params[X,]})
-  names(best_params) <- c('fano','mean','percent_nonzero')
   plotnames <- c('fano','mean','percent_nonzero')
-  criterion_name <- c('fano','mean','percent_nonzero')
   pdf(file=plotfilename)
   par(mfrow=c(3,3))
   for(i in c(1:3)){
@@ -39,12 +37,13 @@ BestMatchParams <- function(tech,counts,plotfilename){
         bin1=grid_summary[[k]][best_match[i],]
         bin2=exp_summary[[k]]
         if(k %in% c(1,2)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
-        plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste('best',criterion_name[i],'match', plotnames[k]))
+        plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste(i,'best','match', plotnames[k]))
         lines(c(-10,10),c(-10,10),col='red')      
       }
     }
   # }
   dev.off()
+  best_params <- do.call(rbind,best_params)
   return(best_params)
 }
 
