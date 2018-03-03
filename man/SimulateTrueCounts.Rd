@@ -5,11 +5,11 @@
 \title{Generate both evf and gene effect and simulate true transcript counts}
 \usage{
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
-  evf_center = 1, nevf = 10, evf_type = "one.population",
-  percent_DEevf = 0.5, impulse = T, vary = "all", Sigma = 0.5,
-  phyla = NULL, gene_effects_sd = 1, gene_effect_prob = 0.3,
-  bimod = 0.3, param_realdata = "zeisel.imputed", joint = F, randseed,
-  SE = F)
+  evf_center = 1, evf_type = "one.population", nevf = 10,
+  n_nd_evf = nevf, n_de_evf = 0, impulse = T, vary = "all",
+  Sigma = 0.5, phyla = NULL, geffect_mean = 0, gene_effects_sd = 1,
+  gene_effect_prob = 0.3, bimod = 0.2, param_realdata = "zeisel.imputed",
+  joint = F, randseed, SE = F)
 }
 \arguments{
 \item{ncells_total}{number of cells}
@@ -22,11 +22,9 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 
 \item{evf_center}{the value which evf mean is generated from}
 
-\item{nevf}{number of evfs}
-
 \item{evf_type}{string that is one of the following: 'one.population','discrete','continuous'}
 
-\item{percent_DEevf}{percentage of differential evfs between populations}
+\item{nevf}{number of evfs}
 
 \item{Sigma}{parameter of the std of evf values within the same population}
 
@@ -39,6 +37,8 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 \item{randseed}{random seed}
 
 \item{SE}{return summerized experiment rather than a list of elements, default is False}
+
+\item{percent_DEevf}{percentage of differential evfs between populations}
 
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
 

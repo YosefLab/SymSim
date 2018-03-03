@@ -1,3 +1,53 @@
+#' Get the best matched parameter 
+#'
+#' This function matches a real dataset to a database of summary information of simulated datasets, plots a qqplot for user to visualize similarity between their dataset and the simulated dataset, and suggests parameters to use in the simulation
+#' @param tech 'ss2','umi' the match database are constructed based on reasonable values for each technology
+#' @param counts expression matrix
+#' @param plotfilename output name for qqplot
+#' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
+
+BestMatchParams <- function(tech,counts,plotfilename){
+  mean_exprs <- quantile(rowMeans(counts+1,na.rm=T),seq(0,1,0.002))
+  fano_exprs <- quantile(apply(counts,1,fano),seq(0,1,0.002),na.rm=T)
+  percent0 <- quantile(apply(counts,1,percent_nonzero),seq(0,1,0.002))
+  if(tech=='ss2'){
+    load('SymSim/grid_summary/exp_figure4ss2_Lgrid.summary.robj')   
+  }else if(tech =='umi'){
+    load('SymSim/grid_summary/exp_figure4umi_Lgrid.summary.robj')   
+  }
+  grid_summary <- list(fano_bins,mean_bins,nonzero_bins)
+
+  exp_summary <- list(fano_exprs,mean_exprs,percent0)
+  dists <- lapply(c(1:3),function(i){
+   dist <- apply(grid_summary[[i]],1,function(X){sum(abs(X-exp_summary[[i]]))})
+   return(dist)
+  })
+  dists <- do.call(cbind,dists)
+  dists <- apply(dists,2,function(X){X/mean(X)})
+  dists <- rowSums(dists)
+  best_match <- c(1:length(dists))[rank(dists)%in% c(1:3)]
+
+  best_params <- lapply(best_match,function(X){sim_params[X,]})
+  names(best_params) <- c('fano','mean','percent_nonzero')
+  plotnames <- c('fano','mean','percent_nonzero')
+  criterion_name <- c('fano','mean','percent_nonzero')
+  pdf(file=plotfilename)
+  par(mfrow=c(3,3))
+  for(i in c(1:3)){
+    # for(j in c(1:3)){
+      for(k in c(1:3)){
+        bin1=grid_summary[[k]][best_match[i],]
+        bin2=exp_summary[[k]]
+        if(k %in% c(1,2)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
+        plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste('best',criterion_name[i],'match', plotnames[k]))
+        lines(c(-10,10),c(-10,10),col='red')      
+      }
+    }
+  # }
+  dev.off()
+  return(best_params)
+}
+
 #' Get the logged distribution from master equation simulations
 #'
 #' This function converts the frequency on integers from (0-K transcripts) to log scaled frequency, where the log_count_bins gives the range for each count bin

@@ -4,8 +4,8 @@
 \alias{DiscreteEVF}
 \title{Generating EVFs for cells sampled from tip populations from a tree}
 \usage{
-DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf, evf_center,
-  percent_DEevf, seed)
+DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf,
+  n_de_evf, vary, evf_center, seed)
 }
 \arguments{
 \item{phyla}{tree for cell developement}
@@ -18,9 +18,9 @@ DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf, evf_center,
 
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
-\item{nevf}{Number of EVFs per cell}
-
 \item{evf_center}{the value used to generated evf means. Suggested value is 1}
+
+\item{nevf}{Number of EVFs per cell}
 
 \item{percent_DEevf}{the percentage of differential EVFs out of all evfs (nevf)}
 }
