@@ -5,11 +5,11 @@
 \title{Generate both evf and gene effect and simulate true transcript counts}
 \usage{
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
-  evf_center = 1, evf_type = "one.population", nevf = 10,
-  n_nd_evf = nevf, n_de_evf = 0, impulse = T, vary = "all",
-  Sigma = 0.5, phyla = NULL, geffect_mean = 0, gene_effects_sd = 1,
-  gene_effect_prob = 0.3, bimod = 0.2, param_realdata = "zeisel.imputed",
-  joint = F, randseed, SE = F)
+  evf_center = 1, evf_type = "one.population", nevf = 10, n_de_evf = 0,
+  impulse = T, vary = "all", Sigma = 0.5, phyla = NULL,
+  geffect_mean = 0, gene_effects_sd = 1, gene_effect_prob = 0.3,
+  bimod = 0.2, param_realdata = "zeisel.imputed", joint = F, randseed,
+  SE = F)
 }
 \arguments{
 \item{ncells_total}{number of cells}

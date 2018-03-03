@@ -14,7 +14,7 @@ PlotTsne <- function(meta,data,plotname,label,n_pc=20,evf_type="discrete",saving
   data <- data[uniqrows,]
   data_pc <- prcomp(t(data))
   data_pc <- data_pc$x[,c(1:n_pc)]
-  data_tsne=Rtsne(t(data_pc),perplexity=perplexity)
+  data_tsne=Rtsne(data_pc,perplexity=perplexity)
   
   if(evf_type=="discrete" | evf_type=="one.population"){
     plot_tsne <- cbind(meta, data.frame(label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2]))
