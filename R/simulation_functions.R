@@ -530,8 +530,13 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
   meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
   return(list(evfs,meta))
 }
+<<<<<<< HEAD
 
 
+=======
+
+
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 #' Generate both evf and gene effect and simulate true transcript counts
 #' @param ncells_total number of cells
 #' @param min_popsize the number of cells 
@@ -552,11 +557,18 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
+<<<<<<< HEAD
                                n_de_evf=0,impulse=T,vary='all',
                                Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0.2,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
   n_nd_evf=nevf-n_de_evf
+=======
+                               n_nd_evf=nevf,n_de_evf=0,impulse=T,vary='all',
+                               Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
+                               bimod=0.2,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
+  set.seed(randseed)
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
   seed <- sample(c(1:1e5),size=2)
   param_names <- c("kon", "koff", "s")
   if(evf_type=='one.population'){
@@ -626,6 +638,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 }
 
 
+<<<<<<< HEAD
 
 #' Simulate observed count matrix given technical biases and the true counts
 #' @param ncells_total number of cells
@@ -674,6 +687,22 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
 #' @param batch_effect the ratio of standard deviation to mean when sampling per batch parameters, default is 0.1
 #' @param nbatch number of batches, default is 3
 #' @param true_counts output of SimulateTrueCounts, with true count matrix and cell meta data
+=======
+# Batch_True2ObservedCounts <- function(){
+
+# }
+# mean_alpha_mean <- rnorm()
+# mean_lenslope <- rnorm()
+#   ....
+# lapply(c(1:nbatch),function(i){
+#   True2ObservedCounts(alpha_mean=mean_alpha_mean[i],)
+#   })
+
+#' Simulate observed count matrix given technical biases and the true counts
+#' @param ncells_total number of cells
+#' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
+#' @param nbatches number of batches (so far only 1)
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 #' @param protocol a string, can be "ss2" or "umi"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
@@ -684,6 +713,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
 #' @param nPCR the number of PCR cycles, default is 16
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
+<<<<<<< HEAD
 BatchTrue2ObservedCounts <- function(
   true_counts,protocol,batch_effect=0.1,nbatch=3,
   alpha_mean=0.1,alpha_sd=0.02,lenslope=0.01,
@@ -726,7 +756,37 @@ BatchTrue2ObservedCounts <- function(
   observed_counts=batch_counts
   return(list(observed_counts,meta_cell))
 }
+=======
+#' @param SE input, should be a summerized experiment rather than a list of elements, default is False
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 
+True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,nbatch=1,protocol,alpha_mean=0.1,alpha_sd=0.02,
+                                lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
+                                rate_2PCR=0.8,nPCR=16,depth_mean, depth_sd){  
+  if(!is.null(SE)){
+    meta_cell <- colData(SE)
+    true_counts <- assays(SE)$count
+  }
+  ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
+  amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
+  rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
+  rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
+  depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
+  depth_vec[which(depth_vec < 200)] <- 200
+  observed_counts <- matrix(0, ngenes, ncells)
+  for (icell in 1:ncells){
+    observed_counts[, icell] <- amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
+                                              rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
+                                              rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell]) 
+  }
+  meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
+  meta_cell <- cbind(meta_cell, meta_cell2)
+  if(is.null(SE)){return(list(observed_counts, meta_cell))}else{
+    assays(SE)$observed_counts <- observed_counts
+    colData(SE)<-meta_cell
+    return(SE)
+  }
+}
 
 #' Simulate technical biases 
 #' @param lenslope amount of length bias

@@ -6,15 +6,23 @@
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
 
+<<<<<<< HEAD
 PlotTsne <- function(meta,data,plotname,label,n_pc=20,evf_type="discrete",saving=F,perplexity=10){
+=======
+PlotTsne <- function(meta,data,plotname,label,evf_type="discrete",saving=F,perplexity=10){
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
   library('Rtsne')
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
   data <- data[,uniqcols];meta <- meta[uniqcols,,drop=FALSE] 
   uniqrows<-c(1:length(data[,1]))[!duplicated(data)]
   data <- data[uniqrows,]
+<<<<<<< HEAD
   data_pc <- prcomp(t(data))
   data_pc <- data_pc$x[,c(1:n_pc)]
   data_tsne=Rtsne(data_pc,perplexity=perplexity)
+=======
+  data_tsne=Rtsne(t(data),perplexity=perplexity)
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
   
   if(evf_type=="discrete" | evf_type=="one.population"){
     plot_tsne <- cbind(meta, data.frame(label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2]))

@@ -5,10 +5,17 @@
 \title{Generate both evf and gene effect and simulate true transcript counts}
 \usage{
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
+<<<<<<< HEAD
   evf_center = 1, evf_type = "one.population", nevf = 10, n_de_evf = 0,
   impulse = T, vary = "all", Sigma = 0.5, phyla = NULL,
   geffect_mean = 0, gene_effects_sd = 1, gene_effect_prob = 0.3,
   bimod = 0.2, param_realdata = "zeisel.imputed", joint = F, randseed,
+=======
+  evf_center = 1, nevf = 10, evf_type = "one.population",
+  percent_DEevf = 0.5, impulse = T, vary = "all", Sigma = 0.5,
+  phyla = NULL, gene_effects_sd = 1, gene_effect_prob = 0.3,
+  bimod = 0.3, param_realdata = "zeisel.imputed", joint = F, randseed,
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
   SE = F)
 }
 \arguments{
@@ -22,6 +29,7 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 
 \item{evf_center}{the value which evf mean is generated from}
 
+<<<<<<< HEAD
 \item{evf_type}{string that is one of the following: 'one.population','discrete','continuous'}
 
 \item{nevf}{number of evfs}
@@ -39,6 +47,25 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 \item{SE}{return summerized experiment rather than a list of elements, default is False}
 
 \item{percent_DEevf}{percentage of differential evfs between populations}
+=======
+\item{nevf}{number of evfs}
+
+\item{evf_type}{string that is one of the following: 'one.population','discrete','continuous'}
+
+\item{percent_DEevf}{percentage of differential evfs between populations}
+
+\item{Sigma}{parameter of the std of evf values within the same population}
+
+\item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package}
+
+\item{gene_effect_prob}{the probability that the effect size is not 0}
+
+\item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
+
+\item{randseed}{random seed}
+
+\item{SE}{return summerized experiment rather than a list of elements, default is False}
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
 

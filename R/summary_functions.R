@@ -247,10 +247,15 @@ PlotGCLENbias <- function(filename,outputname){
 #' @param filename the name of the simualted robj data file
 
 cv <- function(x) {return(sd(x)/mean(x))}
+<<<<<<< HEAD
+=======
+
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 fano <- function(x) {return((sd(x))^2/mean(x))}
 
 percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
 
+<<<<<<< HEAD
 
 
 #' Plotting simulated FNR 
@@ -369,6 +374,125 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
+=======
+
+#' Plotting simulated FNR 
+#'
+#' @param current_counts expression matrix
+#' @param true_counts true expression matrix
+#' @param titlestr title string
+
+plotFNRsim <- function(current_counts, true_counts, x_use="true", titlestr){
+  
+  #cellsize <- colSums(current_counts)
+  zeros <- colSums(current_counts==0 & true_counts!=0)
+  #summary(zeros)
+  
+  ref.glms <- lapply(c(1:length(true_counts[1,])),function(i){
+    real <- true_counts[,i]
+    bias <- current_counts[,i]/sum(current_counts[,i])*10^6
+    fn <- (bias==0 & real!=0)
+    if (x_use == "observed")
+    {data <- data.frame(exprs=log(bias+1,10), fn=fn)} else
+      if (x_use == "true")
+      {data <- data.frame(exprs=log(real+1,10), fn=fn)}
+    data <- data[real!=0,]
+    model <- glm(fn~exprs,family=binomial(link='logit'),data=data)
+    return(model$coefficients)
+  })
+  
+  ncols <- 2000
+  colfunc <- colorRampPalette(c("blue", "green", "red", "purple"))
+  allcol <- colfunc(ncols)
+  
+  col_vec <- allcol[round(rescale2range(colSums(current_counts), 2000))]
+  
+  plot(NULL, main = sprintf("FNR Curves %s", titlestr), ylim = c(0,1),xlim = c(0,6), 
+       ylab = "Failure Probability", xlab = "Mean log10 Expression")
+  x = (0:60)/10
+  for(si in 1:length(ref.glms)){
+    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
+    lines(x, y, type = 'l', lwd = 2, col=col_vec[si])
+  }
+}
+
+#' Plotting real data FNR 
+#'
+#' @param expr_matrix expression matrix
+#' @param hk house keeping genes
+#' @param data_name title string
+#' @param col_vec color vector
+
+plotFNRreal <- function(expr_matrix, hk, data_name, col_vec){
+  # Mean log10(x+1) expression
+  mu_obs = rowMeans(log10(expr_matrix[hk,]+1))
+  drop_outs = expr_matrix[hk,] == 0
+  
+  # Logistic Regression Model of Failure
+  ref.glms = list()
+  for (si in 1:dim(drop_outs)[2]){
+    #fit = glm(cbind(drop_outs[,si], 1 - drop_outs[,si]) ~ mu_obs,family=binomial(logit))
+    fit = glm(drop_outs[,si] ~ mu_obs,family=binomial(logit))
+    ref.glms[[si]] = fit$coefficients
+  }
+  
+  #The list ref.glm contains the intercept and slope of each fit. 
+  # We can now visualize the fit curves and the corresponding Area Under the Curves (AUCs):
+  plot(NULL, main = sprintf("FNR Curves %s", data_name), ylim = c(0,1),xlim = c(0,6), 
+       ylab = "Failure Probability", xlab = "Mean log10 Expression")
+  x = (0:60)/10
+  for(si in 1:ncol(expr_matrix)){
+    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
+    lines(x, 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1), type = 'l', lwd = 2, col=col_vec[si])
+  }
+}
+
+
+plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
+  variance_perc <- 100*(PCAres$sdev)^2/sum((PCAres$sdev)^2)
+  plot(PCAres$x[,1], PCAres$x[,2], col=col_vec, pch=20,
+       xlab=sprintf("PC1 %4.2f%%", variance_perc[1]), 
+       ylab=sprintf("PC2 %4.2f%%", variance_perc[2]),
+       main=figuretitle)
+}
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 ks.dist<- function (spec1, spec2, f = NULL, mel = FALSE, plot = FALSE, 
     type = "l", lty = c(1, 2), col = c(2, 4), flab = NULL, alab = "Cumulated amplitude", 
     flim = NULL, alim = NULL, title = TRUE, legend = TRUE) 

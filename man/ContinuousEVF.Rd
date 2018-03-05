@@ -4,9 +4,14 @@
 \alias{ContinuousEVF}
 \title{Generating EVFs for cells sampled along the trajectory of cell development}
 \usage{
+<<<<<<< HEAD
 ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = T,
   evf_center = 1, vary = "all", Sigma, plotting = T,
   plotname = "cont_evf.pdf", seed)
+=======
+ContinuousEVF(phyla, ncells, nevf1, nevf2, impulse = T, evf_center = 1,
+  vary = "all", Sigma, plotting = T, plotname = "cont_evf.pdf", seed)
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 }
 \arguments{
 \item{phyla}{tree for cell developement}
@@ -15,7 +20,11 @@ ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = T,
 
 \item{n_nd_evf}{Number of EVFs that do not have an impulse signal}
 
+<<<<<<< HEAD
 \item{n_de_evf}{Number of EVFs with an impulse signal}
+=======
+\item{nevf2}{Number of EVFs with an impulse signal}
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
