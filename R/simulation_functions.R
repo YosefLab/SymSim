@@ -32,6 +32,33 @@ MasterEqn2 <- function(rateParams){
   return(p_all[-1]) # data_1gene is indices
 }
 
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
+=======
+#' Getting True Counts from EVF and Gene effects
+#'
+#' This function first calls the Get_params function to calculate the kinetic parameters from evf and gene effects. 
+#' And then tweaks the bimodality variable
+#' At last finds the best matched simulation and sample from the master equation and outputs the true expression of a single cell 
+#' @param allparams the sets of parameter used to simulate master equations
+#' @param sim_master the master equation results
+#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
+#' @param gene_effects a list of three matrices (generated using the GeneEffects function), each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
+#' @param bimdod the parameter for increasing the bimodality of dataset. Takes value between 0 and 1, where 0 means keep the kinetic parameters as is, and 1 means move the kinetic parameters on the kon-koff plane to a space where the distribution of transcript counts is bimodal 
+#' @return the simulated (true) expression matrix
+#' @examples 
+#' EVF2TrueCounts()
+EVF2TrueCounts <- function(allparams,param_realdata,sim_master,evf,gene_effects,bimod, scale_s){
+  if (missing(scale_s)) {scale_s <- 1}
+	nevf <- length(evf) # this evf is for only one cell
+	ngenes <- length(gene_effects[[1]][,1])
+	params <- Get_params(gene_effects,evf,param_realdata,bimod, scale_s)
+	best_matches <- FNN::knnx.index(data=allparams,query=params,k=1,algorithm=c('kd_tree'))
+	sim <- sim_master[best_matches]
+	sim_exprs <- SampleExprs(sim,1)
+	return(sim_exprs) # sim_exprs is gene expression values in only one cell
+}
+
+>>>>>>> update vignette files
 
 #' Getting GeneEffects matrices 
 #'
@@ -70,6 +97,7 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 Get_params <- function(gene_effects,evf,match_params,bimod){
   nparams <- length(match_params[,1])
   params <- lapply(gene_effects,function(X){evf %*% t(X)})
@@ -112,6 +140,47 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
   scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - (x+1)*bimod)})
   scaled_params <- lapply(scaled_params,t)
   return(scaled_params)
+=======
+# param_realdata is the parameter distribution from real data
+Get_params <- function(gene_effects,evf,param_realdata,bimod,scale_s){
+  if (missing(scale_s)){scale_s <- 1}
+  # generate parameters from evf and gene effects
+  # for all genes in one cell
+  params <- lapply(gene_effects,function(X){X %*% evf})
+  params <- do.call(cbind,params)
+  params <- apply(params,2,function(x){1/(1+exp(-x))}) 
+  
+  # map generated parameters to distribution of params from real data
+  # values in params calculated from sigmoid function are between 0-1
+  nparams <- length(param_realdata[,1])
+  params[,1] = sort(param_realdata[,1])[ceiling(params[,1]*nparams)]
+  params[,2] = sort(param_realdata[,2])[ceiling(params[,2]*nparams)]
+  params[,3] = sort(param_realdata[,3])[ceiling(params[,3]*nparams)]
+  
+  # increase the bimodality of data by parameter beta
+  params[,1] <- log(base=10,params[,1])
+  params[,2] <- log(base=10,params[,2])
+  params[,1] <- 10^(params[,1] - (params[,1]+0.5)*bimod)
+  params[,2] <- 10^(params[,2] - (params[,2]+1)*bimod)
+  params[,3] <- params[,3] * scale_s
+  return(params)
+}
+
+#' Sample read counts from master equation
+#'
+#' This function takes ngenes distributions of transcript counts calculated by the master equation and sample from them
+#' @param sim_dist master equation
+#' @param cells the number of times to sample from each distribution
+#' @return counts is a matrix of dimension ngenes * ncells
+#' @examples 
+#' SampleExprs()
+SampleExprs <- function(sim_dist,ncells){
+	counts=lapply(sim_dist,function(X){
+		sample((c(1:length(X))-1),prob=X,size=ncells,replace=T)
+	})
+	counts=do.call(rbind,counts)
+	return(counts)
+>>>>>>> update vignette files
 }
 
 #' This function simulates the amplification, library prep, and the sequencing processes.
@@ -246,6 +315,39 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
     return(vecImpulseValue)
 }
 
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
+=======
+#' find closest matching simulated parameter sets 
+#'
+#' using kd-tree method find the simulated distribution that is closest to the observed distribution, and as diagnostic, plot the expression heat map of the true counts and the best-match simulated counts, and also the distribution of the parameters
+#' @param sim_master the output of the master equation simulation serving as the database
+#' @param allparams the parameters that produced the sim_master
+#' @param log_count_bin the log scale bins
+#' @param counts the real expression matrix that we are trying to fit to
+#' @param plotting (boolean) whether to generate plots or not, default is true
+#' @param samplename the prefix of the output plots 
+#' @return match_params the best matched parameters
+MatchParams <- function(sim_master,allparams,log_count_bin,counts,plotting=TRUE,samplename){
+  print("function MatchParams() is used")
+	simlogdist <- Sim_LogDist(sim_master,log_count_bin)
+	truelogdist <- LogDist(counts, log_count_bin)
+	outofrange <- is.na(rowMeans(truelogdist))
+	counts <- counts[!outofrange,]
+	truelogdist <- truelogdist[!outofrange,]
+	#there are 6 genes ACTB (beta actin), GAPDH, Il17f(Interleukin 17f), Rpl41(Ribosomal Protein L41) , Il9(Interleukin 9), Rn18s.rs5(18s RNA) taht have greater than 10^4 expression and are ignore 
+	best_matches=knnx.index(data=simlogdist,query=truelogdist,k=10,algorithm=c('kd_tree'))
+	matchedlogdist=lapply(best_matches[,1],function(X){simlogdist[X,]})
+	matchedlogdist=do.call(rbind,matchedlogdist)
+	rownames(matchedlogdist)=rownames(truelogdist);colnames(matchedlogdist)=colnames(truelogdist)
+	match_params <- allparams[best_matches[,1],] 
+	if(plotting==T){
+		p1 <- PlotCountHeatmap(truelogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.true.logged.jpeg',sep=''))
+		p2 <- PlotCountHeatmap(matchedlogdist,rowMeans(counts),given_ord=NA,0.99,filename=paste(samplename,'.sim.logged.jpeg',sep=''))
+		p3 <- PlotParamHist(match_params,samplename)
+	}
+	return(list(match_params,p1,p2,p3))
+}
+>>>>>>> update vignette files
 
 
 #' Creating an example tree with 5 tips
@@ -328,9 +430,15 @@ ContinuousEVF <- function(phyla,ncells,nevf1,nevf2,tip,Sigma,plotting=T,plotname
 #' @param nevf Number of EVFs per cell
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
   set.seed(seed)
 	npop <- length(phyla$tip.label) # number of populations
+=======
+DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf){
+	npop <- length(phyla$tip.label) # number of populations
+	
+>>>>>>> update vignette files
 	# set the number of cells in each population
 	# first give each population min_popsize cells
 	# then randomly distribute the rest of cells to all populations except the smallest (first) one
@@ -350,13 +458,42 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, Sigma, nevf,seed){
 	return(list(evfs,meta))
 }
 
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 
+=======
+#' Generate alpha vector for ncells
+#' @param ncells number of cells
+#' @param alpha the mean value of a normal distribution where alpha is sampled from
+#' @param alpha_sd the standard deviation value of a normal distribution where alpha is sampled from
+#' @return a vector with an alpha value for each cell
+SampleAlpha <- function(ncells,alpha,alpha_sd){
+	alphas <- rnorm(ncells,mean=alpha,sd=alpha_sd)
+	alphas[alphas<0] <- 0	
+	alphas[alphas>1] <- 1
+	return(alphas)
+}
+
+
+#' Generate gene bias vector for each gene
+#' @param ngenes number of gene 
+#' @param nbatch number of batches 
+#' @param batch_sd the standard deviation for the random per genebias in each batch (same for each batch)
+#' @return a vector with an batch bias for each gene
+SampleBatch <- function(ngenes,nbatch,batch_sd){
+	batch <- lapply(c(1:nbatch),function(i){
+	   	exp(rnorm(ngenes,mean=0,sd=batch_sd))
+	})
+	batch <- do.call(cbind,batch)
+	return(batch)
+}
+>>>>>>> update vignette files
 
 #' Generate both evf and gene effect and simulate true transcript counts
 #' @param ncells_total number of cells
 #' @param min_popsize the number of cells 
 #' @param ngenes number of genes
 #' @param nevf number of evfs
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 #' @param evf_type string that is one of the following: 'one.population','discrete','continuous'
 #' @param Sigma parameter of the std of evf values within the same population
 #' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
@@ -397,10 +534,49 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
   })
   counts <- do.call(rbind,counts)
   return(list(counts,gene_effects,evf_res,params))
+=======
+#' @param nbatch number of batches
+#' @param evfs matrix with ncells rows and nevf columns, can be generated by ContinuousEVF and DiscreteEVF
+#' @param gene_effects a list of length 3, each element is a sparse matrix determining how each gene is affected by the EVF of that cell
+#' @param alphas a vector of length ncells
+#' @param beta a single float value between 0 and 1 determining the bimodality of entire dataset
+#' @param gcbias a vector of length ngenes
+#' @param lenbias a vector of length ngenes
+#' @param batch a matrix of ngenes rows and nbatch columns
+#' @param batch_id a vector of length ncells indicating which batch each cell comes from (randomly generated)
+#' @param meta1 meta data generated from EVF function (population, depth in the tree, etc.)
+#' @param epsilon a single float value the magnitude of independent noise for each gene in each cell
+#' @return a list of 3 objects, one is a list of the count matrices (true counts, dropped counts and biased counts), the per cell meta data, and the per gene meta data
+SimulateCounts <- function(ncells,ngenes,nevf,nbatch,evfs,gene_effects,
+	alphas,beta,gcbias,lenbias,batch,batch_id,meta1,epsilon){
+	#check dimension of input
+	if(length(evfs[,1])!=ncells){print('ERROR: number of rows of evf is the number of cells');stop()}
+	if(length(evfs[1,])!=nevf){print('ERROR: number of columns of evf is the number of evfs');stop()}
+	if(length(alphas)!=ncells){print('ERROR:need one alpha for each cell');stop()}
+	if(length(beta)!=1){print('ERROR:need only one beta for an experiment');stop()}
+	if(length(gcbias)!=ngenes){print('ERROR: need GC bias for each gene');stop()}
+	if(length(lenbias)!=ngenes){print('ERROR: need length bias for each gene');stop()}
+	if(length(batch[,1])!=ngenes){print('ERROR: number of rows in batch effect is equal to the number of genes');stop()}
+	if(length(batch[1,])!=nbatch){print('ERROR: number of columns if batch effect is equal to the number of bathces');stop()}
+	
+	
+	biased_exprs <- lapply(c(1:ncells),function(i){
+		X <- dropped_exprs[,i]
+		jiggle <- rnorm(ngenes,mean=0,sd=epsilon)
+		Y <- X * gcbias * lenbias * batch[,batch_id[i]] * exp(jiggle)
+		return(Y)
+	})
+	
+	biased_exprs <- do.call(cbind,biased_exprs)
+	meta <- data.frame(batch=batch_id,alpha=alphas,evfs=evfs)
+	meta <- cbind(meta1,meta)
+	return(list(list(true_counts,dropped_exprs,biased_exprs),meta))
+>>>>>>> update vignette files
 }
 
 # Batch_True2ObservedCounts <- function(){
 
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 # }
 # mean_alpha_mean <- rnorm()
 # mean_lenslope <- rnorm()
@@ -408,6 +584,63 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,ngenes,
 # lapply(c(1:nbatch),function(i){
 #   True2ObservedCounts(alpha_mean=mean_alpha_mean[i],)
 #   })
+=======
+# this function needs substantial work!
+# also need to make the size of clusters different
+SimulateTrueCounts <- function(ncells_total,min_popsize=ncells_total,ngenes,
+                            nevf=10,evf_type="one.population",Sigma=0.3,phyla=NULL,
+                            gene_effects_sd=1,gene_effect_prob=0.3,
+                            bimod=0.3,randseed=0){
+  if(evf_type=='one.population'){
+    evf_mean=rep(0,nevf); evf_sd=rep(Sigma,nevf)
+    evfs <- lapply(c(1:ncells_total),function(celli){
+      evf <- sapply(c(1:nevf),function(ievf){rnorm(1,evf_mean[ievf],evf_sd[ievf])})
+      return(evf)
+    })
+    evf_res <- list(evfs=do.call(rbind, evfs), meta=data.frame(pop=rep(1, ncells_total)))
+  } else if(evf_type=='discrete'){
+    evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,Sigma,nevf)
+  }else if(evf_type=='continuous'){
+    evf_res <- ContinuousEVF(phyla,ncells_total,nevf1=nevf/2,nevf2=nevf/2,
+                             tip=1,Sigma,plotting=T,plotname)		
+  }
+  set.seed(randseed)
+  seed <- sample(c(1:1e5),size=3)
+  gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[3],prob=gene_effect_prob, 
+                              geffect_mean=0, geffect_sd=gene_effects_sd)
+  true_counts <- lapply(c(1:ncells_total),function(celli){
+    true_counts <- EVF2TrueCounts(allparams,param_realdata,sim_master,evf=evf_res[[1]][celli,],gene_effects,bimod=bimod, scale_s=1)
+    return(true_counts)
+  })
+  true_counts <- do.call(cbind,true_counts)
+  return(list(counts=true_counts, meta_cell=evf_res[[2]]))
+}
+
+
+
+True2ObservedCounts <- function(true_counts,meta_cell,nbatch=1,protocol,alpha_mean=0.1,alpha_sd=0.02,
+                                lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
+                                batch_sd=0.5,epsilon=0.05,rate_2PCR=0.8,nPCR=16,
+                                depth_mean, depth_sd,randseed=0){  
+  ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
+  amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
+  
+  rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
+  rate_2cap_vec[which(rate_2cap_vec < 0.01)] <- 0.01
+  depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
+  depth_vec[which(depth_vec < 500)] <- 500
+  
+  observed_counts <- matrix(0, ngenes, ncells)
+  for (icell in 1:ncells){
+    observed_counts[, icell] <- amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
+                                              rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
+                                              rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell]) 
+  }
+  meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
+  meta_cell <- cbind(meta_cell, meta_cell2)
+  return(list(observed_counts, meta_cell))
+}
+>>>>>>> update vignette files
 
 #' Simulate observed count matrix given technical biases and the true counts
 #' @param ncells_total number of cells

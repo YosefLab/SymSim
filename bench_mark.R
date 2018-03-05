@@ -2,7 +2,10 @@
 # Clustering 
 #######################
 
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 <<<<<<< HEAD
+=======
+>>>>>>> update vignette files
 required_packages <- c('devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer',
                        'fOptions','fBasics','timeSeries','timeDate','Biobase','repr' )
 install_packages <- rownames(installed.packages())
@@ -13,6 +16,7 @@ load_result <- lapply(required_packages, require, character.only = TRUE)
 
 load('allsim.20170706.robj')
 load('param_realdata.robj')
+<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 load_all('SCsimR')
 
 
@@ -28,6 +32,13 @@ load_all('SCsimR')
 # param_names <- c('bimod','alpha','evf_sd','batch','robj')
 param_names <- c('beta','alpha','evf_sd','batch','discrete')
 >>>>>>> 99929bdf19520594c788b04b39fb5c4476efbe77
+=======
+load_all('SCsimR')
+
+
+
+param_names <- c('bimod','alpha','evf_sd','batch','robj')
+>>>>>>> update vignette files
 
 
 files <- list.files('20170905_sim/')
