@@ -27,9 +27,9 @@ PlotRoot2Leave<-function(temp,tips,edges,root,internal){
   })
 }
 
-ImpulseEVFpertip <- function(phyla, edges,root,tips,internal, neutral, tip,Sigma){
+ImpulseEVFpertip <- function(phyla, edges,root,tips,internal, neutral, tip,Sigma,evf_center){
   beta <- runif(1,5,15)
-  h1 <- runif(1,0.1,1.25)
+  h1 <- runif(1,2,5)
   h2 <- runif(1,0,h1)
   t1 <- runif(1,0,0.9)
   t2 <- runif(1,t1,1)
@@ -40,7 +40,7 @@ ImpulseEVFpertip <- function(phyla, edges,root,tips,internal, neutral, tip,Sigma
   plot(phyla,show.tip.label = F,lwd=2)
   tiplabels(cex=2)
   nodelabels(cex=2)
-  neutral2 <- SampleSubtree(root,0,0,edges,ncells,Sigma,neutral)
+  neutral2 <- SampleSubtree(root,0,evf_center,edges,ncells,Sigma,neutral)
   feature_samples <- AddImpulse(path,edges,neutral2,ImpulseParam,T,tip,tips)
   return(feature_samples)
 }

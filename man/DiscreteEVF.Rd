@@ -4,7 +4,13 @@
 \alias{DiscreteEVF}
 \title{Generating EVFs for cells sampled from tip populations from a tree}
 \usage{
-DiscreteEVF(phyla, ncells_total, min_popsize, Sigma, nevf, seed)
+<<<<<<< HEAD
+DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf,
+  n_de_evf, vary, evf_center, seed)
+=======
+DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, nevf, evf_center,
+  percent_DEevf, seed)
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 }
 \arguments{
 \item{phyla}{tree for cell developement}
@@ -13,9 +19,20 @@ DiscreteEVF(phyla, ncells_total, min_popsize, Sigma, nevf, seed)
 
 \item{min_popsize}{size of the rarest population}
 
+\item{i_minpop}{to specify which population has the smallest size}
+
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
+\item{evf_center}{the value used to generated evf means. Suggested value is 1}
+
 \item{nevf}{Number of EVFs per cell}
+
+<<<<<<< HEAD
+=======
+\item{evf_center}{the value used to generated evf means. Suggested value is 1}
+
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
+\item{percent_DEevf}{the percentage of differential EVFs out of all evfs (nevf)}
 }
 \value{
 a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)

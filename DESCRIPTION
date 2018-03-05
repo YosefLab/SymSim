@@ -15,8 +15,7 @@ Depends:
     fOptions, 
     fBasics,
     labeling,
-    timeSeries, 
-    timeDate, 
+    timeSeries,  
     FNN, 
     reshape,
     gridExtra,
@@ -24,9 +23,10 @@ Depends:
     Biobase,
     ape,
     MASS,
-    phytools,
     roxygen2,
-    repr
+    repr,
+    SummarizedExperiment,
+    plyr
 Suggests:
    knitr,
    rmarkdown

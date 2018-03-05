@@ -1,0 +1,7 @@
+load('~/ResearchProjects/scRNA_simulation/match_params/130cells.BPparams.robj')
+match_params = data.frame(kon=rowMeans(params3$kon[,,1]),koff=rowMeans(params3$koff[,,1]),s=rowMeans(params3$s[,,1]))
+save(match_params,file='match_params.bpMCMC.robj')
+par(mfrow=c(1,3))
+hist(log(base=10,match_params[,1]),col='red',20,main='kon')
+hist(log(base=10,match_params[,2]),col='blue',20,main='koff')
+hist(log(base=10,match_params[,3]),col='green',20,main='s')

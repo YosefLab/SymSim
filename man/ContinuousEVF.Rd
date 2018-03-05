@@ -4,25 +4,35 @@
 \alias{ContinuousEVF}
 \title{Generating EVFs for cells sampled along the trajectory of cell development}
 \usage{
-ContinuousEVF(phyla, ncells, nevf1, nevf2, tip, Sigma, plotting = T, plotname,
-  seed)
+<<<<<<< HEAD
+ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = T,
+  evf_center = 1, vary = "all", Sigma, plotting = T,
+  plotname = "cont_evf.pdf", seed)
+=======
+ContinuousEVF(phyla, ncells, nevf1, nevf2, impulse = T, evf_center = 1,
+  vary = "all", Sigma, plotting = T, plotname = "cont_evf.pdf", seed)
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 }
 \arguments{
 \item{phyla}{tree for cell developement}
 
 \item{ncells}{number of cells}
 
-\item{nevf1}{Number of EVFs that do not have an impulse signal}
+\item{n_nd_evf}{Number of EVFs that do not have an impulse signal}
 
+<<<<<<< HEAD
+\item{n_de_evf}{Number of EVFs with an impulse signal}
+=======
 \item{nevf2}{Number of EVFs with an impulse signal}
-
-\item{tip}{The leaf that the path with impulse lead to}
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
 \item{plotting}{Whether to plot the trajectory or not}
 
 \item{plotname}{The}
+
+\item{tip}{The leaf that the path with impulse lead to}
 }
 \value{
 a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)

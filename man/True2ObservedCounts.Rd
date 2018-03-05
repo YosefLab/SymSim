@@ -4,15 +4,21 @@
 \alias{True2ObservedCounts}
 \title{Simulate observed count matrix given technical biases and the true counts}
 \usage{
-True2ObservedCounts(true_counts, meta_cell, nbatch = 1, protocol,
+<<<<<<< HEAD
+True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
+=======
+True2ObservedCounts(SE = NULL, true_counts, meta_cell, nbatch = 1, protocol,
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
   alpha_mean = 0.1, alpha_sd = 0.02, lenslope = 0.01, nbins = 20,
   gene_len, amp_bias_limit = c(-0.2, 0.2), rate_2PCR = 0.8, nPCR = 16,
-  depth_mean, depth_sd, randseed = 0)
+  depth_mean, depth_sd)
 }
 \arguments{
+\item{SE}{input, should be a summerized experiment rather than a list of elements, default is False}
+
 \item{meta_cell}{the meta information related to cells, will be combined with technical cell level information and returned}
 
-\item{protocol}{a string, can be "ss2" or "10x"}
+\item{protocol}{a string, can be "ss2" or "umi"}
 
 \item{alpha_mean}{the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency}
 
@@ -33,10 +39,11 @@ True2ObservedCounts(true_counts, meta_cell, nbatch = 1, protocol,
 \item{depth_sd}{std of sequencing depth}
 
 \item{ncells_total}{number of cells}
+<<<<<<< HEAD
+=======
 
 \item{nbatches}{number of batches (so far only 1)}
-
-\item{true_counts_1cell}{the true transcript counts for one cell (one vector)}
+>>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts
