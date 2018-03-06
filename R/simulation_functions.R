@@ -620,7 +620,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
   })
   cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
-  return(list(counts,gene_effects,evf_res,params))
+  return(list(counts,gene_effects,cell_meta,params))
 }
 
 
@@ -665,7 +665,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
     colData(SE)<-meta_cell
     return(SE)
   }
-  
+}
 
 #' Simulate observed count matrix given technical biases and the true counts in multiple batches
 #' @param batch_effect the ratio of standard deviation to mean when sampling per batch parameters, default is 0.1
