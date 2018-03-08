@@ -8,17 +8,10 @@ Sigma <- 1
 
 PlotRoot2Leave<-function(temp,tips,edges,root,internal){
   edgenames <-apply(temp[,c(1,2)],1,function(X){paste0(X,collapse = '.')})
-<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
    paths <- lapply(tips,function(tip){
     path<-GetPath(tip,edges,root,tips,internal)
     if(dim(path)[1]!=1){
     path_enames <- apply(path[,c(2,3)],1,function(X){paste0(X,collapse='.')})
-=======
-  paths <- lapply(tips,function(tip){
-    path<-GetPath(tip,edges,root,tips,internal)
-    if(dim(path)[1]!=1){
-      path_enames <- apply(path[,c(2,3)],1,function(X){paste0(X,collapse='.')})
->>>>>>> update vignette files
     }else{
       path_enames <- paste0(path[1,c(2,3)],collapse='.')
     }
@@ -147,7 +140,6 @@ SampleSubtree <- function(par,depth,anc_state,edges,ncells,Sigma,neutral=NA){
     if(sum(edges[,2]==children[j])==0){
       if(is.na(neutral[1])){
         result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma)}else{
-<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
          t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
           result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma,t_sample)
         }
@@ -159,19 +151,6 @@ SampleSubtree <- function(par,depth,anc_state,edges,ncells,Sigma,neutral=NA){
           result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma,t_sample)
         }
      anc_state <- result[length(result[,1]),4]
-=======
-          t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
-          result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma,t_sample)
-        }
-      result <- result[c(1:(length(result[,1]-1))),]
-    }else{
-      if(is.na(neutral[1])){
-        result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma)}else{
-          t_sample <- neutral[neutral[,1]==edge[2] & neutral[,2]==edge[3],3]
-          result <- SampleEdge(edge,depth,anc_state,edges,ncells,Sigma,t_sample)
-        }
-      anc_state <- result[length(result[,1]),4]
->>>>>>> update vignette files
       result <- result[c(1:(length(result[,1]-1))),]
       depth <- depth + edge[4]
       result1 <- SampleSubtree(children[j],depth,anc_state,edges,ncells,Sigma,neutral)
@@ -196,8 +175,4 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
   vecImpulseValue[vecImpulseValue < 10^(-10)] <- 10^(-10)
   
   return(vecImpulseValue)
-<<<<<<< 176a52e550dca83672076caa19801f69fc1b3d4b
 }
-=======
-}
->>>>>>> update vignette files

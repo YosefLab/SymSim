@@ -1,3 +1,53 @@
+#' cluster-ability of a dataset 
+#' 
+#'how well can the cell population be reconstructed by dimensionality reduction methods
+#' @param data: transcriptomics matrix
+#' @param meta: information about cells, must contain 'pop' column
+#' @param n_pc: number of principal components that is fed to tsne
+#' @param perplexity: perplexity parameter for tsne
+#' @param dims: number of dimensions kept after tsne
+
+ClusterQuality <- function(data,meta,n_pc,perplexity,dims){
+  uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
+  data <- data[,uniqcols];meta <- meta[uniqcols,,drop=FALSE] 
+  uniqrows<-c(1:length(data[,1]))[!duplicated(data)]
+  data <- data[uniqrows,]
+  data_pc <- prcomp(t(data))
+  data_pc <- data_pc$x[,c(1:n_pc)]
+  data_tsne=Rtsne(dims = dims ,data_pc,perplexity=perplexity)
+  lowdim_data <- data_tsne$Y
+  assignment <- kmeans(lowdim_data,5,nstart=20)
+  ri <- rand.index(assignment[[1]],meta$pop)
+  lowdim_dist <- as.matrix(dist(lowdim_data, method = "euclidean"))
+  sw <- silhouette(x=meta$pop, dist=dist(lowdim_data, method = "euclidean"))
+  sw_summ <- summary(sw)
+  sw_mean <- sw_summ[['avg.width']]
+  minpop <- sw_summ[["clus.sizes"]]==min(sw_summ[["clus.sizes"]])
+  sw_minpop <- sw_summ[["clus.avg.widths"]][minpop]
+  # for all cells that are in pop2, what is the most common cluster they are in
+  # for all clusters, which one has the highest prop of pop2 cells
+  # for the most common pop2 cluster, what is the proportion of pop2 cells? 
+  min_in_clst <- sapply(split(x=meta$pop,f=assignment[[1]]),function(X){
+  	sum(X%in%c(1:5)[minpop])})
+  clst_w_min <- sapply(split(x=meta$pop,f=assignment[[1]]),function(X){
+  	sum(X%in%c(1:5)[minpop])/length(X)})
+  return(c(ri,sw_mean,sw_minpop,min_in_clst,clst_w_min))
+}
+#' rand index
+#'
+#' compare two clustering result: proportion of pairs of individual that share the same clustering result in both groupings
+#' @param group1 first clustering
+#' @param group2 second clustering 
+
+rand.index<-function (group1, group2) 
+{
+    x <- c(sapply(group1, function(x) {x==group1}))
+    y <- c(sapply(group2, function(x) {x==group2}))
+    same <- sum(x==y)
+    ri <- same/length(x)
+    return(ri)
+}
+
 #' Perform tSNE 
 #' 
 #' This function takes the ground truth (meta), the expresssion matrix (data), and performs tSNE, saves the result to a jpeg file with user specified name
@@ -6,7 +56,8 @@
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
 
-PlotTsne <- function(meta,data,plotname,label,n_pc=20,evf_type="discrete",saving=F,perplexity=10){
+PlotTsne <- function(
+	){
   library('Rtsne')
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
   data <- data[,uniqcols];meta <- meta[uniqcols,,drop=FALSE] 

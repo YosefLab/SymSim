@@ -584,8 +584,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     evf_res <- DiscreteEVF(phyla,ncells_total,min_popsize,i_minpop=i_minpop,Sigma,
                            n_nd_evf, n_de_evf, vary=vary, evf_center=evf_center, seed=seed[1])
   }else if(evf_type=='continuous'){
-    n_de <- round(nevf*percent_DEevf)
-    evf_res <- ContinuousEVF(phyla,ncells_total,n_nd_evf=nevf-n_de,n_de_evf=n_de,
+    evf_res <- ContinuousEVF(phyla,ncells_total,n_nd_evf=nevf-n_de_evf,n_de_evf=n_de_evf,
                              evf_center=evf_center,vary=vary,impulse=impulse,
                              Sigma,plotting=T,seed=seed[1])    
   }
