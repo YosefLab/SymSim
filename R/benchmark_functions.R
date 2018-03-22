@@ -56,8 +56,7 @@ rand.index<-function (group1, group2)
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
 
-PlotTsne <- function(
-	){
+PlotTsne <- function(meta, data, evf_type, n_pc, perplexity=30, label, saving=F, plotname){
   library('Rtsne')
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
   data <- data[,uniqcols];meta <- meta[uniqcols,,drop=FALSE] 
