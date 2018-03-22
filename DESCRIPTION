@@ -12,7 +12,6 @@ Depends:
     ggplot2, 
     Rtsne,
     RColorBrewer, 
-    fOptions, 
     fBasics,
     labeling,
     timeSeries,  
