@@ -7,12 +7,12 @@
 #' @param perplexity: perplexity parameter for tsne
 #' @param dims: number of dimensions kept after tsne
 
-ClusterQuality <- function(data,meta,n_pc,perplexity,dims,npop=5){
+ClusterQuality <- function(data,meta,n_pc,perplexity,dims,npop=5,return_kmeans=F,pca_scale=F){
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
   data <- data[,uniqcols];meta <- meta[uniqcols,,drop=FALSE] 
   uniqrows<-c(1:length(data[,1]))[!duplicated(data)]
   data <- data[uniqrows,]
-  data_pc <- prcomp(t(data))
+  data_pc <- prcomp(t(data), scale. = pca_scale)
   data_pc <- data_pc$x[,c(1:n_pc)]
   data_tsne=Rtsne(dims = dims ,data_pc,perplexity=perplexity)
   lowdim_data <- data_tsne$Y
@@ -33,7 +33,10 @@ ClusterQuality <- function(data,meta,n_pc,perplexity,dims,npop=5){
   	sum(X%in%c(1:npop)[minpop])/length(X)})
   res <- c(ri,sw_mean,sw_minpop,min_in_clst,clst_w_min)
   names(res) <- c("RI", "SW_mean", "SW_minpop", paste0("min_in_clst",1:npop), paste0("clst_w_min", 1:npop))
-  return(res)
+  if (return_kmeans)
+    return(list(measures=res, kmeans_res=assignment))
+  else
+    return(res)
 }
 #' rand index
 #'
