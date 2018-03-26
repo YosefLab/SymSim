@@ -234,7 +234,13 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     for (igene in which(amp_mol_count>0)){
       frag_vec[igene] <- sum(sample(len2nfrag[as.character(gene_len[igene]),], 
                                     amp_mol_count[igene], replace = TRUE))}
-    
+    # another 8 rounds of amplification to the fragments (fragmentation bias gets amplified)
+    for (iPCR in 1:2){
+      frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
+    }
+    for (iPCR in 3:8){
+      frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
+    }
     SEQ_efficiency=N_molecules_SEQ/sum(frag_vec)
     if (SEQ_efficiency >= 1) {read_count <- frag_vec} else{
       read_count <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)}) }
@@ -244,11 +250,11 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
     {return(rbinom(n=1, size = PCRed_vec[igene], 
                    prob = len2prob3pri[as.character(gene_len[trans_idx[igene]])] ))})
-    # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
-    for (iPCR in 1:3){
+    # another 8 rounds of amplification to the fragments (fragmentation bias gets amplified)
+    for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
     }
-    for (iPCR in 4:8){
+    for (iPCR in 3:8){
       frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
     }
     
