@@ -474,7 +474,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
   # set the number of cells in each population: first give each population min_popsize cells
   # then randomly distribute the rest of cells to all populations except the smallest one
   ncells_pop <- rep(min_popsize, npop)
-  if (ncells_total <= min_popsize*npop) {
+  if (ncells_total < min_popsize*npop) {
     stop("The size of the smallest population is too big for the total number of cells")}
   larger_pops <- setdiff(1:npop, i_minpop)
   ncells_pop[larger_pops] <- floor((ncells_total-min_popsize)/length(larger_pops))
