@@ -477,8 +477,11 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
   if (ncells_total <= min_popsize*npop) {
     stop("The size of the smallest population is too big for the total number of cells")}
   larger_pops <- setdiff(1:npop, i_minpop)
-  temp <- sample(larger_pops, (ncells_total-min_popsize*npop), replace = T)
-  ncells_pop[larger_pops] <- ncells_pop[larger_pops] + table(temp)
+  ncells_pop[larger_pops] <- floor((ncells_total-min_popsize)/length(larger_pops))
+  leftover <- ncells_total-sum(ncells_pop)
+  if (leftover > 0){
+    temp <- sample(larger_pops, leftover, replace = F); ncells_pop[temp] <- ncells_pop[temp] + 1
+  }
   
   vcv_evf_mean <- vcv.phylo(phyla,cor=T)
   param_names <- c("kon", "koff", "s")
