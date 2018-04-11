@@ -6,7 +6,9 @@
 #' @param plotfilename output name for qqplot
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
 
-BestMatchParams <- function(tech,counts,plotfilename){
+BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
+  counts <- cortex_counts
+  counts <- counts[rowSums(counts>1)>10, ]
   mean_exprs <- quantile(rowMeans(counts+1,na.rm=T),seq(0,1,0.002))
   fano_exprs <- quantile(apply(counts,1,fano),seq(0,1,0.002),na.rm=T)
   percent0 <- quantile(apply(counts,1,percent_nonzero),seq(0,1,0.002))
@@ -15,20 +17,24 @@ BestMatchParams <- function(tech,counts,plotfilename){
   }else if(tech =='umi'){
     load('SymSim/grid_summary/exp_figure4umi_Lgrid.summary.robj')   
   }
-  grid_summary <- list(fano_bins,mean_bins,nonzero_bins)
+  grid_summary <- list(mean_bins,nonzero_bins,fano_bins)
 
-  exp_summary <- list(fano_exprs,mean_exprs,percent0)
+  exp_summary <- list(mean_exprs,percent0,fano_exprs)
   dists <- lapply(c(1:3),function(i){
-   dist <- apply(grid_summary[[i]],1,function(X){sum(abs(X-exp_summary[[i]]))})
+    if (i %in% c(1,3)){
+      dist <- apply(grid_summary[[i]],1,function(X){sum(abs(log10(X)-log10(exp_summary[[i]])))})
+    } else{
+      dist <- apply(grid_summary[[i]],1,function(X){sum(abs(X-exp_summary[[i]]))})
+   }
    return(dist)
   })
   dists <- do.call(cbind,dists)
   dists <- apply(dists,2,function(X){X/mean(X)})
   dists <- rowSums(dists)
-  best_match <- c(1:length(dists))[rank(dists)%in% c(1:3)]
+  best_match <- sort.int(dists, index.return = T)$ix[1:n_optimal]
 
   best_params <- lapply(best_match,function(X){sim_params[X,]})
-  plotnames <- c('fano','mean','percent_nonzero')
+  plotnames <- c('mean','percent_nonzero','fano')
   pdf(file=plotfilename)
   par(mfrow=c(3,3))
   for(i in c(1:3)){
@@ -36,7 +42,7 @@ BestMatchParams <- function(tech,counts,plotfilename){
       for(k in c(1:3)){
         bin1=grid_summary[[k]][best_match[i],]
         bin2=exp_summary[[k]]
-        if(k %in% c(1,2)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
+        if(k %in% c(1,3)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
         plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste(i,'best','match', plotnames[k]))
         lines(c(-10,10),c(-10,10),col='red')      
       }
