@@ -1,3 +1,7 @@
+cv <- function(x) {return(sd(x)/mean(x))}
+fano <- function(x) {return((sd(x))^2/mean(x))}
+percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
+
 #' Get the best matched parameter 
 #'
 #' This function matches a real dataset to a database of summary information of simulated datasets, plots a qqplot for user to visualize similarity between their dataset and the simulated dataset, and suggests parameters to use in the simulation
@@ -7,7 +11,6 @@
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
 
 BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
-  counts <- cortex_counts
   counts <- counts[rowSums(counts>1)>10, ]
   mean_exprs <- quantile(rowMeans(counts+1,na.rm=T),seq(0,1,0.002))
   fano_exprs <- quantile(apply(counts,1,fano),seq(0,1,0.002),na.rm=T)
@@ -251,13 +254,6 @@ PlotGCLENbias <- function(filename,outputname){
 #' Calculating the 
 #'
 #' @param filename the name of the simualted robj data file
-
-cv <- function(x) {return(sd(x)/mean(x))}
-fano <- function(x) {return((sd(x))^2/mean(x))}
-
-percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
-
-
 
 #' Plotting simulated FNR 
 #'
