@@ -431,8 +431,11 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
         dev.off()
       }else{
         de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
-          SampleSubtree(root,0,evf_center,edges,ncells,Sigma*50,neutral=neutral)    
+          SampleSubtree(root,0,evf_center,edges,ncells,100,neutral=neutral)    
         })
+        # pdf(file = plotname,width=15,height=5)
+        # if(plotting==T){PlotRoot2Leave(cbind(neutral,tips,edges,root,internal)}
+        # dev.off()
       }
       de_evf <- lapply(de_evf,function(X){X[,4]})
       de_evf <- do.call(cbind,de_evf)
