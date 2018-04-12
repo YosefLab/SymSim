@@ -538,19 +538,6 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
   meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
   return(list(evfs,meta))
 }
-#' Generate alpha vector for ncells
-#' @param ncells number of cells
-#' @param alpha the mean value of a normal distribution where alpha is sampled from
-#' @param alpha_sd the standard deviation value of a normal distribution where alpha is sampled from
-#' @return a vector with an alpha value for each cell
-SampleAlpha <- function(ncells,alpha,alpha_sd){
-	alphas <- rnorm(ncells,mean=alpha,sd=alpha_sd)
-	alphas[alphas<0] <- 0	
-	alphas[alphas>1] <- 1
-	return(alphas)
-}
-
-
 
 #' Generate both evf and gene effect and simulate true transcript counts
 #' @param ncells_total number of cells
