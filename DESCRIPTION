@@ -23,7 +23,11 @@ Depends:
     ape,
     MASS,
     roxygen2,
+    phytools,
     repr,
+    IRanges,
+    GenomeInfoDb,
+    GenomicRanges,
     S4Vectors,
     SummarizedExperiment,
     plyr
