@@ -24,6 +24,7 @@ Depends:
     MASS,
     roxygen2,
     repr,
+    S4Vectors,
     SummarizedExperiment,
     plyr
 Suggests:
