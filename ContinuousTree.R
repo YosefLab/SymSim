@@ -2,10 +2,6 @@ library('ape')
 library('phytools')
 library('MASS')
 
-ncells <- 10000
-ntips <- 10
-Sigma <- 1
-
 PlotRoot2Leave<-function(temp,tips,edges,root,internal){
   edgenames <-apply(temp[,c(1,2)],1,function(X){paste0(X,collapse = '.')})
    paths <- lapply(tips,function(tip){

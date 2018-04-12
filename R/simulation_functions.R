@@ -234,7 +234,13 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     for (igene in which(amp_mol_count>0)){
       frag_vec[igene] <- sum(sample(len2nfrag[as.character(gene_len[igene]),], 
                                     amp_mol_count[igene], replace = TRUE))}
-    
+    # another 8 rounds of amplification to the fragments (fragmentation bias gets amplified)
+    for (iPCR in 1:2){
+      frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
+    }
+    for (iPCR in 3:8){
+      frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
+    }
     SEQ_efficiency=N_molecules_SEQ/sum(frag_vec)
     if (SEQ_efficiency >= 1) {read_count <- frag_vec} else{
       read_count <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)}) }
@@ -244,11 +250,11 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
     {return(rbinom(n=1, size = PCRed_vec[igene], 
                    prob = len2prob3pri[as.character(gene_len[trans_idx[igene]])] ))})
-    # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
-    for (iPCR in 1:3){
+    # another 8 rounds of amplification to the fragments (fragmentation bias gets amplified)
+    for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
     }
-    for (iPCR in 4:8){
+    for (iPCR in 3:8){
       frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
     }
     
@@ -471,11 +477,14 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
   # set the number of cells in each population: first give each population min_popsize cells
   # then randomly distribute the rest of cells to all populations except the smallest one
   ncells_pop <- rep(min_popsize, npop)
-  if (ncells_total <= min_popsize*npop) {
+  if (ncells_total < min_popsize*npop) {
     stop("The size of the smallest population is too big for the total number of cells")}
   larger_pops <- setdiff(1:npop, i_minpop)
-  temp <- sample(larger_pops, (ncells_total-min_popsize*npop), replace = T)
-  ncells_pop[larger_pops] <- ncells_pop[larger_pops] + table(temp)
+  ncells_pop[larger_pops] <- floor((ncells_total-min_popsize)/length(larger_pops))
+  leftover <- ncells_total-sum(ncells_pop)
+  if (leftover > 0){
+    temp <- sample(larger_pops, leftover, replace = F); ncells_pop[temp] <- ncells_pop[temp] + 1
+  }
   
   vcv_evf_mean <- vcv.phylo(phyla,cor=T)
   param_names <- c("kon", "koff", "s")
@@ -532,19 +541,6 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
   meta <- data.frame(pop=do.call(c,lapply(c(1:npop),function(i){rep(i,ncells_pop[i])})))
   return(list(evfs,meta))
 }
-#' Generate alpha vector for ncells
-#' @param ncells number of cells
-#' @param alpha the mean value of a normal distribution where alpha is sampled from
-#' @param alpha_sd the standard deviation value of a normal distribution where alpha is sampled from
-#' @return a vector with an alpha value for each cell
-SampleAlpha <- function(ncells,alpha,alpha_sd){
-	alphas <- rnorm(ncells,mean=alpha,sd=alpha_sd)
-	alphas[alphas<0] <- 0	
-	alphas[alphas>1] <- 1
-	return(alphas)
-}
-
-
 
 #' Generate both evf and gene effect and simulate true transcript counts
 #' @param ncells_total number of cells
