@@ -562,9 +562,9 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
-                               n_de_evf=0,impulse=T,vary='all',
+                               n_de_evf=0,impulse=F,vary='all',
                                Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
-                               bimod=0.2,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
+                               bimod=0,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
   n_nd_evf=nevf-n_de_evf
   seed <- sample(c(1:1e5),size=2)
