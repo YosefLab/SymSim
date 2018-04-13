@@ -1,9 +1,8 @@
 ---
 title: "SymSim: single cell RNAseq data simulator"
+author: "Xiuwei Zhang"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
-#fig_width: 6 
-#fig_height: 4 
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,7 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "~/Research/incoming/simulation/")
+opts_knit$set(root.dir = "/data/yosef2/users/xiuwei/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -30,45 +29,43 @@ depth and batch effects. At different steps, users have control on the amount
 of extrinsic variation, intrinsic variation and technical variation.
 
 ### Load required packages, load SymSim
-```{r, fig.show='hold',message=F,cache=F}
-# required_packages <- c('devtools','FNN','reshape','ggplot2','gridExtra','ape','MASS','Rtsne','RColorBrewer','
-#                       fOptions','fBasics','timeSeries','timeDate','Biobase', 'plyr')
-# install_packages <- rownames(installed.packages())
-# need_install <- setdiff(required_packages,install_packages)
-# if(length(need_install)>0){install.packages(need_install)}
-# load_result <- lapply(required_packages, require, character.only = TRUE)
-
+```{r, message=F, warning=FALSE}
 library(devtools)
 load_all('SymSim')
 ```
 
-# Main functions and input
+## Main functions and input
 
 **SimulateTrueCounts( )** and **True2ObservedCounts( )** are the two major functions of the SymSim package. SimulateTrueCounts generates true transcript counts for the given number of genes and cells, where the cells can come from one single population, or multiple discrete populations, or continuous populations. True2ObservedCounts then simulates the library preparation and sequencing procedures, and convert the true transcript counts into observed read counts or UMI counts.
 
 The input parameters of the package allow users to control intrinsic variation, technical variation and biological variation in the data. Intrinsic variation is modeled through the kinetic model; technical variation takes into account dropouts, amplification biases including length bias and GC bias, and batch effects; biological variation is modeled by EVFs (extrinsic variation factors). 
 
 Parameters for function SimulateTrueCounts( ) are:  
-**ncells_total** total number of cells from all populations;  
+**ncells_total** total number of cells from all populations;    
 **min_popsize** number of cells in the rarest population;  
-**i_minpop** specifies which population has the smallest size;  
-**ngenes** number of genes;  
-**evf_center** the value which evf mean is generated from;  
-**nevf** number of EVFs;  
-**evf_type** indicates the population structure of the cells, can be "one.population", "discrete" or "continuous";  
-**percent_DEevf** percentage of differential evfs between populations;  
-**Sigma** controls heterogeneity each population;  
+**i_minpop** specifies which population has the smallest size;   
+**ngenes** number of genes;   
+**evf_center** the value which evf mean is generated from;   
+**nevf** number of EVFs;   
+**evf_type** indicates the population structure of the cells, can be "one.population", "discrete" or "continuous";   
+**n_de_evf** number of differential evfs between populations for one kinetic parameter;  
+**impulse** when generating continuous populations, use the impulse model or not;  
+**vary** which kinetic parameters have differential evfs. Can be "all", "kon", "koff", "s", "except_kon", "except_koff", "except_s";  
+**Sigma** controls heterogeneity each population;   
 **phyla** a tree which defines relationship between populations;  
+**geffect_mean** the mean of gene effect size;  
 **gene_effects_sd** controls differences between genes;  
 **gene_effect_prob** probability of non-zero values in the gene effect vectors;   
-**match_params_den** empirical density function of the kon,koff and s parameter estimated from real data;  
 **bimod** adjusts the bimodality of gene expression, thus controls intrinsic variation;  
+**param_realdata** the experimental dataset used to estimate kon, koff and s parameters;   
+**joint** when matching generated kinetic parameters to those estimated from experimental dataset, using joint distribution or not;  
 **SE** return summerized experiment rather than a list of elements, default is False.  
 
 The function returns a list of four elements:  
 **1** a matrix containing the true transcript counts;  
 **2** gene level meta information;  
-**3** cell level meta information, including a matrix of EVFs and a vector of cell identity (for example, the population the cell belongs to);   **4** the parameters kon, koff and s used to simulation the true counts.  
+**3** cell level meta information, including a matrix of EVFs and a vector of cell identity (for example, the population the cell belongs to);   
+**4** the parameters kon, koff and s used to simulation the true counts.  
 
 Parameters for function True2ObservedCounts( ) are:  
 **true_counts** true transcript counts from function SimulateTrueCounts;  
@@ -87,53 +84,75 @@ Parameters for function True2ObservedCounts( ) are:
 **depth_sd** standard deviation of sequencing depth of all cells.  
 **SE** should the returned value be a summerized experiment rather than a list of elements, default is FALSE.  
 
-This function returns a list of two elements.  
+This function returns a list of two elements:  
+**1** a matrix containing the observed read counts or UMI counts;  
+**2** cell level meta information;  
 
-# Simulate true counts
+## Simulate one population
 First, we simulate the case where there is one population.
 ```{r,cache=T}
-ngenes <- 300
-true_counts_res <- SimulateTrueCounts(ncells_total=400, ngenes=ngenes, evf_center=1, nevf=10, evf_type="one.population", 
-                                      Sigma=0.5, gene_effects_sd=1, gene_effect_prob=0.3, bimod=0.3, randseed=0, 
-                                      param_realdata = "zeisel.imputed", SE=F)
-tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=true_counts_res[[1]], label='pop', saving = F)
+ngenes <- 500
+true_counts_res <- SimulateTrueCounts(ncells_total=200, ngenes=ngenes, evf_center=1, nevf=10, evf_type="one.population", Sigma=0.5, gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="one.population", n_pc=20, label='pop', saving = F, plotname="one.population")
 tsne_true_counts[[2]]
 ```
 
-When there are multiple populations, users need to provide a tree. A tree with five leaves (five populations) can be generated as follows:
-```{r,cache=T}
-phyla <- Phyla5()
-plot(phyla)
-```
-
-The true counts of the five populations can be simulated:
-```{r,cache=T}
-true_counts_res <- SimulateTrueCounts(ncells_total=400, min_popsize=40, i_minpop=1, ngenes=ngenes, 
-                                      evf_center=1, nevf=10, evf_type="discrete", percent_DEevf=0.5, Sigma=0.2, 
-                                      phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0.3,
-                                      randseed=0, param_realdata = "zeisel.imputed", SE=F)
-
-pcaRes <-  prcomp(true_counts_res[[3]][, 3:12], scale. = T)
-plotPCAbasic(pcaRes, col_vec = true_counts_res[[3]][,2], figuretitle = "evfs")
-legend("bottomright", legend = 1:5, col = 1:5, pch=20)
-
-pca_counts <- prcomp(t(true_counts_res[[1]]), scale. = T)
-tsne_after_pca <- PlotTsne(meta = true_counts_res[[3]], data= t(pca_counts$x[, 1:10]), label = "pop", saving = F)
-tsne_after_pca[[2]]
-
-```
-
-# Simulate observed counts
-For the true counts from five discrete populations compulated above, taking them through the library preparation and sequencing procedures will yield true read counts (if protocol="ss2") or UMI counts (if protocol="10x"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
+For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="ss2") or UMI counts (if protocol="umi"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
 ```{r,cache=T}
 load("SymSim/gene_len_pool.RData")
-gene_len <- sample(gene_len_pool[which(gene_len_pool>100)], ngenes, replace = FALSE)
-
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="ss2", 
-                                       alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, 
-                                       amp_bias_limit=c(-0.2, 0.2), rate_2PCR=0.8, nPCR=16, depth_mean=3e5, depth_sd=3e3)
-pca_observed_counts <- prcomp(t(observed_counts[[1]][which(rowSums(observed_counts[[1]])>0),]), scale. = T)
-tsne_after_pca_ss2 <- PlotTsne(meta=observed_counts[[2]], data= t(pca_observed_counts$x[, 1:10]), label = "pop", saving = F)
-tsne_after_pca_ss2[[2]]
+gene_len <- sample(gene_len_pool, ngenes, replace = FALSE)
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="ss2", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
 ```
 
+One can plot the mean-variance relationship in the observed read counts:
+```{r,cache=T,fig.width=4, fig.height=4}
+plot(log2(rowMeans(observed_counts[[1]])+1), log2(apply(observed_counts[[1]],1,cv)), col=adjustcolor("blue", alpha.f = 0.5), pch=19, xlab="log2(mean)", ylab="log2(CV)")
+```
+
+## Simulate multiple discrete populations
+When there are multiple populations, users need to provide a tree. A tree with five leaves (five populations) can be generated as follows:
+```{r,cache=T,fig.width=4, fig.height=3}
+phyla1 <- Phyla5()
+plot(phyla1)
+```  
+
+or read from a file with the tree in Newick format:
+```{r,cache=T,fig.width=4, fig.height=3}
+phyla2 <- read.tree("SymSim/Newick_ABCDE.txt")
+plot(phyla2)
+```
+The true counts of the five populations can be simulated:
+```{r,cache=T}
+true_counts_res <- SimulateTrueCounts(ncells_total=200, min_popsize=30, i_minpop=2, ngenes=ngenes, evf_center=1, nevf=10, evf_type="discrete", n_de_evf=9, vary="s", Sigma=0.5, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="discrete populations (true counts)")
+tsne_true_counts[[2]]
+```
+
+```{r,cache=T}
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="ss2", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
+tsne_ss2_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts ss2")
+tsne_ss2_counts[[2]]
+
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="umi", alpha_mean=0.05, alpha_sd=0.02, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=5e4, depth_sd=3e3)
+tsne_umi_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts umi")
+tsne_umi_counts[[2]]
+```
+
+
+## Simulate continuous populations
+```{r,cache=T}
+source("SymSim/ContinuousTree.R")
+true_counts_res <- SimulateTrueCounts(ncells_total=200, min_popsize=30, i_minpop=2, ngenes=ngenes, evf_center=1, nevf=10, evf_type="continuous", n_de_evf=9, vary="s", Sigma=0.1, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="continuous", n_pc=20, label='pop', saving = F, plotname="continuous populations (true counts)")
+tsne_true_counts[[2]]
+```
+
+## Find simulations which match a given experimental dataset from our database  
+Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 10 best matching parameter configurations for the Th17 dataset.
+```{r,cache=T}
+load("SymSim/Th17_data.RData")
+expressed_genes <- which(rowSums(ss2_130cells_counts > 1) > 10)
+counts <- ss2_130cells_counts[expressed_genes,]
+best_matches <- BestMatchParams('ss2',counts,'best_params.ss2.qqplot.pdf', n_optimal=10)
+best_matches
+```

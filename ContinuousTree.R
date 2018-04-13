@@ -1,6 +1,6 @@
-library('ape')
-library('phytools')
-library('MASS')
+#library('ape')
+#library('phytools')
+#library('MASS')
 
 PlotRoot2Leave<-function(temp,tips,edges,root,internal){
   edgenames <-apply(temp[,c(1,2)],1,function(X){paste0(X,collapse = '.')})
