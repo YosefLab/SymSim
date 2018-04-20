@@ -387,7 +387,6 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
   set.seed(seed)
   edges <- cbind(phyla$edge,phyla$edge.length)
   edges <- cbind(c(1:length(edges[,1])),edges)
-  edges[,4] <- edges[,4]/mean(vcv.phylo(phyla))
   connections <- table(c(edges[,2],edges[,3]))
   root <- as.numeric(names(connections)[connections==2])
   tips <- as.numeric(names(connections)[connections==1])
@@ -414,7 +413,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
     N_DE_evfs =c(n_de_evf,n_de_evf,0)    
     N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf+n_de_evf)
   }
-  neutral <- SampleSubtree(root,0,evf_center,edges,ncells,Sigma)
+  neutral <- SampleSubtree(root,0,evf_center,edges,ncells)
   param_names <- c("kon", "koff", "s")
   evfs <- lapply(c(1:3),function(parami){
     nd_evf <- lapply(c(1:N_ND_evfs[parami]),function(ievf){
@@ -437,7 +436,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
         dev.off()
       }else{
         de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
-          SampleSubtree(root,0,evf_center,edges,ncells,100,neutral=neutral)    
+          SampleSubtree(root,0,evf_center,edges,ncells,neutral=neutral)    
         })
         # pdf(file = plotname,width=15,height=5)
         # if(plotting==T){PlotRoot2Leave(cbind(neutral,tips,edges,root,internal)}
