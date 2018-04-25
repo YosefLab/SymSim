@@ -549,9 +549,10 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param evf_center the value which evf mean is generated from
 #' @param nevf number of evfs
 #' @param evf_type string that is one of the following: 'one.population','discrete','continuous'
-#' @param percent_DEevf percentage of differential evfs between populations
+#' @param n_de_evf number of differential evfs between populations
 #' @param Sigma parameter of the std of evf values within the same population
 #' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
+#' @param param_realdata pick from zeisel.imputed or pop4.romain
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
@@ -622,7 +623,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 
 
 #' Simulate observed count matrix given technical biases and the true counts
-#' @param ncells_total number of cells
+#' @param true_counts gene cell matrix
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
 #' @param protocol a string, can be "ss2" or "umi"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
@@ -649,12 +650,12 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
   depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
   depth_vec[which(depth_vec < 200)] <- 200
-  observed_counts <- matrix(0, ngenes, ncells)
-  for (icell in 1:ncells){
-    observed_counts[, icell] <- amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
-                                              rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
-                                              rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell]) 
-  }
+  observed_counts <- lapply(c(1:ncells),function(icell){
+    amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
+      rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
+      rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell])     
+  })
+  observed_counts <- do.call(cbind,observed_counts)
   meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
   meta_cell <- cbind(meta_cell, meta_cell2)
   if(is.null(SE)){return(list(observed_counts, meta_cell))}else{
