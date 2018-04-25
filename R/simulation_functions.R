@@ -413,7 +413,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
     N_DE_evfs =c(n_de_evf,n_de_evf,0)    
     N_ND_evfs =c(n_nd_evf,n_nd_evf,n_nd_evf+n_de_evf)
   }
-  neutral <- SampleSubtree(root,0,evf_center,edges,ncells,Sigma)
+  neutral <- SampleSubtree(root,0,evf_center,edges,ncells)
   param_names <- c("kon", "koff", "s")
   evfs <- lapply(c(1:3),function(parami){
     nd_evf <- lapply(c(1:N_ND_evfs[parami]),function(ievf){
@@ -436,7 +436,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
         dev.off()
       }else{
         de_evf <- lapply(c(1:N_DE_evfs[parami]),function(evf_i){
-          SampleSubtree(root,0,evf_center,edges,ncells,100,neutral=neutral)    
+          SampleSubtree(root,0,evf_center,edges,ncells,neutral=neutral)    
         })
         # pdf(file = plotname,width=15,height=5)
         # if(plotting==T){PlotRoot2Leave(cbind(neutral,tips,edges,root,internal)}
@@ -561,9 +561,9 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
-                               n_de_evf=0,impulse=T,vary='all',
+                               n_de_evf=0,impulse=F,vary='all',
                                Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
-                               bimod=0.2,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
+                               bimod=0,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
   set.seed(randseed)
   n_nd_evf=nevf-n_de_evf
   seed <- sample(c(1:1e5),size=2)

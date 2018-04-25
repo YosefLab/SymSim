@@ -7,7 +7,6 @@ RColorBrewer
 timeDate
 timeSeries
 fBasics
-fOptions
 labeling
 FNN
 reshape
@@ -17,11 +16,15 @@ Biobase
 ape
 MASS
 roxygen2
+maps
+phytools
 repr
 S4Vectors
 IRanges
 GenomeInfoDb
 GenomicRanges
+matrixStats
+DelayedArray
 SummarizedExperiment
 plyr
 SymSim
