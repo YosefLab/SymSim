@@ -387,7 +387,6 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
   set.seed(seed)
   edges <- cbind(phyla$edge,phyla$edge.length)
   edges <- cbind(c(1:length(edges[,1])),edges)
-  edges[,4] <- edges[,4]/mean(vcv.phylo(phyla))
   connections <- table(c(edges[,2],edges[,3]))
   root <- as.numeric(names(connections)[connections==2])
   tips <- as.numeric(names(connections)[connections==1])
