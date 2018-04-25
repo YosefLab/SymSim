@@ -184,7 +184,8 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
                           rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
   ngenes <- length(gene_len)
   if (protocol=="ss2"){load("SymSim/len2nfrag.RData")} else 
-    if(protocol=="umi"){load("SymSim/len2prob3pri.RData")} # where should we keep the vairables?
+    if(protocol=="umi"){load("SymSim/len2prob3pri.RData")} else
+    {stop("protocol input should be ss2 or umi")}
   inds <- vector("list",2)
   # expand the original vector and apply capture efficiency
   # maintain a transcript index vector: which transcript the molecule belongs to
