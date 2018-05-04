@@ -161,3 +161,14 @@ cal_AUC <- function(x_vec, y_vec){
   ytemp <- y_vec[2:length(y_vec)]-y_vec[1:(length(y_vec)-1)]
   return(sum(xtemp*(y_vec[1:(length(y_vec)-1)] + ytemp/2)))
 }
+
+# calculate sensitivity and specificity
+sens_and_spec <- function(isDE_gold, isDE_pred){
+  TP <- sum(isDE_gold & isDE_pred, na.rm = T)
+  TN <- sum(!isDE_gold & !isDE_pred, na.rm = T)
+  FP <- sum(!isDE_gold & isDE_pred, na.rm = T)
+  FN <- sum(isDE_gold & !isDE_pred, na.rm = T)
+  sensi <- TP/(TP+FN); speci <- TN/(TN+FP)
+  return(c(sensi, speci))
+}
+
