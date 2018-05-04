@@ -651,6 +651,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
   depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
   depth_vec[which(depth_vec < 200)] <- 200
+  
   observed_counts <- lapply(c(1:ncells),function(icell){
     amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
       rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 

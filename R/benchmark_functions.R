@@ -154,3 +154,10 @@ DEseq_test <- function(result){
   colnames(overlaps) <- c('DE_pos','DE_neg')
   return(list(logFC,res$log2FoldChange,res$pvalue,overlaps))
 }
+
+# calculate area under curve
+cal_AUC <- function(x_vec, y_vec){
+  xtemp <- x_vec[2:length(x_vec)]-x_vec[1:(length(x_vec)-1)]
+  ytemp <- y_vec[2:length(y_vec)]-y_vec[1:(length(y_vec)-1)]
+  return(sum(xtemp*(y_vec[1:(length(y_vec)-1)] + ytemp/2)))
+}
