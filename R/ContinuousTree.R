@@ -113,13 +113,15 @@ PlotPaths<-function(temp,main){
 
 SampleEdge <- function(edge,depth,anc_state,edges,ncells,t_sample=NA){
   if(is.na(t_sample[1])){
-    t_sample <- c(0,sort(runif(round(edge[4]*ncells/sum(edges[,4])),0,edge[4])))
+    #t_sample <- c(0,sort( runif(round(edge[4]*ncells/sum(edges[,4])),0,edge[4]) ))
+    t_sample <- c(0,seq(0, edge[4], edge[4]/(round(edge[4]*ncells/sum(edges[,4]))+1)))
+    print("updated")
     t_sample<-c(t_sample,edge[4])
   }else{
     t_sample<-sort(c(0,t_sample-depth))
   }
   t_interval<-diff(t_sample)
-  x_change <- sapply(t_interval*1,function(sig){rnorm(1,0,sqrt(sig))})
+  x_change <- sapply(t_interval,function(sig){rnorm(1,0,sqrt(sig))})
   x_sample <- cumsum(x_change)
   result<-cbind(depth+t_sample[-1],x_sample+anc_state)
   result <- cbind(rep(edge[2],length(result[,1])),rep(edge[3],length(result[,1])),result)

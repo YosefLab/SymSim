@@ -172,20 +172,20 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 
 #' This function simulates the amplification, library prep, and the sequencing processes.
 #' @param true_counts_1cell the true transcript counts for one cell (one vector)
-#' @param protocol a string, can be "ss2" or "umi"
+#' @param protocol a string, can be "nonUMI" or "UMI"
 #' @param rate_2cap the capture efficiency for this cell
 #' @param gene_len gene lengths for the genes/transcripts, sampled from real human transcript length
 #' @param amp_bias amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high
 #' @param nPCR the number of PCR cycles
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
-#' @return read counts (if protocol="ss2") or UMI counts (if protocol="umi)
+#' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
                           rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
   ngenes <- length(gene_len)
-  if (protocol=="ss2"){load("SymSim/len2nfrag.RData")} else 
-    if(protocol=="umi"){load("SymSim/len2prob3pri.RData")} else
-    {stop("protocol input should be ss2 or umi")}
+  if (protocol=="nonUMI"){load("SymSim/len2nfrag.RData")} else 
+    if(protocol=="UMI"){load("SymSim/len2prob3pri.RData")} else
+    {stop("protocol input should be nonUMI or UMI")}
   inds <- vector("list",2)
   # expand the original vector and apply capture efficiency
   # maintain a transcript index vector: which transcript the molecule belongs to
@@ -216,7 +216,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   }
   PCRed_vec <- temp
   
-  if (protocol=="ss2"){ # add fragmentation step here
+  if (protocol=="nonUMI"){ # add fragmentation step here
     temp_vec <- PCRed_vec
     for (i in seq(2,1,-1)){
       temp_vec1 <- numeric(); temp_vec1[inds[[i]]] <- temp_vec; 
@@ -239,14 +239,14 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
     }
-    for (iPCR in 3:8){
+    for (iPCR in 3:10){
       frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
     }
     SEQ_efficiency=N_molecules_SEQ/sum(frag_vec)
     if (SEQ_efficiency >= 1) {read_count <- frag_vec} else{
       read_count <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)}) }
     return(read_count)
-  } else if (protocol=="umi"){
+  } else if (protocol=="UMI"){
     # fragmentation: 
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
     {return(rbinom(n=1, size = PCRed_vec[igene], 
@@ -262,22 +262,23 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     SEQ_efficiency <- N_molecules_SEQ/sum(frag_vec)
     if (SEQ_efficiency >= 1){sequenced_vec <- frag_vec} else {
       sequenced_vec <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)})}
-    
     temp_vec <- c(sequenced_vec,1)
-    
+    #print(sprintf("length of sequenced_vec %d", length(sequenced_vec)))
     for (i in seq(2,1,-1)){
       temp_vec1 <- numeric(); temp_vec1[inds[[i]]] <- temp_vec; 
       temp_vec <- temp_vec1; temp_vec[is.na(temp_vec)] <- 0
     }
     recovered_vec <- temp_vec[1:(length(temp_vec)-1)]
+    #print(sprintf("length of recovered_vec %d", length(recovered_vec)))
+    #print(sprintf("length of nonzero recovered_vec %d", length(which(recovered_vec>0))))
     
-    UMI=numeric(ngenes)
+    UMI_counts=numeric(ngenes); 
     GI=c(0, cumsum(true_counts_1cell));
     for (i in which(true_counts_1cell>0)){
       x=recovered_vec[(GI[i]+1):GI[i+1]];
-      UMI[i]=sum(x>0);
+      UMI_counts[i]=sum(x>0); 
     }
-    return(UMI)
+    return(list(UMI_counts, sequenced_vec, sum(frag_vec>0)))
   }
 }
 
@@ -626,7 +627,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' Simulate observed count matrix given technical biases and the true counts
 #' @param true_counts gene cell matrix
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
-#' @param protocol a string, can be "ss2" or "umi"
+#' @param protocol a string, can be "nonUMI" or "UMI"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
 #' @param lenslope amount of length bias
@@ -654,13 +655,24 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   
   observed_counts <- lapply(c(1:ncells),function(icell){
     amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
-      rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
-      rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell])     
+                  rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
+                  rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell])     
   })
-  observed_counts <- do.call(cbind,observed_counts)
   meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
   meta_cell <- cbind(meta_cell, meta_cell2)
-  if(is.null(SE)){return(list(observed_counts, meta_cell))}else{
+  
+  if (protocol=="UMI"){
+    UMI_counts <- do.call(cbind, lapply(observed_counts, "[[", 1))
+    nreads_perUMI <- lapply(observed_counts, "[[", 2)
+    nUMI2seq <- sapply(observed_counts, "[[", 3)
+    observed_counts <- UMI_counts
+  } else
+    observed_counts <- do.call(cbind,observed_counts)
+  
+  if(is.null(SE)){
+    if (protocol=="UMI"){return(list(observed_counts, meta_cell, nreads_perUMI, nUMI2seq))} else
+      return(list(observed_counts, meta_cell))
+  } else{
     assays(SE)$observed_counts <- observed_counts
     colData(SE)<-meta_cell
     return(SE)
@@ -674,7 +686,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
 #' @param ncells_total number of cells
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
 #' @param nbatches number of batches (so far only 1)
-#' @param protocol a string, can be "ss2" or "umi"
+#' @param protocol a string, can be "nonUMI" or "UMI"
 #' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
 #' @param lenslope amount of length bias
@@ -714,7 +726,7 @@ BatchTrue2ObservedCounts <- function(
   observed_batches <- lapply(c(1:nbatch),function(i){
     observed_counts <- True2ObservedCounts(
       true_counts=counts[[i]],meta_cell=meta[[i]],
-      protocol="umi",alpha_mean=batch_alpha_mean[i],lenslope=batch_lenslope[i],
+      protocol="UMI",alpha_mean=batch_alpha_mean[i],lenslope=batch_lenslope[i],
       gene_len=gene_len,amp_bias_limit=c(-0.2, 0.2),
       rate_2PCR=batch_rate_2PCR[i],nPCR=18,
       depth_mean=batch_depth_mean[i], depth_sd=depth_sd)
