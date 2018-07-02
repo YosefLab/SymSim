@@ -1,8 +1,8 @@
 Package: SymSim
-Title: Simulate and Test Single Cell RNA Sequencing Data
+Title: Simulate Single Cell RNA Sequencing Data
 Version: 0.0.0.9000
-Authors@R: person("Chenling", "Xu", email = "chenlingantelope@gmail.com", role = c("aut", "cre"))
-Description: This package simulates single cell RNA sequencing data allowing users to tune the level of variation at different stages of the experiment and test existing methods. 
+Authors@R: c(person("Chenling", "Xu", email = "chenlingantelope@gmail.com", role = c("aut", "cre")), person("Xiuwei", "Zhang", role=c("aut")))
+Description: This package simulates single cell RNA sequencing data allowing users to tune the variation of gene-expression on different levels, or simulates single cell RNA-seq data with similar statistical properties to an input experimental dataset. It can be used to benchmark compulational methods for single cell RNA-Seq data, and to assist in experimental design of wet-lab experiments.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
@@ -12,9 +12,7 @@ Depends:
     ggplot2, 
     Rtsne,
     RColorBrewer, 
-    fBasics,
     labeling,
-    timeSeries,  
     FNN, 
     reshape,
     gridExtra,
