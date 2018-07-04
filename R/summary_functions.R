@@ -5,24 +5,24 @@ percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
 #' Get the best matched parameter 
 #'
 #' This function matches a real dataset to a database of summary information of simulated datasets, plots a qqplot for user to visualize similarity between their dataset and the simulated dataset, and suggests parameters to use in the simulation
-#' @param tech 'ss2','umi' the match database are constructed based on reasonable values for each technology
+#' @param tech 'nonUMI','UMI' the match database are constructed based on reasonable values for each technology
 #' @param counts expression matrix
 #' @param plotfilename output name for qqplot
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
 
 BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
-  counts <- counts[rowSums(counts>1)>10, ]
+  counts <- counts[rowSums(counts>0)>10, ]
   mean_exprs <- quantile(rowMeans(counts+1,na.rm=T),seq(0,1,0.002))
-  fano_exprs <- quantile(apply(counts,1,fano),seq(0,1,0.002),na.rm=T)
+  sd_exprs <- quantile(apply(counts,1,sd),seq(0,1,0.002),na.rm=T)
   percent0 <- quantile(apply(counts,1,percent_nonzero),seq(0,1,0.002))
-  if(tech=='ss2'){
-    load('SymSim/grid_summary/exp_figure4ss2_Lgrid.summary.robj')   
-  }else if(tech =='umi'){
-    load('SymSim/grid_summary/exp_figure4umi_Lgrid.summary.robj')   
+  if(tech=='nonUMI'){
+    load('SymSim/grid_summary/figure4_nonUMI_Lgrid.summary.RData')
+  }else if(tech =='UMI'){
+    load('SymSim/grid_summary/figure4_UMI_Lgrid.summary.RData')   
   }
-  grid_summary <- list(mean_bins,nonzero_bins,fano_bins)
+  grid_summary <- list(mean_bins,nonzero_bins,sd_bins)
 
-  exp_summary <- list(mean_exprs,percent0,fano_exprs)
+  exp_summary <- list(mean_exprs,percent0,sd_exprs)
   dists <- lapply(c(1:3),function(i){
     if (i %in% c(1,3)){
       dist <- apply(grid_summary[[i]],1,function(X){sum(abs(log10(X)-log10(exp_summary[[i]])))})
@@ -37,22 +37,30 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
   best_match <- sort.int(dists, index.return = T)$ix[1:n_optimal]
 
   best_params <- lapply(best_match,function(X){sim_params[X,]})
-  plotnames <- c('mean','percent_nonzero','fano')
-  pdf(file=plotfilename)
-  par(mfrow=c(3,3))
-  for(i in c(1:3)){
-    # for(j in c(1:3)){
-      for(k in c(1:3)){
-        bin1=grid_summary[[k]][best_match[i],]
-        bin2=exp_summary[[k]]
-        if(k %in% c(1,3)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
-        plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste(i,'best','match', plotnames[k]))
-        lines(c(-10,10),c(-10,10),col='red')      
-      }
-    }
+  plotnames <- c('mean','percent_nonzero','sd')
+  # pdf(file=plotfilename, 10, 23)
+  # par(mfrow=c(6,3))
+  # for(i in c(1:6)){
+  #   for(k in c(1:3)){
+  #     bin1=grid_summary[[k]][best_match[i],]
+  #     bin2=exp_summary[[k]]
+  #     if(k %in% c(1,3)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
+  #     plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste(i,'best','match', plotnames[k]))
+  #     lines(c(-10,10),c(-10,10),col='red')      
+  #   }
   # }
-  dev.off()
+  # dev.off()
+  par(mfrow=c(1,3))
+  for(k in c(1:3)){
+    bin1=grid_summary[[k]][best_match[1],]
+    bin2=exp_summary[[k]]
+    if(k %in% c(1,3)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
+    plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=plotnames[k])
+    lines(c(-10,10),c(-10,10),col='red')      
+  }
   best_params <- do.call(rbind,best_params)
+  best_params <- best_params[, c("gene_effects_sd", "gene_effect_prob", "nevf", "Sigma",
+                                 "alpha_mean", "alpha_sd", "depth_mean", "depth_sd")]
   return(best_params)
 }
 
