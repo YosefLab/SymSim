@@ -1,7 +1,7 @@
 ---
 title: "SymSim: single cell RNAseq data simulator"
-author: "Xiuwei Zhang"
-date: "`r Sys.Date()`"
+#author: "Xiuwei Zhang"
+#date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
@@ -10,7 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "/data/yosef2/users/xiuwei/simulation/")
+opts_knit$set(root.dir = "~/Research/incoming/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -49,7 +49,7 @@ Parameters for function SimulateTrueCounts( ) are:
 **nevf** number of EVFs;   
 **evf_type** indicates the population structure of the cells, can be "one.population", "discrete" or "continuous";   
 **n_de_evf** number of differential evfs between populations for one kinetic parameter;  
-**impulse** when generating continuous populations, use the impulse model or not;  
+**impulse** when generating continuous populations, use the impulse model or not. Default is FALSE;  
 **vary** which kinetic parameters have differential evfs. Can be "all", "kon", "koff", "s", "except_kon", "except_koff", "except_s";  
 **Sigma** controls heterogeneity each population;   
 **phyla** a tree which defines relationship between populations;  
@@ -71,7 +71,7 @@ Parameters for function True2ObservedCounts( ) are:
 **true_counts** true transcript counts from function SimulateTrueCounts;  
 **meta_cell** cell identity from function SimulateTrueCounts;  
 **nbatch** number of batches the cells are sequenced on;  
-**protocol** protocol for library preparation, can be "ss2" (without UMIs) or "10x" (with UMIs);  
+**protocol** protocol for library preparation, can be "nonUMI" (without UMIs) or "10x" (with UMIs);  
 **alpha_mean** mean capture effeciency of all cells;  
 **alpha_sd** standard deviation of capture efficiency of all cells;  
 **lenslope** controls the amount of gene length bias;  
@@ -79,7 +79,9 @@ Parameters for function True2ObservedCounts( ) are:
 **gene_len** gene lengths;  
 **amp_bias_limit**  amount of amplification bias;  
 **rate_2PCR** PCR efficiency during amplification;   
-**nPCR**  number of PCR cycles;  
+**nPCR**  number of PCR cycles in the pre-amplification step;  
+**LinearAmp** if linear amplification should be used instead of PCR amplification for the pre-amplification step. Default is FALSE;  
+**LinearAmp_coef** the number by which the number of transcript is multiplied if linear amplification is used;   
 **depth_mean** mean sequencing depth of all cells;  
 **depth_sd** standard deviation of sequencing depth of all cells.  
 **SE** should the returned value be a summerized experiment rather than a list of elements, default is FALSE.  
@@ -97,11 +99,11 @@ tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_re
 tsne_true_counts[[2]]
 ```
 
-For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="ss2") or UMI counts (if protocol="umi"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
+For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
 ```{r,cache=T}
 load("SymSim/gene_len_pool.RData")
 gene_len <- sample(gene_len_pool, ngenes, replace = FALSE)
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="ss2", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
 ```
 
 One can plot the mean-variance relationship in the observed read counts:
@@ -111,16 +113,18 @@ plot(log2(rowMeans(observed_counts[[1]])+1), log2(apply(observed_counts[[1]],1,c
 
 ## Simulate multiple discrete populations
 When there are multiple populations, users need to provide a tree. A tree with five leaves (five populations) can be generated as follows:
-```{r,cache=T,fig.width=4, fig.height=3}
+```{r,cache=T}
 phyla1 <- Phyla5()
-plot(phyla1)
 ```  
-
 or read from a file with the tree in Newick format:
-```{r,cache=T,fig.width=4, fig.height=3}
+```{r,cache=T,fig.width=7, fig.height=3}
 phyla2 <- read.tree("SymSim/Newick_ABCDE.txt")
+par(mfrow=c(1,2))
+plot(phyla1)
 plot(phyla2)
 ```
+  
+
 The true counts of the five populations can be simulated:
 ```{r,cache=T}
 true_counts_res <- SimulateTrueCounts(ncells_total=200, min_popsize=30, i_minpop=2, ngenes=ngenes, evf_center=1, nevf=10, evf_type="discrete", n_de_evf=9, vary="s", Sigma=0.5, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
@@ -129,30 +133,41 @@ tsne_true_counts[[2]]
 ```
 
 ```{r,cache=T}
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="ss2", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
-tsne_ss2_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts ss2")
-tsne_ss2_counts[[2]]
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
+tsne_nonUMI_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts nonUMI")
+tsne_nonUMI_counts[[2]]
 
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="umi", alpha_mean=0.05, alpha_sd=0.02, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=5e4, depth_sd=3e3)
-tsne_umi_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts umi")
-tsne_umi_counts[[2]]
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="UMI", alpha_mean=0.05, alpha_sd=0.02, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=5e4, depth_sd=3e3)
+tsne_UMI_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts UMI")
+tsne_UMI_counts[[2]]
 ```
 
 
 ## Simulate continuous populations
+We use the same tree as used for the simulation of discrete populations above. To visualize the continuous populations, we color the cells by the edges they belong to on the tree. We then label both the internal and tip nodes of the tree.
+```{r,cache=T, fig.width=4, fig.height=3}
+plot(phyla1, show.tip.label=F)
+nodelabels()
+tiplabels()
+```
+
 ```{r,cache=T}
-source("SymSim/ContinuousTree.R")
-true_counts_res <- SimulateTrueCounts(ncells_total=200, min_popsize=30, i_minpop=2, ngenes=ngenes, evf_center=1, nevf=10, evf_type="continuous", n_de_evf=9, vary="s", Sigma=0.1, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+true_counts_res <- SimulateTrueCounts(ncells_total=500, ngenes=ngenes, evf_center=1, nevf=20, evf_type="continuous", n_de_evf=12, vary="s", Sigma=0.4, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="continuous", n_pc=20, label='pop', saving = F, plotname="continuous populations (true counts)")
 tsne_true_counts[[2]]
 ```
 
 ## Find simulations which match a given experimental dataset from our database  
-Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 10 best matching parameter configurations for the Th17 dataset.
-```{r,cache=T}
+Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 8 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
+```{r,cache=T, fig.width=6.6, fig.height=2.4}
+load("SymSim/cortex_data_pop3.RData")
+best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', n_optimal=8)
+best_matches_UMI
+```
+Given the Th17 dataset:
+```{r,cache=T, fig.width=6.6, fig.height=2.4}
 load("SymSim/Th17_data.RData")
-expressed_genes <- which(rowSums(ss2_130cells_counts > 1) > 10)
-counts <- ss2_130cells_counts[expressed_genes,]
-best_matches <- BestMatchParams('ss2',counts,'best_params.ss2.qqplot.pdf', n_optimal=10)
-best_matches
+counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 1) > 10),]
+best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', n_optimal=8)
+best_matches_nonUMI
 ```
