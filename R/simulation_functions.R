@@ -559,7 +559,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param n_de_evf number of differential evfs between populations
 #' @param Sigma parameter of the std of evf values within the same population
 #' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
-#' @param param_realdata pick from zeisel.imputed or pop4.romain
+#' @param param_realdata pick from zeisel.imputed or zeisel.pop4
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
@@ -598,10 +598,10 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                               geffect_mean=geffect_mean,geffect_sd=gene_effects_sd)
   if(!is.null(param_realdata)){
     if(param_realdata=="zeisel.imputed"){
-      load('SymSim/match_params.zeisel_imputed.robj')
+      load('SymSim/param_realdata.zeisel.imputed.robj')
     }
-    if(param_realdata=="pop4.romain"){
-      load('SymSim/romain_pop4.zeisel.2.BP.robj')
+    if(param_realdata=="zeisel.pop4"){
+      load('SymSim/param_realdata.zeisel.pop4.robj')
       match_params <- cbind(result[[2]]$a[,1000,1],result[[2]]$b[,1000,1],result[[2]]$s[,1000,1])
     }
     match_params[,1]=log(base=10,match_params[,1])

@@ -64,6 +64,7 @@ AddImpulse <- function(path,edges,neutral,ImpulseParam,plotting,main,tips){
   }
   return(newtree)
 }
+
 #' @author Liam Revell
 getDescendants<-function(edges,par,tips,curr=NULL){
   if(is.null(curr)) {curr<-vector()}
