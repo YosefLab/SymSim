@@ -57,6 +57,7 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
     return(do.call(rbind,effect))
   })
 }
+
 #' sample from smoothed density function
 #' @param nsample number of samples needed
 #' @param den_fun density function estimated from density() from R default
@@ -108,6 +109,7 @@ Get_params <- function(gene_effects,evf,match_param_den,bimod){
   scaled_params[[3]] <- t(apply(scaled_params[[3]],2,function(x){x<-abs(x)}))
   return(scaled_params)
 }
+
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
@@ -140,6 +142,7 @@ Get_params3 <- function(gene_effects,evf,match_params,bimod){
   scaled_params <- lapply(scaled_params,t)
   return(scaled_params)
 }
+
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
@@ -149,7 +152,6 @@ Get_params3 <- function(gene_effects,evf,match_params,bimod){
 #' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
 #' @param param_realdata the fitted parameter distribution to sample from 
 #' @param bimod the bimodality constant
-#' @param scale_s transcription rate will be multiplied by this factor to increase cell size
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
@@ -181,7 +183,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
-                          rate_2PCR=0.8, nPCR=18, N_molecules_SEQ){
+                          rate_2PCR=0.8, nPCR=18, LinearAmp, LinearAmp_coef, N_molecules_SEQ){
   ngenes <- length(gene_len)
   if (protocol=="nonUMI"){load("SymSim/len2nfrag.RData")} else 
     if(protocol=="UMI"){load("SymSim/len2prob3pri.RData")} else
@@ -202,19 +204,22 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   trans_idx <- trans_idx[inds[[2]]]
   
   amp_rate <- c((rate_2PCR+amp_bias[trans_idx[1:(length(trans_idx)-1)]]),1)
-  temp <- runif(length(captured_vec)) < amp_rate
-  temp <- temp*2+captured_vec-temp
   
-  for (iPCR in 2:nPCR){
-    eff <- runif(length(temp))*amp_rate
-    v1 <- temp*(1-eff)
-    round_down <- (v1-floor(v1)) < runif(length(v1))
-    if (any(is.na(round_down))) {stop(sprintf("there is NA values in round_down, capture rate=%4.2f, total true counts=%d", 
-                                              rate_2cap, sum(true_counts_1cell)))}
-    v1[round_down] <- floor(v1[round_down]); v1[!round_down] <- ceiling(v1[!round_down])
-    temp <- v1 + 2*(temp-v1)
+  # pre-amplification:
+  if (LinearAmp){
+    PCRed_vec <- captured_vec*LinearAmp_coef
+  } else {
+    temp <- runif(length(captured_vec)) < amp_rate
+    temp <- temp*2+captured_vec-temp
+    for (iPCR in 2:nPCR){
+      eff <- runif(length(temp))*amp_rate
+      v1 <- temp*(1-eff)
+      round_down <- (v1-floor(v1)) < runif(length(v1))
+      v1[round_down] <- floor(v1[round_down]); v1[!round_down] <- ceiling(v1[!round_down])
+      temp <- v1 + 2*(temp-v1)
+    }
+    PCRed_vec <- temp
   }
-  PCRed_vec <- temp
   
   if (protocol=="nonUMI"){ # add fragmentation step here
     temp_vec <- PCRed_vec
@@ -635,13 +640,15 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param amp_bias_limit range of amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high, default is 0.8
 #' @param nPCR the number of PCR cycles, default is 16
+#' @param LinearAmp if linear amplification is used for pre-amplification step, default is FALSE
+#' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 
 True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.02,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
-                                rate_2PCR=0.8,nPCR=16,depth_mean, depth_sd){  
+                                rate_2PCR=0.8,nPCR=16, LinearAmp=F, LinearAmp_coef=2000, depth_mean, depth_sd){  
   if(!is.null(SE)){
     meta_cell <- colData(SE)
     true_counts <- assays(SE)$count
