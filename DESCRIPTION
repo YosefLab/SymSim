@@ -12,6 +12,7 @@ Depends:
     ggplot2, 
     Rtsne,
     RColorBrewer, 
+    grid,
     reshape,
     RColorBrewer,
     Biobase,

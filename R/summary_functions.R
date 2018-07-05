@@ -112,9 +112,11 @@ LogDist <- function(counts,log_count_bins){
 #' @param mean_counts the average expression for each gene, used for sorting purpose
 #' @param zeropropthres the genes with zeroproportion greater than this number is not plotted (default to 0.8)
 #' @param filename the name of the output plot
+#' @param data_name a string which is included in the title of the plot to describe the data used
 #' @examples
 #' Sim_LogDist()
-PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,filename,saving=F, data_name){
+PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,
+                             filename,saving=F, data_name){
     mean_counts=mean_counts[log_real[,1]<zeropropthres]
     log_real=log_real[log_real[,1]<zeropropthres,]
     colnames(log_real)[1]='.0'
@@ -162,8 +164,10 @@ PlotParamHist<-function(params,samplename,saving=F){
 
 #' rescale2range
 #'
-#' Subfunction for Plotting FNR
-rescale2range <- function(vec, n){ # rescale the values in vec such that the lagest is n, and the smallest is 1.
+#' Subfunction for Plotting FNR. Rescale the values in vec such that the lagest is n, and the smallest is 1.
+#' @param vec input vector
+#' @param n the largest integer to scale the vector to (the smallest is 1)
+rescale2range <- function(vec, n){
   a <- (n-1)/(max(vec)-min(vec))
   return(a*vec+(1-a*min(vec)))
 }
@@ -224,45 +228,6 @@ plotFNR <- function(expr_matrix, data_name, ncols){
   
 }
 
-
-#' Plotting GC bias and Length 
-#'
-#' @param filename the name of the simualted robj data file
-PlotGCLENbias <- function(filename,outputname){
-    load(filename)
-    GCbias <- result[[4]][[1]][[1]][[1]]
-    LNbias <- 1/result[[4]][[1]][[1]][[2]]
-    plots <- lapply(list(GCbias,LNbias),function(bias){
-        bybins <- lapply(c(1:10),function(i){
-            X<-result[[1]][[3]][as.numeric(factor(bias))==i,]
-            average<-rowMeans(X)
-            average <- average[average>0]
-            mu <- mean(log(average,base=2),na.rm=T)
-            sd <- sd(log(average,base=2),na.rm=T)
-            c(mu,sd,i)
-        })
-        bybins <- do.call(rbind,bybins)
-        colnames(bybins)<-c('mu','sd','bin')
-        temp <- as.data.frame(bybins)
-        pd <- position_dodge(0.1)
-        p1 <- ggplot(temp, aes(x=bin, y=mu)) + 
-            geom_errorbar(aes(ymin=mu-sd, ymax=mu+sd), width=.1, position=pd) +
-            geom_line(position=pd) +
-            geom_point(position=pd)
-        p2 <- ggplot(temp,aes(x=bin,y=sd/mu))+
-            geom_line(position=pd) +
-            geom_point(position=pd)
-        return(list(p1,p2))
-    })
-    plots<-do.call(c,plots)
-    names(plots) <- c('GC_mean','GC_fano','Len_mean','Len_fano')
-    ggsave(outputname, arrangeGrob(grobs = plots))
-    return(plots)
-}
-#' Calculating the 
-#'
-#' @param filename the name of the simualted robj data file
-
 #' Plotting simulated FNR 
 #'
 #' @param current_counts expression matrix
@@ -334,6 +299,10 @@ plotFNRreal <- function(expr_matrix, hk, data_name, col_vec){
   }
 }
 
+#' Plotting PCA results (PC1 and PC2)
+#' @param PCAres the PCA results
+#' @param col_vec a vector to specify the colors for each point
+#' @param figuretitle title for the plot
 
 plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
   variance_perc <- 100*(PCAres$sdev)^2/sum((PCAres$sdev)^2)
@@ -343,6 +312,7 @@ plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
        main=figuretitle)
 }
 
+#' arrange multiple plots from ggplot2 to one figure
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
   
@@ -380,119 +350,4 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 }
 
 
-#' Plotting simulated FNR 
-#'
-#' @param current_counts expression matrix
-#' @param true_counts true expression matrix
-#' @param titlestr title string
-
-plotFNRsim <- function(current_counts, true_counts, x_use="true", titlestr){
-  
-  #cellsize <- colSums(current_counts)
-  zeros <- colSums(current_counts==0 & true_counts!=0)
-  #summary(zeros)
-  
-  ref.glms <- lapply(c(1:length(true_counts[1,])),function(i){
-    real <- true_counts[,i]
-    bias <- current_counts[,i]/sum(current_counts[,i])*10^6
-    fn <- (bias==0 & real!=0)
-    if (x_use == "observed")
-    {data <- data.frame(exprs=log(bias+1,10), fn=fn)} else
-      if (x_use == "true")
-      {data <- data.frame(exprs=log(real+1,10), fn=fn)}
-    data <- data[real!=0,]
-    model <- glm(fn~exprs,family=binomial(link='logit'),data=data)
-    return(model$coefficients)
-  })
-  
-  ncols <- 2000
-  colfunc <- colorRampPalette(c("blue", "green", "red", "purple"))
-  allcol <- colfunc(ncols)
-  
-  col_vec <- allcol[round(rescale2range(colSums(current_counts), 2000))]
-  
-  plot(NULL, main = sprintf("FNR Curves %s", titlestr), ylim = c(0,1),xlim = c(0,6), 
-       ylab = "Failure Probability", xlab = "Mean log10 Expression")
-  x = (0:60)/10
-  for(si in 1:length(ref.glms)){
-    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
-    lines(x, y, type = 'l', lwd = 2, col=col_vec[si])
-  }
-}
-
-#' Plotting real data FNR 
-#'
-#' @param expr_matrix expression matrix
-#' @param hk house keeping genes
-#' @param data_name title string
-#' @param col_vec color vector
-
-plotFNRreal <- function(expr_matrix, hk, data_name, col_vec){
-  # Mean log10(x+1) expression
-  mu_obs = rowMeans(log10(expr_matrix[hk,]+1))
-  drop_outs = expr_matrix[hk,] == 0
-  
-  # Logistic Regression Model of Failure
-  ref.glms = list()
-  for (si in 1:dim(drop_outs)[2]){
-    #fit = glm(cbind(drop_outs[,si], 1 - drop_outs[,si]) ~ mu_obs,family=binomial(logit))
-    fit = glm(drop_outs[,si] ~ mu_obs,family=binomial(logit))
-    ref.glms[[si]] = fit$coefficients
-  }
-  
-  #The list ref.glm contains the intercept and slope of each fit. 
-  # We can now visualize the fit curves and the corresponding Area Under the Curves (AUCs):
-  plot(NULL, main = sprintf("FNR Curves %s", data_name), ylim = c(0,1),xlim = c(0,6), 
-       ylab = "Failure Probability", xlab = "Mean log10 Expression")
-  x = (0:60)/10
-  for(si in 1:ncol(expr_matrix)){
-    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
-    lines(x, 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1), type = 'l', lwd = 2, col=col_vec[si])
-  }
-}
-
-
-plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
-  variance_perc <- 100*(PCAres$sdev)^2/sum((PCAres$sdev)^2)
-  plot(PCAres$x[,1], PCAres$x[,2], col=col_vec, pch=20,
-       xlab=sprintf("PC1 %4.2f%%", variance_perc[1]), 
-       ylab=sprintf("PC2 %4.2f%%", variance_perc[2]),
-       main=figuretitle)
-}
-
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  
-  if (numPlots==1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
 
