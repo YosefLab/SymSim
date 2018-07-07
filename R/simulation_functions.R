@@ -633,7 +633,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param true_counts gene cell matrix
 #' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
 #' @param protocol a string, can be "nonUMI" or "UMI"
-#' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
+#' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10 percent efficiency
 #' @param alpha_sd the std of rate of subsampling of transcripts
 #' @param lenslope amount of length bias
 #' @param nbins number of bins for gene length
