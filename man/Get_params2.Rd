@@ -15,8 +15,6 @@ each corresponding to one kinetic parameter. Each matrix has nevf columns, and n
 \item{bimod}{the bimodality constant}
 
 \item{param_realdata}{the fitted parameter distribution to sample from}
-
-\item{scale_s}{transcription rate will be multiplied by this factor to increase cell size}
 }
 \value{
 params a matrix of ngenes * 3

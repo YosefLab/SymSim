@@ -6,6 +6,11 @@
 \usage{
 rescale2range(vec, n)
 }
+\arguments{
+\item{vec}{input vector}
+
+\item{n}{the largest integer to scale the vector to (the smallest is 1)}
+}
 \description{
-Subfunction for Plotting FNR
+Subfunction for Plotting FNR. Rescale the values in vec such that the lagest is n, and the smallest is 1.
 }

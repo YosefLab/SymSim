@@ -4,23 +4,21 @@
 \alias{True2ObservedCounts}
 \title{Simulate observed count matrix given technical biases and the true counts}
 \usage{
-<<<<<<< HEAD
 True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
-=======
-True2ObservedCounts(SE = NULL, true_counts, meta_cell, nbatch = 1, protocol,
->>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
   alpha_mean = 0.1, alpha_sd = 0.02, lenslope = 0.01, nbins = 20,
   gene_len, amp_bias_limit = c(-0.2, 0.2), rate_2PCR = 0.8, nPCR = 16,
-  depth_mean, depth_sd)
+  LinearAmp = F, LinearAmp_coef = 2000, depth_mean, depth_sd)
 }
 \arguments{
 \item{SE}{input, should be a summerized experiment rather than a list of elements, default is False}
 
+\item{true_counts}{gene cell matrix}
+
 \item{meta_cell}{the meta information related to cells, will be combined with technical cell level information and returned}
 
-\item{protocol}{a string, can be "ss2" or "umi"}
+\item{protocol}{a string, can be "nonUMI" or "UMI"}
 
-\item{alpha_mean}{the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency}
+\item{alpha_mean}{the mean of rate of subsampling of transcripts during capture step, default at 10 percent efficiency}
 
 \item{alpha_sd}{the std of rate of subsampling of transcripts}
 
@@ -34,16 +32,13 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, nbatch = 1, protocol,
 
 \item{nPCR}{the number of PCR cycles, default is 16}
 
+\item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
+
+\item{LinearAmp_coef}{the coeficient of linear amplification, that is, how many times each molecule is amplified by}
+
 \item{depth_mean}{mean of sequencing depth}
 
 \item{depth_sd}{std of sequencing depth}
-
-\item{ncells_total}{number of cells}
-<<<<<<< HEAD
-=======
-
-\item{nbatches}{number of batches (so far only 1)}
->>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts

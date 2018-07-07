@@ -4,10 +4,10 @@
 \alias{BestMatchParams}
 \title{Get the best matched parameter}
 \usage{
-BestMatchParams(tech, counts, plotfilename)
+BestMatchParams(tech, counts, plotfilename, n_optimal = 3)
 }
 \arguments{
-\item{tech}{'ss2','umi' the match database are constructed based on reasonable values for each technology}
+\item{tech}{'nonUMI','UMI' the match database are constructed based on reasonable values for each technology}
 
 \item{counts}{expression matrix}
 

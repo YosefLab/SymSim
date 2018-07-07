@@ -268,14 +268,11 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     if (SEQ_efficiency >= 1){sequenced_vec <- frag_vec} else {
       sequenced_vec <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)})}
     temp_vec <- c(sequenced_vec,1)
-    #print(sprintf("length of sequenced_vec %d", length(sequenced_vec)))
     for (i in seq(2,1,-1)){
       temp_vec1 <- numeric(); temp_vec1[inds[[i]]] <- temp_vec; 
       temp_vec <- temp_vec1; temp_vec[is.na(temp_vec)] <- 0
     }
     recovered_vec <- temp_vec[1:(length(temp_vec)-1)]
-    #print(sprintf("length of recovered_vec %d", length(recovered_vec)))
-    #print(sprintf("length of nonzero recovered_vec %d", length(which(recovered_vec>0))))
     
     UMI_counts=numeric(ngenes); 
     GI=c(0, cumsum(true_counts_1cell));

@@ -4,32 +4,12 @@
 \alias{SimulateTrueCounts}
 \title{Generate both evf and gene effect and simulate true transcript counts}
 \usage{
-<<<<<<< HEAD
-<<<<<<< HEAD
-SimulateTrueCounts(ncells, ngenes, nevf, Sigma = 0.1, phyla, bimod = 0.5,
-  gene_effects_mean = 0, gene_effects_sd = 1, gene_effect_prob = 0.3,
-  evf_type, randseed = 0)
-=======
-SimulateTrueCounts(ncells_total, min_popsize, ngenes, nevf = 10,
-  evf_type = "one.population", Sigma = 0.3, phyla = NULL,
-  gene_effects_sd = 1, gene_effect_prob = 0.3, bimod = 0.3,
-  randseed = 0)
->>>>>>> c198b90973e3718e2cbd97d31bffee9e29f0c31c
-=======
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
-<<<<<<< HEAD
   evf_center = 1, evf_type = "one.population", nevf = 10, n_de_evf = 0,
-  impulse = T, vary = "all", Sigma = 0.5, phyla = NULL,
+  impulse = F, vary = "all", Sigma = 0.5, phyla = NULL,
   geffect_mean = 0, gene_effects_sd = 1, gene_effect_prob = 0.3,
-  bimod = 0.2, param_realdata = "zeisel.imputed", joint = F, randseed,
-=======
-  evf_center = 1, nevf = 10, evf_type = "one.population",
-  percent_DEevf = 0.5, impulse = T, vary = "all", Sigma = 0.5,
-  phyla = NULL, gene_effects_sd = 1, gene_effect_prob = 0.3,
-  bimod = 0.3, param_realdata = "zeisel.imputed", joint = F, randseed,
->>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
+  bimod = 0, param_realdata = "zeisel.imputed", joint = F, randseed,
   SE = F)
->>>>>>> de68f0d77d0fb7c5402e989a978af800e9338ce1
 }
 \arguments{
 \item{ncells_total}{number of cells}
@@ -42,10 +22,11 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 
 \item{evf_center}{the value which evf mean is generated from}
 
-<<<<<<< HEAD
 \item{evf_type}{string that is one of the following: 'one.population','discrete','continuous'}
 
 \item{nevf}{number of evfs}
+
+\item{n_de_evf}{number of differential evfs between populations}
 
 \item{Sigma}{parameter of the std of evf values within the same population}
 
@@ -55,30 +36,11 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 
 \item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
 
-\item{randseed}{random seed}
-
-\item{SE}{return summerized experiment rather than a list of elements, default is False}
-
-\item{percent_DEevf}{percentage of differential evfs between populations}
-=======
-\item{nevf}{number of evfs}
-
-\item{evf_type}{string that is one of the following: 'one.population','discrete','continuous'}
-
-\item{percent_DEevf}{percentage of differential evfs between populations}
-
-\item{Sigma}{parameter of the std of evf values within the same population}
-
-\item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package}
-
-\item{gene_effect_prob}{the probability that the effect size is not 0}
-
-\item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
+\item{param_realdata}{pick from zeisel.imputed or zeisel.pop4}
 
 \item{randseed}{random seed}
 
 \item{SE}{return summerized experiment rather than a list of elements, default is False}
->>>>>>> b1c727f6ac83412053a415eccd221e3a5179bbd7
 
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
 
