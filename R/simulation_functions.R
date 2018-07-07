@@ -645,7 +645,6 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
-
 True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.02,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR=16, LinearAmp=F, LinearAmp_coef=2000, depth_mean, depth_sd){  
@@ -663,7 +662,8 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   observed_counts <- lapply(c(1:ncells),function(icell){
     amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
                   rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
-                  rate_2PCR=rate_2PCR, nPCR=nPCR, N_molecules_SEQ = depth_vec[icell])     
+                  rate_2PCR=rate_2PCR, nPCR=nPCR, LinearAmp = LinearAmp, 
+                  LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])     
   })
   meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
   meta_cell <- cbind(meta_cell, meta_cell2)
@@ -685,68 +685,6 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
     return(SE)
   }
 }
-
-#' Simulate observed count matrix given technical biases and the true counts in multiple batches
-#' @param batch_effect the ratio of standard deviation to mean when sampling per batch parameters, default is 0.1
-#' @param nbatch number of batches, default is 3
-#' @param true_counts output of SimulateTrueCounts, with true count matrix and cell meta data
-#' @param ncells_total number of cells
-#' @param meta_cell the meta information related to cells, will be combined with technical cell level information and returned 
-#' @param nbatches number of batches (so far only 1)
-#' @param protocol a string, can be "nonUMI" or "UMI"
-#' @param alpha_mean the mean of rate of subsampling of transcripts during capture step, default at 10% efficiency
-#' @param alpha_sd the std of rate of subsampling of transcripts
-#' @param lenslope amount of length bias
-#' @param nbins number of bins for gene length
-#' @param amp_bias_limit range of amplification bias for each gene, a vector of length ngenes
-#' @param rate_2PCR PCR efficiency, usually very high, default is 0.8
-#' @param nPCR the number of PCR cycles, default is 16
-#' @param depth_mean mean of sequencing depth
-#' @param depth_sd std of sequencing depth
-BatchTrue2ObservedCounts <- function(
-  true_counts,protocol,batch_effect=0.1,nbatch=3,
-  alpha_mean=0.1,alpha_sd=0.02,lenslope=0.01,
-  nbins=20,amp_bias_limit=c(-0.2, 0.2),
-  rate_2PCR=0.8,nPCR=18,depth_mean, depth_sd){
-  ncells=length(true_counts[[1]][1,])
-  ngenes = length(true_counts[[1]][,1])
-  load("SymSim/gene_len_pool.RData")
-  gene_len <- sample(gene_len_pool[which(gene_len_pool>100)], ngenes, replace = FALSE)
-  batch_alpha_mean=rnorm(3,alpha_mean,alpha_mean*batch_effect)
-  batch_lenslope=rnorm(3,lenslope,lenslope*batch_effect) 
-  batch_rate_2PCR=rnorm(3,rate_2PCR,rate_2PCR*batch_effect) 
-  batch_rate_2PCR[batch_rate_2PCR>1]=0.95
-  batch_depth_mean=rnorm(3,depth_mean,depth_mean*batch_effect)
-  if(sum(c(batch_alpha_mean,batch_rate_2PCR,batch_depth_mean)<0)){
-    stop("batch effect is too large and created negative values in technical parameters")
-  }
-  ncells_batch <- rbinom(nbatch,p=1/nbatch,size=ncells)
-  ncells_batch[3] <- ncells_batch[3]-(sum(ncells_batch)-ncells)
-  batch_id <- do.call(c,lapply(c(1:nbatch),function(i){rep(i,ncells_batch[i])}))
-  batch_id <- sample(batch_id,length(batch_id))
-  counts <- lapply(c(1:nbatch),function(i){
-    true_counts[[1]][,batch_id==i]
-  })
-  meta <- lapply(c(1:nbatch),function(i){
-    true_counts[[3]][batch_id==i,]
-  })
-  observed_batches <- lapply(c(1:nbatch),function(i){
-    observed_counts <- True2ObservedCounts(
-      true_counts=counts[[i]],meta_cell=meta[[i]],
-      protocol="UMI",alpha_mean=batch_alpha_mean[i],lenslope=batch_lenslope[i],
-      gene_len=gene_len,amp_bias_limit=c(-0.2, 0.2),
-      rate_2PCR=batch_rate_2PCR[i],nPCR=18,
-      depth_mean=batch_depth_mean[i], depth_sd=depth_sd)
-    return(observed_counts)
-  })
-  batch_counts <- do.call(cbind,lapply(observed_batches,function(X){X[[1]]}))
-  meta_cell <- do.call(rbind,lapply(observed_batches,function(X){X[[2]]}))
-  meta_cell <- cbind(meta_cell,batch_id)
-  observed_counts=batch_counts
-  return(list(observed_counts,meta_cell))
-}
-
-
 
 #' Simulate technical biases 
 #' @param lenslope amount of length bias
