@@ -44,8 +44,6 @@ MasterEqn2 <- function(rateParams){
 #' @param geffect_mean the mean of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param geffect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @return a list of 3 matrices, each of dimension ngenes * nevf
-#' @examples 
-#' GeneEffects()
 GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
   set.seed(randseed)
   lapply(c('kon','koff','s'),function(param){
@@ -180,6 +178,8 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param amp_bias amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high
 #' @param nPCR the number of PCR cycles
+#' @param LinearAmp if linear amplification is used for pre-amplification step, default is FALSE
+#' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
@@ -285,17 +285,9 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
 }
 
 
-
-### Compute value of impulse model
-
-#' Compute value of impulse function given parameters.
-#' 
 #' Compute value of impulse function given parameters.
 #' Enforces lower bound on value of function to avoid numerical
 #' errors during model fitting.
-#' 
-#' @seealso Compiled version: \link{evalImpulse_comp}
-#' 
 #' @param vecImpulseParam (numeric vector number of impulse model parameters)
 #' \{beta, h0, h1, h2, t1, t2\}
 #' Vector of impulse model parameters.
@@ -381,12 +373,16 @@ Phyla3 <- function(plotting=F){
 #' @param ncells number of cells
 #' @param n_nd_evf Number of EVFs that do not have an impulse signal
 #' @param n_de_evf Number of EVFs with an impulse signal
+#' @param impulse if the impluse model should be used instead of Brownian motion
+#' @param evf_center the mean of Gaussain function where the non-Diff EVFs are sampled from
+#' @param vary which parameters are affected by Diff-EVFs. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s"
 #' @param tip The leaf that the path with impulse lead to
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
 #' @param plotting Whether to plot the trajectory or not
-#' @param plotname The 
+#' @param plotname The string to be used in the output file name
+#' @param seed the random seed 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
-ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,vary='all',
+ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=F,evf_center=1,vary='all',
                           Sigma,plotting=T,plotname='cont_evf.pdf',seed){
   set.seed(seed)
   edges <- cbind(phyla$edge,phyla$edge.length)
@@ -470,11 +466,14 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=T,evf_center=1,
 #' @param min_popsize size of the rarest population
 #' @param i_minpop to specify which population has the smallest size
 #' @param Sigma The standard deviation of the brownian motion of EVFs changing along the tree 
-#' @param nevf Number of EVFs per cell
+#' @param n_nd_evf number of non-Diff EVFs
+#' @param n_de_evf number of Diff EVFs
+#' @param vary which parameters are affected by Diff-EVFs. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s"
 #' @param evf_center the value used to generated evf means. Suggested value is 1
-#' @param percent_DEevf the percentage of differential EVFs out of all evfs (nevf)
+#' @param seed the random seed
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)
-DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf, n_de_evf, vary, evf_center, seed){
+DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf, n_de_evf, 
+                        vary, evf_center, seed){
   set.seed(seed)
   npop <- length(phyla$tip.label)
   # set the number of cells in each population: first give each population min_popsize cells
@@ -642,9 +641,10 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
+#' @param nbatch number of batches
 True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.02,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
-                                rate_2PCR=0.8,nPCR=16, LinearAmp=F, LinearAmp_coef=2000, depth_mean, depth_sd){  
+                                rate_2PCR=0.8,nPCR=16, LinearAmp=F, LinearAmp_coef=2000, depth_mean, depth_sd, nbatch=1){  
   if(!is.null(SE)){
     meta_cell <- colData(SE)
     true_counts <- assays(SE)$count
@@ -662,7 +662,9 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
                   rate_2PCR=rate_2PCR, nPCR=nPCR, LinearAmp = LinearAmp, 
                   LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])     
   })
-  meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec)
+  ## assign random batch ID to cells
+  batchIDs <- sample(1:nbatch, ncells, replace = TRUE)
+  meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec, batch=batchIDs)
   meta_cell <- cbind(meta_cell, meta_cell2)
   
   if (protocol=="UMI"){
@@ -672,6 +674,31 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
     observed_counts <- UMI_counts
   } else
     observed_counts <- do.call(cbind,observed_counts)
+  
+  ## add batch effects to observed counts
+  # use different mean and same sd to generate the multiplicative factor for different gene in different batch
+  if (nbatch>1){
+    mean_matrix <- matrix(0, ngenes, nbatch)
+    
+    # batch_mean <- runif(nbatch, min = -1, max = 1)
+    # temp <- lapply(1:nbatch, function(ibatch) {
+    #   return(rnorm(ngenes, mean = batch_mean[ibatch], sd=max(abs(batch_mean[ibatch])/5, 0.01)))} )
+    # mean_matrix <- do.call(cbind, temp)
+    batch_effect_size <- 2
+    gene_mean <- rnorm(ngenes, 0, 1)
+    temp <- lapply(1:ngenes, function(igene) {
+      return(runif(nbatch, min = gene_mean[igene]-batch_effect_size, max = gene_mean[igene]+batch_effect_size))
+    })
+    mean_matrix <- do.call(rbind, temp)
+    
+    batch_factor <- matrix(0, ngenes, ncells)
+    for (igene in 1:ngenes){
+      for (icell in 1:ncells){
+        batch_factor[igene, icell] <- rnorm(n=1, mean=mean_matrix[igene, batchIDs[icell]], sd=0.01)
+      }
+    }
+    observed_counts <- 2^(log2(observed_counts)+batch_factor)
+  }
   
   if(is.null(SE)){
     if (protocol=="UMI"){return(list(observed_counts, meta_cell, nreads_perUMI, nUMI2seq))} else

@@ -17,6 +17,3 @@ a matrix where the rows are the genes and columns are the number of samples with
 \description{
 Prepares for plotting the Count Heatmap
 }
-\examples{
-
-}

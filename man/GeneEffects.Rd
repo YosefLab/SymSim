@@ -25,6 +25,3 @@ a list of 3 matrices, each of dimension ngenes * nevf
 \description{
 This function randomly generates the effect size of each evf on the dynamic expression parameters
 }
-\examples{
-GeneEffects()
-}

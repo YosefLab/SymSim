@@ -2,7 +2,9 @@
 % Please edit documentation in R/simulation_functions.R
 \name{evalImpulse}
 \alias{evalImpulse}
-\title{Compute value of impulse function given parameters.}
+\title{Compute value of impulse function given parameters.
+Enforces lower bound on value of function to avoid numerical
+errors during model fitting.}
 \usage{
 evalImpulse(vecImpulseParam, vecTimepoints)
 }
@@ -22,9 +24,6 @@ Model values for given time points.
 Compute value of impulse function given parameters.
 Enforces lower bound on value of function to avoid numerical
 errors during model fitting.
-}
-\seealso{
-Compiled version: \link{evalImpulse_comp}
 }
 \author{
 David Sebastian Fischer

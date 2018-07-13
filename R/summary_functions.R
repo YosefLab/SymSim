@@ -8,8 +8,8 @@ percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
 #' @param tech 'nonUMI','UMI' the match database are constructed based on reasonable values for each technology
 #' @param counts expression matrix
 #' @param plotfilename output name for qqplot
+#' @param n_optimal number of top parameter configurations to return
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
-
 BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
   counts <- counts[rowSums(counts>0)>10, ]
   mean_exprs <- quantile(rowMeans(counts+1,na.rm=T),seq(0,1,0.002))
@@ -70,7 +70,6 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
 #' @param dist a list of master equation simulation results, each element is a vector of length K
 #' @param log_count_bins a vector of form seq(min,max,stepsize), or doesn't have equal distance bins
 #' @return a matrix where each column is a bin, and each row is one distribution, and the contents are frequencies of probability of being in each bin 
-
 Sim_LogDist <- function(dist,log_count_bins){
     bins=10^log_count_bins
     Log_dist=lapply(dist,function(X){
@@ -89,8 +88,6 @@ Sim_LogDist <- function(dist,log_count_bins){
 #' @param dist the expression matrix
 #' @param log_count_bins a vector of the cut-offs for the histogram
 #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
-#' @examples
-#' 
 LogDist <- function(counts,log_count_bins){
     log_dist=apply(log(counts+1,base=10),1,function(x){
         if(sum(is.na(x))!=length(x)){
@@ -105,16 +102,17 @@ LogDist <- function(counts,log_count_bins){
     log_dist=t(log_dist)
     return(log_dist)
 }
+
 #' Plotting logged expression distribution
 #'
 #' takes an expression matrix and makes a 2D histogram on the log scale where each row is a gene and the number of samples in a bin is shown by the intensity of the color
 #' @param log_real the logged distribution of count distribution
 #' @param mean_counts the average expression for each gene, used for sorting purpose
+#' @param given_ord the given order of genes 
 #' @param zeropropthres the genes with zeroproportion greater than this number is not plotted (default to 0.8)
 #' @param filename the name of the output plot
+#' @param saving if the plot should be saved into a file
 #' @param data_name a string which is included in the title of the plot to describe the data used
-#' @examples
-#' Sim_LogDist()
 PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,
                              filename,saving=F, data_name){
     mean_counts=mean_counts[log_real[,1]<zeropropthres]
@@ -145,6 +143,7 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
 #' plot colored histograms of parameters
 #' @param params a matrix of 3 columns, the first one is kon, the second is koff and the third is s
 #' @param samplename the prefix of the plot, the suffix is '.params_dist.jpeg'
+#' @param saving if the plot should be saved to file
 #' @return make a plot of three histograms
 PlotParamHist<-function(params,samplename,saving=F){
         df <- data.frame(kon = log(base=10,params[,1]),koff=log(base=10,params[,2]),s=log(base=10,params[,3]))
@@ -172,138 +171,10 @@ rescale2range <- function(vec, n){
   return(a*vec+(1-a*min(vec)))
 }
 
-#' Plotting FNR 
-#'
-#' Make 2 plots: one is the FNR curves, and the other one is the barplots of AUC
-#' @param expr_matrix expression matrix
-#' @param data_name what to name the plot
-#' @param ncols number of colors in the color ramp
-
-plotFNR <- function(expr_matrix, data_name, ncols){
-    rescale2range <- function(vec, n){ # rescale the values in vec such that the lagest is n, and the smallest is 1.
-      a <- (n-1)/(max(vec)-min(vec))
-      return(a*vec+(1-a*min(vec)))
-    }
-    # filter out cells where less than 10% of all genes are expressed
-    notzero <- apply(expr_matrix,2,function(X){sum(X>0)>length(X)*0.1})
-    expr_matrix<-expr_matrix[,notzero]
-
-    # home keeping gene is defined as genes that are in the top half highest expressed genes
-    # taht are also in the top half lowest variance genes
-    highexprs <- c(1:length(expr_matrix[,1]))[rowMeans(expr_matrix)>quantile(rowMeans(expr_matrix),0.5)]
-    sd2 <- apply(expr_matrix,1,var)
-    lowvar <- c(1:length(expr_matrix[,1]))[sd2/rowMeans(expr_matrix)<quantile(sd2/rowMeans(expr_matrix),0.5,na.rm=T)]
-    hk <- intersect(highexprs,lowvar)
-
-    # Mean log10(x+1) expression
-    colfunc <- colorRampPalette(c("blue", "green", "red", "purple"))
-    allcol <- colfunc(ncols)
-
-    col_vec <- allcol[round(rescale2range(colSums(expr_matrix), 2000))]
-    mu_obs = rowMeans(log10(expr_matrix[hk,]+1))
-    drop_outs = expr_matrix[hk,] == 0
-
-    # Logistic Regression Model of Failure
-    ref.glms = list()
-    for (si in 1:dim(drop_outs)[2]){
-    fit = glm(cbind(drop_outs[,si],1 - drop_outs[,si]) ~ mu_obs,family=binomial(logit))
-    ref.glms[[si]] = fit$coefficients
-    }
-    #The list ref.glm contains the intercept and slope of each fit. 
-    # We can now visualize the fit curves and the corresponding Area Under the Curves (AUCs):
-
-    plot(NULL, main = sprintf("FNR Curves %s", data_name), ylim = c(0,1),xlim = c(0,2), 
-       ylab = "Failure Probability", xlab = "Mean log10 Expression")
-    x = (0:60)/10
-    AUC = NULL
-    for(si in 1:ncol(expr_matrix)){
-    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
-    AUC[si] = sum(y)/10
-    lines(x, 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1), type = 'l', lwd = 2, col=col_vec[si])
-}
-# Barplot of FNR AUC
-
-  o = order(AUC)
-  barplot(AUC[o], col=col_vec[o], border=col_vec[o], main="FNR AUC")
-  
-}
-
-#' Plotting simulated FNR 
-#'
-#' @param current_counts expression matrix
-#' @param true_counts true expression matrix
-#' @param titlestr title string
-
-plotFNRsim <- function(current_counts, true_counts, x_use="true", titlestr){
-  
-  #cellsize <- colSums(current_counts)
-  zeros <- colSums(current_counts==0 & true_counts!=0)
-  #summary(zeros)
-  
-  ref.glms <- lapply(c(1:length(true_counts[1,])),function(i){
-    real <- true_counts[,i]
-    bias <- current_counts[,i]/sum(current_counts[,i])*10^6
-    fn <- (bias==0 & real!=0)
-    if (x_use == "observed")
-    {data <- data.frame(exprs=log(bias+1,10), fn=fn)} else
-      if (x_use == "true")
-      {data <- data.frame(exprs=log(real+1,10), fn=fn)}
-    data <- data[real!=0,]
-    model <- glm(fn~exprs,family=binomial(link='logit'),data=data)
-    return(model$coefficients)
-  })
-  
-  ncols <- 2000
-  colfunc <- colorRampPalette(c("blue", "green", "red", "purple"))
-  allcol <- colfunc(ncols)
-  
-  col_vec <- allcol[round(rescale2range(colSums(current_counts), 2000))]
-  
-  plot(NULL, main = sprintf("FNR Curves %s", titlestr), ylim = c(0,1),xlim = c(0,6), 
-       ylab = "Failure Probability", xlab = "Mean log10 Expression")
-  x = (0:60)/10
-  for(si in 1:length(ref.glms)){
-    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
-    lines(x, y, type = 'l', lwd = 2, col=col_vec[si])
-  }
-}
-
-#' Plotting real data FNR 
-#'
-#' @param expr_matrix expression matrix
-#' @param hk house keeping genes
-#' @param data_name title string
-#' @param col_vec color vector
-
-plotFNRreal <- function(expr_matrix, hk, data_name, col_vec){
-  # Mean log10(x+1) expression
-  mu_obs = rowMeans(log10(expr_matrix[hk,]+1))
-  drop_outs = expr_matrix[hk,] == 0
-  
-  # Logistic Regression Model of Failure
-  ref.glms = list()
-  for (si in 1:dim(drop_outs)[2]){
-    #fit = glm(cbind(drop_outs[,si], 1 - drop_outs[,si]) ~ mu_obs,family=binomial(logit))
-    fit = glm(drop_outs[,si] ~ mu_obs,family=binomial(logit))
-    ref.glms[[si]] = fit$coefficients
-  }
-  
-  #The list ref.glm contains the intercept and slope of each fit. 
-  # We can now visualize the fit curves and the corresponding Area Under the Curves (AUCs):
-  plot(NULL, main = sprintf("FNR Curves %s", data_name), ylim = c(0,1),xlim = c(0,6), 
-       ylab = "Failure Probability", xlab = "Mean log10 Expression")
-  x = (0:60)/10
-  for(si in 1:ncol(expr_matrix)){
-    y = 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1)
-    lines(x, 1/(exp(-ref.glms[[si]][1] - ref.glms[[si]][2] * x) + 1), type = 'l', lwd = 2, col=col_vec[si])
-  }
-}
-
 #' Plotting PCA results (PC1 and PC2)
 #' @param PCAres the PCA results
 #' @param col_vec a vector to specify the colors for each point
 #' @param figuretitle title for the plot
-
 plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
   variance_perc <- 100*(PCAres$sdev)^2/sum((PCAres$sdev)^2)
   plot(PCAres$x[,1], PCAres$x[,2], col=col_vec, pch=20,
@@ -312,7 +183,11 @@ plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
        main=figuretitle)
 }
 
-#' arrange multiple plots from ggplot2 to one figure
+#' arrange multiple plots from ggplot2 to one figure. 
+#' From http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#' ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+#' @param cols Number of columns in layout
+#' @param layout A matrix specifying the layout. If present, 'cols' is ignored.
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
   

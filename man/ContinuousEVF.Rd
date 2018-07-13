@@ -4,7 +4,7 @@
 \alias{ContinuousEVF}
 \title{Generating EVFs for cells sampled along the trajectory of cell development}
 \usage{
-ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = T,
+ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = F,
   evf_center = 1, vary = "all", Sigma, plotting = T,
   plotname = "cont_evf.pdf", seed)
 }
@@ -17,11 +17,19 @@ ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = T,
 
 \item{n_de_evf}{Number of EVFs with an impulse signal}
 
+\item{impulse}{if the impluse model should be used instead of Brownian motion}
+
+\item{evf_center}{the mean of Gaussain function where the non-Diff EVFs are sampled from}
+
+\item{vary}{which parameters are affected by Diff-EVFs. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s"}
+
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
 \item{plotting}{Whether to plot the trajectory or not}
 
-\item{plotname}{The}
+\item{plotname}{The string to be used in the output file name}
+
+\item{seed}{the random seed}
 
 \item{tip}{The leaf that the path with impulse lead to}
 }

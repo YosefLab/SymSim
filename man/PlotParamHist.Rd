@@ -10,6 +10,8 @@ PlotParamHist(params, samplename, saving = F)
 \item{params}{a matrix of 3 columns, the first one is kon, the second is koff and the third is s}
 
 \item{samplename}{the prefix of the plot, the suffix is '.params_dist.jpeg'}
+
+\item{saving}{if the plot should be saved to file}
 }
 \value{
 make a plot of three histograms

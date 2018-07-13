@@ -1,5 +1,5 @@
 ---
-title: "SymSim: single cell RNAseq data simulator"
+title: "SymSim: single cell RNA-Seq data simulator"
 #author: "Xiuwei Zhang"
 #date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -83,7 +83,8 @@ Parameters for function True2ObservedCounts( ) are:
 **LinearAmp** if linear amplification should be used instead of PCR amplification for the pre-amplification step. Default is FALSE;  
 **LinearAmp_coef** the number by which the number of transcript is multiplied if linear amplification is used;   
 **depth_mean** mean sequencing depth of all cells;  
-**depth_sd** standard deviation of sequencing depth of all cells.  
+**depth_sd** standard deviation of sequencing depth of all cells;  
+**nbatch** the number of batches;  
 **SE** should the returned value be a summerized experiment rather than a list of elements, default is FALSE.  
 
 This function returns a list of two elements:  
@@ -152,7 +153,7 @@ tiplabels()
 ```
 
 ```{r,cache=T}
-true_counts_res <- SimulateTrueCounts(ncells_total=500, ngenes=ngenes, evf_center=1, nevf=20, evf_type="continuous", n_de_evf=12, vary="s", Sigma=0.4, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+true_counts_res <- SimulateTrueCounts(ncells_total=500, ngenes=ngenes, evf_center=1, nevf=20, evf_type="continuous", n_de_evf=12, impulse = F, vary="s", Sigma=0.4, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="continuous", n_pc=20, label='pop', saving = F, plotname="continuous populations (true counts)")
 tsne_true_counts[[2]]
 ```

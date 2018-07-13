@@ -18,11 +18,15 @@ DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf,
 
 \item{Sigma}{The standard deviation of the brownian motion of EVFs changing along the tree}
 
+\item{n_nd_evf}{number of non-Diff EVFs}
+
+\item{n_de_evf}{number of Diff EVFs}
+
+\item{vary}{which parameters are affected by Diff-EVFs. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s"}
+
 \item{evf_center}{the value used to generated evf means. Suggested value is 1}
 
-\item{nevf}{Number of EVFs per cell}
-
-\item{percent_DEevf}{the percentage of differential EVFs out of all evfs (nevf)}
+\item{seed}{the random seed}
 }
 \value{
 a list of two object, one is the evf, and the other is a dataframe indicating the population each cell comes from (pop)

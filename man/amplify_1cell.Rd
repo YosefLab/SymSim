@@ -23,6 +23,10 @@ amplify_1cell(true_counts_1cell, protocol, rate_2cap = 0.1, gene_len,
 
 \item{nPCR}{the number of PCR cycles}
 
+\item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
+
+\item{LinearAmp_coef}{the coeficient of linear amplification, that is, how many times each molecule is amplified by}
+
 \item{N_molecules_SEQ}{number of molecules sent for sequencing; sequencing depth}
 }
 \value{

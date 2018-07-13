@@ -12,6 +12,8 @@ BestMatchParams(tech, counts, plotfilename, n_optimal = 3)
 \item{counts}{expression matrix}
 
 \item{plotfilename}{output name for qqplot}
+
+\item{n_optimal}{number of top parameter configurations to return}
 }
 \value{
 three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
