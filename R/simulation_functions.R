@@ -711,7 +711,7 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
 }
 
 #' Simulate technical biases 
-#' @param lenslope amount of length bias
+#' @param lenslope amount of length bias. This value sould be less than 2*amp_bias_limit[2]/(nbins-1)
 #' @param nbins number of bins for gene length
 #' @param gene_len transcript length of each gene
 #' @param amp_bias_limit range of amplification bias for each gene, a vector of length ngenes
