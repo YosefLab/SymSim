@@ -12,4 +12,4 @@ load_all("SymSim")
 
 ### Generating datasets with SymSim
 
-Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vignettes/SymSimTutorial.html) for examples of using SymSim to simulate datasets.
+Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vignettes/SymSimTutorial.Rmd) for examples of using SymSim to simulate datasets.
