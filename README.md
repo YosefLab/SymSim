@@ -13,3 +13,7 @@ load_all("SymSim")
 ### Generating datasets with SymSim
 
 Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vignettes/SymSimTutorial.Rmd) for examples of using SymSim to simulate datasets.
+
+### References
+
+Xiuwei Zhang, Chenling Xu, Nir Yosef. SymSim: simulating multi- faceted variability in Single Cell RNA sequencing. In submission.
