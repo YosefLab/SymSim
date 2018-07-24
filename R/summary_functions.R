@@ -16,9 +16,9 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
   sd_exprs <- quantile(apply(counts,1,sd),seq(0,1,0.002),na.rm=T)
   percent0 <- quantile(apply(counts,1,percent_nonzero),seq(0,1,0.002))
   if(tech=='nonUMI'){
-    load('SymSim/grid_summary/figure4_nonUMI_Lgrid.summary.RData')
+    load('SymSim/data/grid_summary/figure4_nonUMI_Lgrid.summary.RData')
   }else if(tech =='UMI'){
-    load('SymSim/grid_summary/figure4_UMI_Lgrid.summary.RData')   
+    load('SymSim/data/grid_summary/figure4_UMI_Lgrid.summary.RData')   
   }
   grid_summary <- list(mean_bins,nonzero_bins,sd_bins)
 
@@ -37,7 +37,7 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3){
   best_match <- sort.int(dists, index.return = T)$ix[1:n_optimal]
 
   best_params <- lapply(best_match,function(X){sim_params[X,]})
-  plotnames <- c('mean','percent_nonzero','sd')
+  plotnames <- c('log10(mean)','percent_nonzero','log10(sd)')
   # pdf(file=plotfilename, 10, 23)
   # par(mfrow=c(6,3))
   # for(i in c(1:6)){

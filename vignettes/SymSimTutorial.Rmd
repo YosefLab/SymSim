@@ -10,7 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "~/Research/incoming/simulation/")
+opts_knit$set(root.dir = "/data/yosef2/users/xiuwei/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -102,7 +102,7 @@ tsne_true_counts[[2]]
 
 For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
 ```{r,cache=T}
-load("SymSim/gene_len_pool.RData")
+load("SymSim/data/gene_len_pool.RData")
 gene_len <- sample(gene_len_pool, ngenes, replace = FALSE)
 observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
 ```
@@ -119,7 +119,7 @@ phyla1 <- Phyla5()
 ```  
 or read from a file with the tree in Newick format:
 ```{r,cache=T,fig.width=7, fig.height=3}
-phyla2 <- read.tree("SymSim/Newick_ABCDE.txt")
+phyla2 <- read.tree("SymSim/data/Newick_ABCDE.txt")
 par(mfrow=c(1,2))
 plot(phyla1)
 plot(phyla2)
@@ -161,13 +161,13 @@ tsne_true_counts[[2]]
 ## Find simulations which match a given experimental dataset from our database  
 Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 8 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
 ```{r,cache=T, fig.width=6.6, fig.height=2.4}
-load("SymSim/cortex_data_pop3.RData")
+load("SymSim/data/cortex_data_pop3.RData")
 best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', n_optimal=8)
 best_matches_UMI
 ```
 Given the Th17 dataset:
 ```{r,cache=T, fig.width=6.6, fig.height=2.4}
-load("SymSim/Th17_data.RData")
+load("SymSim/data/Th17_data.RData")
 counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 1) > 10),]
 best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', n_optimal=8)
 best_matches_nonUMI

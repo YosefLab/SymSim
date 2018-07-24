@@ -185,8 +185,8 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
                           rate_2PCR=0.8, nPCR=18, LinearAmp, LinearAmp_coef, N_molecules_SEQ){
   ngenes <- length(gene_len)
-  if (protocol=="nonUMI"){load("SymSim/len2nfrag.RData")} else 
-    if(protocol=="UMI"){load("SymSim/len2prob3pri.RData")} else
+  if (protocol=="nonUMI"){load("SymSim/data/len2nfrag.RData")} else 
+    if(protocol=="UMI"){load("SymSim/data/len2prob3pri.RData")} else
     {stop("protocol input should be nonUMI or UMI")}
   inds <- vector("list",2)
   # expand the original vector and apply capture efficiency
@@ -594,10 +594,10 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                               geffect_mean=geffect_mean,geffect_sd=gene_effects_sd)
   if(!is.null(param_realdata)){
     if(param_realdata=="zeisel.imputed"){
-      load('SymSim/param_realdata.zeisel.imputed.robj')
+      load('SymSim/data/param_realdata.zeisel.imputed.robj')
     }
     if(param_realdata=="zeisel.pop4"){
-      load('SymSim/param_realdata.zeisel.pop4.robj')
+      load('SymSim/data/param_realdata.zeisel.pop4.robj')
       match_params <- cbind(result[[2]]$a[,1000,1],result[[2]]$b[,1000,1],result[[2]]$s[,1000,1])
     }
     match_params[,1]=log(base=10,match_params[,1])
