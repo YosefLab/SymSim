@@ -598,7 +598,6 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     }
     if(param_realdata=="zeisel.pop4"){
       load('SymSim/data/param_realdata.zeisel.pop4.robj')
-      match_params <- cbind(result[[2]]$a[,1000,1],result[[2]]$b[,1000,1],result[[2]]$s[,1000,1])
     }
     match_params[,1]=log(base=10,match_params[,1])
     match_params[,2]=log(base=10,match_params[,2])
