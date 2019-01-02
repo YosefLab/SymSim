@@ -84,7 +84,7 @@ SampleDen <- function(nsample,den_fun){
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
-Get_params <- function(gene_effects,evf,match_param_den,bimod){
+Get_params <- function(gene_effects,evf,match_param_den,bimod,scale_s){
   params <- lapply(1:3, function(iparam){evf[[iparam]] %*% t(gene_effects[[iparam]])})
   scaled_params <- lapply(c(1:3),function(i){
     X <- params[[i]]
@@ -104,12 +104,13 @@ Get_params <- function(gene_effects,evf,match_param_den,bimod){
   bimod_vec <- c(rep(bimod, ngenes/2), rep(0, ngenes/2))
   scaled_params[[1]] <- apply(t(scaled_params[[1]]),2,function(x){x <- 10^(x - bimod_vec)})
   scaled_params[[2]] <- apply(t(scaled_params[[2]]),2,function(x){x <- 10^(x - bimod_vec)})
-  scaled_params[[3]] <- t(apply(scaled_params[[3]],2,function(x){x<-abs(x)}))
+  scaled_params[[3]] <- t(apply(scaled_params[[3]],2,function(x){x<-10^x}))*scale_s
+  
   return(scaled_params)
 }
 
 #' Getting the parameters for simulating gene expression from EVf and gene effects
-#'
+#' Use the joint distribution of kinetic parameters estimated from real data
 #' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
 #' by using first a logistic function and then adding/dividing by constant to their correct range
 #' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
@@ -177,13 +178,13 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param gene_len gene lengths for the genes/transcripts, sampled from real human transcript length
 #' @param amp_bias amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high
-#' @param nPCR the number of PCR cycles
+#' @param nPCR1 the number of PCR cycles
 #' @param LinearAmp if linear amplification is used for pre-amplification step, default is FALSE
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
-amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, amp_bias, 
-                          rate_2PCR=0.8, nPCR=18, LinearAmp, LinearAmp_coef, N_molecules_SEQ){
+amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_bias, 
+                          rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ){
   ngenes <- length(gene_len)
   if (protocol=="nonUMI"){load("SymSim/data/len2nfrag.RData")} else 
     if(protocol=="UMI"){load("SymSim/data/len2prob3pri.RData")} else
@@ -211,7 +212,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   } else {
     temp <- runif(length(captured_vec)) < amp_rate
     temp <- temp*2+captured_vec-temp
-    for (iPCR in 2:nPCR){
+    for (iPCR in 2:nPCR1){
       eff <- runif(length(temp))*amp_rate
       v1 <- temp*(1-eff)
       round_down <- (v1-floor(v1)) < runif(length(v1))
@@ -244,7 +245,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
     }
-    for (iPCR in 3:10){
+    for (iPCR in 3:nPCR2){
       frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
     }
     SEQ_efficiency=N_molecules_SEQ/sum(frag_vec)
@@ -260,7 +261,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
     for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
     }
-    for (iPCR in 3:10){
+    for (iPCR in 3:nPCR2){
       frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
     }
     
@@ -284,6 +285,22 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap=0.1, gene_len, 
   }
 }
 
+#' sample from truncated normal distribution
+#' @param a the minimum value allowed 
+#' @param b the maximum value allowed
+rnorm_trunc <- function(n, mean, sd, a, b){
+  vec1 <- rnorm(n, mean = mean, sd=sd)
+  beyond_idx <- which(vec1 < a | vec1 > b)
+  if (length(beyond_idx) > 0) { # for each value < rate_2cap_lb
+    substi_vec <- sapply(1:length(beyond_idx), function(i){
+      while (TRUE){
+        temp <- rnorm(1, mean = mean, sd=sd)
+        if (temp > a | temp > b) {break}}
+      return(temp)} )
+    vec1[beyond_idx] <- substi_vec
+  }
+  return(vec1)
+}
 
 #' Compute value of impulse function given parameters.
 #' Enforces lower bound on value of function to avoid numerical
@@ -560,14 +577,18 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
+#' @param scale_s a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)
+#' @param prop_hge the proportion of very highly expressed genes
+#' @param mean_hge the parameter to amplify the gene-expression levels of the very highly expressed genes
 #' @param randseed random seed
 #' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
-                               n_de_evf=0,impulse=F,vary='all',
-                               Sigma=0.5,phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
-                               bimod=0,param_realdata="zeisel.imputed",joint=F,randseed,SE=F){
+                               n_de_evf=0,impulse=F,vary='all',Sigma=0.5,
+                               phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
+                               bimod=0,param_realdata="zeisel.imputed",scale_s=1,
+                               prop_hge=0.015, mean_hge=5, randseed,SE=F){
   set.seed(randseed)
   n_nd_evf=nevf-n_de_evf
   seed <- sample(c(1:1e5),size=2)
@@ -601,12 +622,11 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
     }
     match_params[,1]=log(base=10,match_params[,1])
     match_params[,2]=log(base=10,match_params[,2])
+    match_params[,3]=log(base=10,match_params[,3])
     match_params_den <- lapply(c(1:3),function(i){
       density(match_params[,i],n=2000)
     })
-    if(joint==F){
-      params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod)      
-    }else{params <- Get_params3(gene_effects,evf_res[[1]],match_params,bimod)}
+    params <- Get_params(gene_effects,evf_res[[1]],match_params_den,bimod,scale_s=scale_s)
   }else{
     params <- Get_params2(gene_effects,evf_res[[1]],bimod,ranges)
   }
@@ -618,9 +638,38 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
       return(x)
     })
   })
+  
+  if (prop_hge>0){
+    chosen_hge <- sample(ngenes, ceiling(ngenes*prop_hge), replace = F)
+    multi_factors <- numeric(length(chosen_hge))
+    rank_sum <- rank(rowSums(params[[3]][chosen_hge,]))
+    multi_factors <- sapply(1:length(chosen_hge), function(igene){
+      tosubstract <- -rank_sum[igene]*1/length(chosen_hge)+1
+      if (runif(1, 0, 1) < 1){
+        multi_factor <- mean_hge - tosubstract
+      } else {multi_factor <- mean_hge}
+      return(multi_factor)
+    })
+    new_s <- matrix(0, length(chosen_hge), ncells_total)
+    for (i in 1:length(chosen_hge)){
+      new_s[i,] <- params[[3]][chosen_hge[i],] * (2^multi_factors[i])
+    }
+    params[[3]][chosen_hge,] <- new_s
+    counts[chosen_hge] <- lapply(1:length(chosen_hge),function(i){
+      s_vec <- new_s[i,]
+      count <- sapply(c(1:ncells_total),function(j){
+        x <- rpois(1,s_vec[j])
+        return(x)
+      })
+      return(count)
+    })
+    chosen_hge <- cbind(chosen_hge, multi_factors)
+  } else {chosen_hge <- NULL}
+  
   cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
-  return(list(counts,gene_effects,cell_meta,params))
+  
+  return(list(counts=counts,gene_effects=gene_effects,cell_meta=cell_meta,kinetic_params=params,chosen_hge=chosen_hge))
 }
 
 
@@ -634,31 +683,32 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param nbins number of bins for gene length
 #' @param amp_bias_limit range of amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high, default is 0.8
-#' @param nPCR the number of PCR cycles, default is 16
+#' @param nPCR1 the number of PCR cycles, default is 16
 #' @param LinearAmp if linear amplification is used for pre-amplification step, default is FALSE
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
+#' @param hge2true if we add high gene expression to true counts
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 #' @param nbatch number of batches
-True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.02,
+True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
                                 lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
-                                rate_2PCR=0.8,nPCR=16, LinearAmp=F, LinearAmp_coef=2000, depth_mean, depth_sd, nbatch=1){  
+                                rate_2PCR=0.8,nPCR1=16, nPCR2=10, LinearAmp=F, LinearAmp_coef=2000, 
+                                depth_mean, depth_sd, nbatch=1){  
   if(!is.null(SE)){
     meta_cell <- colData(SE)
     true_counts <- assays(SE)$count
   }
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
-  rate_2cap_vec <- rnorm(ncells, mean = alpha_mean, sd=alpha_sd)
-  rate_2cap_vec[which(rate_2cap_vec < 0.0005)] <- 0.0005
-  depth_vec <- rnorm(ncells, mean = depth_mean, sd=depth_sd)
-  depth_vec[which(depth_vec < 200)] <- 200
-  
+  rate_2cap_lb <- 0.0005; depth_lb <- 200 # lower bound for capture efficiency and sequencing depth  
+  rate_2cap_vec <- rnorm_trunc(n=ncells, mean = alpha_mean, sd=alpha_sd, a=rate_2cap_lb, b=Inf)
+  depth_vec <- rnorm_trunc(n=ncells, mean = depth_mean, sd=depth_sd,a=depth_lb,b=Inf)
+
   observed_counts <- lapply(c(1:ncells),function(icell){
     amplify_1cell(true_counts_1cell =  true_counts[, icell], protocol=protocol, 
                   rate_2cap=rate_2cap_vec[icell], gene_len=gene_len, amp_bias = amp_bias, 
-                  rate_2PCR=rate_2PCR, nPCR=nPCR, LinearAmp = LinearAmp, 
+                  rate_2PCR=rate_2PCR, nPCR1=nPCR1, nPCR2=nPCR2, LinearAmp = LinearAmp, 
                   LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])     
   })
   ## assign random batch ID to cells
@@ -678,11 +728,6 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   # use different mean and same sd to generate the multiplicative factor for different gene in different batch
   if (nbatch>1){
     mean_matrix <- matrix(0, ngenes, nbatch)
-    
-    # batch_mean <- runif(nbatch, min = -1, max = 1)
-    # temp <- lapply(1:nbatch, function(ibatch) {
-    #   return(rnorm(ngenes, mean = batch_mean[ibatch], sd=max(abs(batch_mean[ibatch])/5, 0.01)))} )
-    # mean_matrix <- do.call(cbind, temp)
     batch_effect_size <- 2
     gene_mean <- rnorm(ngenes, 0, 1)
     temp <- lapply(1:ngenes, function(igene) {
@@ -700,8 +745,9 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   }
   
   if(is.null(SE)){
-    if (protocol=="UMI"){return(list(observed_counts, meta_cell, nreads_perUMI, nUMI2seq))} else
-      return(list(observed_counts, meta_cell))
+    if (protocol=="UMI"){return(list(counts=observed_counts, meta_cell=meta_cell, nreads_perUMI=nreads_perUMI, 
+                                     nUMI2seq=nUMI2seq))} else
+                                       return(list(observed_counts, meta_cell))
   } else{
     assays(SE)$observed_counts <- observed_counts
     colData(SE)<-meta_cell

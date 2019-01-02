@@ -60,8 +60,6 @@ rand.index<-function (group1, group2)
 #' @param data: expression matrix
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
-
-
 PlotTsne <- function(meta, data, evf_type, pca = T, n_pc, perplexity=30, label, saving=F, plotname,system.color=T){
   library('Rtsne')
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
@@ -135,3 +133,85 @@ sens_and_spec <- function(isDE_gold, isDE_pred){
   return(c(sensi, speci))
 }
 
+#' convert a decimal number to k based number
+#' 
+#' @param k the base number
+#' @param nbits the length (number of bits) in the target string
+#' @param dec_number the decimal number to convert
+#' @return a vector with values as the converted string at each position
+Dec2k_based <- function(k,nbits,dec_number){
+  res_code <- numeric(nbits)
+  temp <- dec_number
+  for (iexp in seq((nbits-1), 0, -1)){
+    ratio <- temp/(k^iexp)
+    if (ratio >= 1){
+      res_code[nbits-iexp] <- floor(ratio)
+      temp <- temp-floor(ratio)*(k^iexp)
+    } else {res_code[nbits-iexp] <- 0}
+  }
+  return(res_code)
+}
+
+#' convert a k based number to decimal number
+basek2decimal <- function(k, basek_vec){
+  nbits <- length(basek_vec)
+  tosum <- numeric(nbits)
+  for (ibit in 1:nbits){
+    tosum[ibit] <- basek_vec[ibit]*(k^(nbits-ibit))
+  }
+  return(sum(tosum))
+}
+
+#' calculate adjusted rand index between labels from a clustering algorithm and known labels
+#' @param cluster_res results from a cluster algorithm
+#' @param label known label of the cells
+cal_ARI <- function(cluster_res, label){
+  ri_all <- adj.rand.index(cluster_res,label)
+  ri_pop <- sapply(sort(unique(label)),function(i){
+    adj.rand.index(cluster_res,label==i)
+  })
+  ri <- c(ri_all,ri_pop)
+  return(ri)
+}
+
+KNNP <- function(data,label,mutual=T){
+  knn <- get.knn(data,k=20)
+  if(mutual==T){
+    knn <- lapply(c(1:length(data[,1])),function(i){
+      X = knn[[1]][i,]
+      mut=sapply(X,function(x){
+        i%in%knn[[1]][x,]
+      })
+      return(X[mut])
+    })		
+  }else{
+    knn <- lapply(c(1:length(data[,1])),function(i){
+      X = knn[[1]][i,]
+      return(X)})
+  }
+  purity <- sapply(c(1:length(knn)),function(i){
+    correct <- label[i]==label[knn[[i]]]
+    return(sum(correct)/length(correct))
+  })
+  return(purity)
+}
+
+#' calculate knn purity of a data space with given labels
+cal_KNNP <- function(data, label){
+  knn_purity <- KNNP(data, label)
+  kp_all <- mean(knn_purity,na.rm=T)
+  kp_pop <- sapply(sort(unique(label)),function(i){
+    mean(knn_purity[label==i],na.rm=T)
+  })
+  kp <- c(kp_all,kp_pop)
+  return(kp)
+}
+
+#' calculate pseudotime correlation between our true pseudotime and predicted pseudotime
+#' true pseudotime is a list where each element corresponds to an lineage
+cor_pseudotime <- function(true_time, pred_time){
+  cor_vec <- sapply(1:length(true_time), function(i){
+    return(cor(pred_time[paste0("cell",true_time[[i]][,1])], true_time[[i]][,2], method="spearman"))
+  })
+  return(mean(abs(cor_vec)))
+}
