@@ -10,7 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "/data/yosef2/users/xiuwei/simulation/")
+opts_knit$set(root.dir = "~/Research/incoming/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -39,16 +39,16 @@ load_all('SymSim')
 **SimulateTrueCounts( )** and **True2ObservedCounts( )** are the two major functions of the SymSim package. SimulateTrueCounts generates true transcript counts for the given number of genes and cells, where the cells can come from one single population, or multiple discrete populations, or continuous populations. True2ObservedCounts then simulates the library preparation and sequencing procedures, and convert the true transcript counts into observed read counts or UMI counts.
 
 The input parameters of the package allow users to control intrinsic variation, technical variation and biological variation in the data. Intrinsic variation is modeled through the kinetic model; technical variation takes into account dropouts, amplification biases including length bias and GC bias, and batch effects; biological variation is modeled by EVFs (extrinsic variation factors). 
-
+                               
 Parameters for function SimulateTrueCounts( ) are:  
 **ncells_total** total number of cells from all populations;    
 **min_popsize** number of cells in the rarest population;  
 **i_minpop** specifies which population has the smallest size;   
 **ngenes** number of genes;   
-**evf_center** the value which evf mean is generated from;   
-**nevf** number of EVFs;   
+**evf_center** the value which evf mean is generated from (default=1);   
+**nevf** number of EVFs for each kinetic parameter (default=30);   
 **evf_type** indicates the population structure of the cells, can be "one.population", "discrete" or "continuous";   
-**n_de_evf** number of differential evfs between populations for one kinetic parameter;  
+**n_de_evf** number of differential evfs between populations for one kinetic parameter (default=18 when vary='s');  
 **impulse** when generating continuous populations, use the impulse model or not. Default is FALSE;  
 **vary** which kinetic parameters have differential evfs. Can be "all", "kon", "koff", "s", "except_kon", "except_koff", "except_s";  
 **Sigma** controls heterogeneity each population;   
@@ -58,7 +58,10 @@ Parameters for function SimulateTrueCounts( ) are:
 **gene_effect_prob** probability of non-zero values in the gene effect vectors;   
 **bimod** adjusts the bimodality of gene expression, thus controls intrinsic variation;  
 **param_realdata** the experimental dataset used to estimate kon, koff and s parameters;   
-**joint** when matching generated kinetic parameters to those estimated from experimental dataset, using joint distribution or not;  
+**scale_s** the cell size parameter in (0,1). Use smaller value for cell types known to be small (like naive cells);  
+**prop_hge** proportion of high expression outlier genes (default=0.015);   
+**mean_hge** the inflation parameter to increase s for the high expression outlier genes;  
+**randseed** random seed to reproduce the results;  
 **SE** return summerized experiment rather than a list of elements, default is False.  
 
 The function returns a list of four elements:  
@@ -79,7 +82,8 @@ Parameters for function True2ObservedCounts( ) are:
 **gene_len** gene lengths;  
 **amp_bias_limit**  amount of amplification bias;  
 **rate_2PCR** PCR efficiency during amplification;   
-**nPCR**  number of PCR cycles in the pre-amplification step;  
+**nPCR1**  number of PCR cycles in the pre-amplification step;  
+**nPCR2**  number of PCR cycles in the second amplification step for fragments;  
 **LinearAmp** if linear amplification should be used instead of PCR amplification for the pre-amplification step. Default is FALSE;  
 **LinearAmp_coef** the number by which the number of transcript is multiplied if linear amplification is used;   
 **depth_mean** mean sequencing depth of all cells;  
@@ -95,7 +99,7 @@ This function returns a list of two elements:
 First, we simulate the case where there is one population.
 ```{r,cache=T}
 ngenes <- 500
-true_counts_res <- SimulateTrueCounts(ncells_total=200, ngenes=ngenes, evf_center=1, nevf=10, evf_type="one.population", Sigma=0.5, gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+true_counts_res <- SimulateTrueCounts(ncells_total=200, ngenes=ngenes, evf_center=1, nevf=10, evf_type="one.population", Sigma=0.5, gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", scale_s=1,prop_hge=0.02, mean_hge=5, SE=F)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="one.population", n_pc=20, label='pop', saving = F, plotname="one.population")
 tsne_true_counts[[2]]
 ```
@@ -104,12 +108,12 @@ For the true counts computed above, taking them through the library preparation 
 ```{r,cache=T}
 load("SymSim/data/gene_len_pool.RData")
 gene_len <- sample(gene_len_pool, ngenes, replace = FALSE)
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.02, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR1=16, depth_mean=1e5, depth_sd=3e3)
 ```
 
 One can plot the mean-variance relationship in the observed read counts:
 ```{r,cache=T,fig.width=4, fig.height=4}
-plot(log2(rowMeans(observed_counts[[1]])+1), log2(apply(observed_counts[[1]],1,cv)), col=adjustcolor("blue", alpha.f = 0.5), pch=19, xlab="log2(mean)", ylab="log2(CV)")
+plot(log2(rowMeans(observed_counts[[1]])+1), log2(apply(observed_counts[[1]],1,cv)), col=adjustcolor("blue", alpha.f = 0.5), pch=19, xlab="log2(mean+1)", ylab="log2(CV)")
 ```
 
 ## Simulate multiple discrete populations
@@ -134,11 +138,11 @@ tsne_true_counts[[2]]
 ```
 
 ```{r,cache=T}
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=1e5, depth_sd=3e3)
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, lenslope=0.02, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR1=16, depth_mean=1e5, depth_sd=3e3)
 tsne_nonUMI_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts nonUMI")
 tsne_nonUMI_counts[[2]]
 
-observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="UMI", alpha_mean=0.05, alpha_sd=0.02, lenslope=0.01, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR=16, depth_mean=5e4, depth_sd=3e3)
+observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="UMI", alpha_mean=0.05, alpha_sd=0.02, lenslope=0.02, nbins=20, gene_len=gene_len, amp_bias_limit=c(-0.3, 0.3), rate_2PCR=0.7, nPCR1=16, depth_mean=5e4, depth_sd=3e3)
 tsne_UMI_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts UMI")
 tsne_UMI_counts[[2]]
 ```
@@ -153,7 +157,7 @@ tiplabels()
 ```
 
 ```{r,cache=T}
-true_counts_res <- SimulateTrueCounts(ncells_total=500, ngenes=ngenes, evf_center=1, nevf=20, evf_type="continuous", n_de_evf=12, impulse = F, vary="s", Sigma=0.4, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=0, param_realdata = "zeisel.imputed", SE=F)
+true_counts_res <- SimulateTrueCounts(ncells_total=500, ngenes=ngenes, evf_center=1, nevf=20, evf_type="continuous", n_de_evf=12, impulse = F, vary="s", Sigma=0.4, phyla=Phyla5(), gene_effects_sd=1, gene_effect_prob=0.3, bimod=0, randseed=1, param_realdata = "zeisel.imputed", SE=F)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="continuous", n_pc=20, label='pop', saving = F, plotname="continuous populations (true counts)")
 tsne_true_counts[[2]]
 ```
@@ -161,14 +165,14 @@ tsne_true_counts[[2]]
 ## Find simulations which match a given experimental dataset from our database  
 Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 8 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
 ```{r,cache=T, fig.width=6.6, fig.height=2.4}
-load("SymSim/data/cortex_data_pop3.RData")
-best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', n_optimal=8)
+cortex_counts <- read.table("SymSim/data/cortex_counts.txt", header = F, stringsAsFactors = F)
+best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', depth_range = c(200e3,Inf), n_optimal=5)
 best_matches_UMI
 ```
 Given the Th17 dataset:
 ```{r,cache=T, fig.width=6.6, fig.height=2.4}
 load("SymSim/data/Th17_data.RData")
-counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 1) > 10),]
-best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', n_optimal=8)
+counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 0) > 10),]
+best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', depth_range = c(1e6, 2e6), n_optimal=5)
 best_matches_nonUMI
 ```
