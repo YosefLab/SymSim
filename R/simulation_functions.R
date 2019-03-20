@@ -254,9 +254,9 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_
     return(read_count)
   } else if (protocol=="UMI"){
     # fragmentation: 
+    prob_vec <- len2prob3pri[as.character(gene_len[trans_idx])]
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
-    {return(rbinom(n=1, size = PCRed_vec[igene], 
-                   prob = len2prob3pri[as.character(gene_len[trans_idx[igene]])] ))})
+    {return(rbinom(n=1, size = PCRed_vec[igene], prob = prob_vec ))})
     # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
     for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
