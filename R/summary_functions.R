@@ -11,18 +11,19 @@ percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
 #' @param n_optimal number of top parameter configurations to return
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
 BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
-                            depth_range=c(-Inf, Inf),alpha_range=c(-Inf, Inf),idx_set=NULL,sim_params){
+                            depth_range=c(-Inf, Inf),alpha_range=c(-Inf, Inf),idx_set=NULL){
   #counts <- counts[rowSums(counts>0)>10, ]
   mean_exprs <- quantile(rowMeans(counts+1,na.rm=T),seq(0,1,0.002))
   sd_exprs <- quantile(apply(counts,1,sd),seq(0,1,0.002),na.rm=T)
   percent0 <- quantile(apply(counts,1,percent_nonzero),seq(0,1,0.002))
   
-  tempdata <- read.table(sprintf("SymSim/data/grid_summary/mean_bins_%s.RData",tech), stringsAsFactors = F)
+  tempdata <- read.table(sprintf("SymSim/data/grid_summary/mean_bins_%s.txt",tech), stringsAsFactors = F)
   mean_bins <- unname( as.matrix(tempdata))
-  tempdata <- read.table(sprintf("SymSim/data/grid_summary/sd_bins_%s.RData",tech), stringsAsFactors = F)
+  tempdata <- read.table(sprintf("SymSim/data/grid_summary/sd_bins_%s.txt",tech), stringsAsFactors = F)
   sd_bins <- unname( as.matrix(tempdata))
-  tempdata <- read.table(sprintf("SymSim/data/grid_summary/nonzero_bins_%s.RData",tech), stringsAsFactors = F)
+  tempdata <- read.table(sprintf("SymSim/data/grid_summary/nonzero_bins_%s.txt",tech), stringsAsFactors = F)
   nonzero_bins <- unname( as.matrix(tempdata))
+  load(sprintf("SymSim/data/grid_summary/sim_params_%s.RData",tech))
   chosen_params <- which(sim_params$depth_mean >= depth_range[1] & sim_params$depth_mean <= depth_range[2] &
                            sim_params$alpha_mean >= alpha_range[1] & sim_params$alpha_mean <= alpha_range[2])
   if (!is.null(idx_set)){
