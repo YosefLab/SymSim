@@ -669,7 +669,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
   cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
   
-  return(list(counts=counts,gene_effects=gene_effects,cell_meta=cell_meta,kinetic_params=params,chosen_hge=chosen_hge))
+  return(list(counts=counts,gene_effects=gene_effects,cell_meta=cell_meta,kinetic_params=params))
 }
 
 
@@ -692,7 +692,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 #' @param nbatch number of batches
 True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
-                                lenslope=0.01,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
+                                lenslope=0.02,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR1=16, nPCR2=10, LinearAmp=F, LinearAmp_coef=2000, 
                                 depth_mean, depth_sd, nbatch=1){  
   if(!is.null(SE)){
@@ -745,9 +745,9 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
   }
   
   if(is.null(SE)){
-    if (protocol=="UMI"){return(list(counts=observed_counts, meta_cell=meta_cell, nreads_perUMI=nreads_perUMI, 
+    if (protocol=="UMI"){return(list(counts=observed_counts, cell_meta=meta_cell, nreads_perUMI=nreads_perUMI, 
                                      nUMI2seq=nUMI2seq))} else
-                                       return(list(observed_counts, meta_cell))
+                                       return(list(counts=observed_counts, cell_meta=meta_cell))
   } else{
     assays(SE)$observed_counts <- observed_counts
     colData(SE)<-meta_cell
