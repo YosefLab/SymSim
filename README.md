@@ -16,4 +16,4 @@ Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vi
 
 ### References
 
-Xiuwei Zhang &ast;, Chenling Xu &ast;, Nir Yosef. **SymSim: simulating multi- faceted variability in Single Cell RNA sequencing**. [bioRxiv] (https://doi.org/10.1101/378646). (&ast; Equal contribution)
+Xiuwei Zhang &ast;, Chenling Xu &ast;, Nir Yosef. **SymSim: simulating multi- faceted variability in Single Cell RNA sequencing**. bioRxiv (https://doi.org/10.1101/378646). (&ast; Equal contribution)
