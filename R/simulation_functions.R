@@ -399,7 +399,7 @@ Phyla3 <- function(plotting=F){
 #' @param plotname The string to be used in the output file name
 #' @param seed the random seed 
 #' @return a list of two object, one is the evf, and the other is a dataframe indicating the branch each cell comes from (pop) and its depth in the tree (depth)
-ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=F,evf_center=1,vary='all',
+ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=F,evf_center=1,vary='s',
                           Sigma,plotting=T,plotname='cont_evf.pdf',seed){
   set.seed(seed)
   edges <- cbind(phyla$edge,phyla$edge.length)
@@ -585,7 +585,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
-                               n_de_evf=0,impulse=F,vary='all',Sigma=0.5,
+                               n_de_evf=0,impulse=F,vary='s',Sigma=0.5,
                                phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0,param_realdata="zeisel.imputed",scale_s=1,
                                prop_hge=0.015, mean_hge=5, randseed,SE=F){

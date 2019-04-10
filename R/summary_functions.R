@@ -361,3 +361,13 @@ getDEgenes <- function(true_counts_res, popA, popB){
   return(list(nDiffEVF=n_useDEevf, logFC_theoretical=logFC_theoretical, wil.p_true_counts=wil.p_true_counts))
 }
 
+#' retrieve the information of cells on continuous trajectories
+#' Outputs a data frame, where each row corresponds to a cell
+#' Each cell has information "pseudotime" (distance from root) and "branch" (on which branch is the cell)
+#' @param cell_meta the cell meta information stored in the output of SimulateTrueCounts() or True2ObservedCounts()
+getTrajectoryGenes <- function(cell_meta){
+  temp <- cell_meta[, 2:3]
+  colnames(temp) <- c("branch", "pseudotime")
+  rownames(temp) <- cell_meta[, 1]
+  return(temp)
+}

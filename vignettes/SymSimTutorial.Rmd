@@ -10,7 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "~/Research/incoming/simulation/")
+opts_knit$set(root.dir = "/data/yosef2/users/xiuwei/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -40,7 +40,7 @@ library("devtools")
 load_all('SymSim')
 ```
 
-## Main functions and input
+## Main functions
 
 **SimulateTrueCounts( )** and **True2ObservedCounts( )** are the two major functions to generate datasets. SimulateTrueCounts generates true transcript counts for the given number of genes and cells, where the cells can come from one single population, or multiple discrete populations, or continuous populations. True2ObservedCounts then simulates the library preparation and sequencing procedures, and convert the true transcript counts into observed read counts or UMI counts.
 
@@ -58,7 +58,7 @@ The input parameters of the package allow users to control intrinsic variation, 
 
 **BestMatchParams( )** returns parameters to generate datasets with similar statistical properties as a given input real dataset.
 
-We also provide functions for users to retrieve goldstandard information to benchmark computational methods for clustering, differential expression and trajectory inference. The "true" cluster information for each cell can be simply obtained from the output of function SimulateTrueCounts( ). Function **getDEgenes( )** can be used to obtain differential expression information for genes, given two populations. We are adding a function **getTrajectoryGenes( )** to return the simulated trajectory information of genes.
+We also provide functions for users to retrieve goldstandard information to benchmark computational methods for clustering, differential expression and trajectory inference. The "true" cluster information for each cell can be simply obtained from the output of function SimulateTrueCounts( ). Function **getDEgenes( )** can be used to obtain differential expression information for genes, given two populations. Function **getTrajectoryGenes( )** returns the simulated trajectory information of cells.
 
 Description of input parameters for these functions can be found at the end of this document.
 
@@ -155,7 +155,12 @@ wil.p_true_counts: adjusted wilcoxon p-value based on true counts
 DEinfo <- getDEgenes(true_counts_res = true_counts_res_dis, popA = 1, popB = 3)
 summary(DEinfo)
 ```
-
+**getTrajectoryGenes( )** retrieve thes information of cells on continuous trajectories. It outputs a data frame, where each row corresponds to a cell.
+Each cell has information "pseudotime" (distance from root) and "branch" (on which branch is the cell).
+```{r,cache=T}
+TrajInfo <- getTrajectoryGenes(true_counts_res$cell_meta)
+head(TrajInfo)
+```
 
 ## Description of input parameters for major functions  
 Parameters for function SimulateTrueCounts( ) are:  
