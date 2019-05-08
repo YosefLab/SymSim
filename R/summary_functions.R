@@ -257,8 +257,9 @@ plot_nreads_UMI <- function(hist_res, plot_title){
 #' @param real_data gene expression matrix of experimental data
 #' @param sim_data gene expression matrix of simulated data
 #' @param express_prop the minimum proportion of cells a gene should be expressed in
-#' @param file_name the pdf file name for the output plots
-QQplot2RealData <- function(real_data, sim_data, expressed_prop, file_name){
+#' @param plot_file_name the pdf file name for the output plots
+#' @param print_data_dir the directory to print the source data for plots; if NA then do not print
+QQplot2RealData <- function(real_data, sim_data, expressed_prop, plot_file_name, print_data_dir=NA){
   real_data <- real_data[rowSums(real_data>0)>floor(dim(real_data)[2]*expressed_prop),]
   sim_data <- sim_data[rowSums(sim_data>0)>floor(dim(sim_data)[2]*expressed_prop),]
   
@@ -285,7 +286,7 @@ QQplot2RealData <- function(real_data, sim_data, expressed_prop, file_name){
       geom_point(alpha=0.6) + geom_abline(intercept = 0, slope = 1,col='red')
   })
   
-  pdf(file_name, 10.5, 3.5)
+  pdf(plot_file_name, 10.5, 3.5)
   par(mfrow=c(1,3))
   plot(log10(mean_sim),log10(mean_real),pch=16,xlab='simulated data',ylab='real data',main="log10(mean+1)")
   abline(a=0,b=1,col="red")
@@ -299,7 +300,15 @@ QQplot2RealData <- function(real_data, sim_data, expressed_prop, file_name){
     p_d[[2]]+labs(x="",y="")+theme(text = element_text(size=15)),
     p_d[[3]]+labs(x="",y="")+theme(text = element_text(size=15)), cols=3)
   dev.off()
-  print(sprintf("QQ-plots printed into file %s.", file_name))
+  print(sprintf("QQ-plots printed into file %s.", plot_file_name))
+  if (!is.na(print_data_dir)){
+    write.table(data.frame(simulated=log10(mean_sim), experimental=log10(mean_real)), 
+                sprintf("%s/log10meanplus1.txt",print_data_dir), quote = F, row.names = F)
+    write.table(data.frame(simulated=nonzero_sim, experimental=nonzero_real), 
+                sprintf("%s/percent_nonzero.txt",print_data_dir), quote = F, row.names = F)
+    write.table(data.frame(simulated=log10(sd_sim), experimental=log10(sd_real)), 
+                sprintf("%s/log10sd.txt",print_data_dir), quote = F, row.names = F)
+  }
   return(NULL)
 }
 
