@@ -1,6 +1,33 @@
+#' Calculate the coefficient of variation of a vector x
+#' @export
 cv <- function(x) {return(sd(x)/mean(x))}
+
+#' Calculate the fano factor of a vector x
+#' @export
 fano <- function(x) {return((sd(x))^2/mean(x))}
+
+#' Calculate the percentage of non-zero values in a vector x
+#' @export
 percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
+
+
+#' how well do dots fit to the diagonal (for evaluating our qqplots)
+#' @param x a vector on x axis
+#' @param y a vector on y axis with the same length as x
+#' @export
+dist2diag <- function(x, y, nbins){
+  min_val <- min(c(x,y));  max_val <- max(c(x,y))
+  # make nbins equal interval bins
+  bin_width <- (max_val-min_val)/nbins
+  binned_xy <- sapply(1:nbins, function(ibin){
+    bin_min <- min_val+(ibin-1)*bin_width
+    bin_max <- bin_min+bin_width
+    in_bin <- which(x>=bin_min & x<=bin_max)
+    return(c(mean(x[in_bin]), mean(y[in_bin])))
+  })
+  return(mean(abs(binned_xy[1,]-binned_xy[2,]),na.rm = T))
+}
+
 
 #' Get the best matched parameter 
 #'
@@ -10,6 +37,7 @@ percent_nonzero <- function(x) {return(sum(x>0)/length(x))}
 #' @param plotfilename output name for qqplot
 #' @param n_optimal number of top parameter configurations to return
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
+#' @export
 BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
                             depth_range=c(-Inf, Inf),alpha_range=c(-Inf, Inf),idx_set=NULL){
   #counts <- counts[rowSums(counts>0)>10, ]
@@ -48,25 +76,28 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
   })
   
   dists <- do.call(cbind,dists)
-  #dists <- apply(dists,2,function(X){X/mean(X)})
   dists <- rowSums(dists)
   sorted_dists <- sort.int(dists, index.return = T)
   best_match <- sorted_dists$ix[1:n_optimal]
   
   best_params <- lapply(chosen_params[best_match],function(X){sim_params[X,]})
   plotnames <- c('log10(mean)','percent_nonzero','log10(sd)')
-  # pdf(file=plotfilename, 10, 23)
-  # par(mfrow=c(6,3))
-  # for(i in c(1:6)){
-  #   for(k in c(1:3)){
-  #     bin1=grid_summary[[k]][best_match[i],]
-  #     bin2=exp_summary[[k]]
-  #     if(k %in% c(1,3)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
-  #     plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste(i,'best','match', plotnames[k]))
-  #     lines(c(-10,10),c(-10,10),col='red')      
-  #   }
-  # }
-  # dev.off()
+  
+  if (!is.na(plotfilename)){
+    pdf(file=sprintf("%s.pdf",plotfilename), 10, 23)
+    par(mfrow=c(6,3))
+    for(i in c(1:n_optimal)){
+      for(k in c(1:3)){
+        bin1=grid_summary[[k]][best_match[i],]
+        bin2=exp_summary[[k]]
+        if(k %in% c(1,3)){bin1 <- log(base=10,bin1);bin2 <- log(base=10,bin2)}
+        plot(bin1,bin2,pch=16,xlab='simulated values',ylab='experimental values',main=paste('No.', i,'best','match', plotnames[k]))
+        lines(c(-10,10),c(-10,10),col='red')
+      }
+    }
+    dev.off()
+  }
+  
   par(mfrow=c(1,3))
   for(k in c(1:3)){
     bin1=grid_summary[[k]][best_match[1],]
@@ -82,44 +113,47 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
   return(best_params)
 }
 
-#' Get the logged distribution from master equation simulations
-#'
-#' This function converts the frequency on integers from (0-K transcripts) to log scaled frequency, where the log_count_bins gives the range for each count bin
-#' @param dist a list of master equation simulation results, each element is a vector of length K
-#' @param log_count_bins a vector of form seq(min,max,stepsize), or doesn't have equal distance bins
-#' @return a matrix where each column is a bin, and each row is one distribution, and the contents are frequencies of probability of being in each bin 
-Sim_LogDist <- function(dist,log_count_bins){
-  bins=10^log_count_bins
-  Log_dist=lapply(dist,function(X){
-    inbins=split(X[c(2:length(X))],cut(c(2:length(X)),bins))
-    dist=c(X[1],sapply(inbins,sum))
-    dist[is.na(dist)]=0
-    return(dist)
-  })
-  Log_dist=do.call(rbind,Log_dist)
-  return(Log_dist)
-}
 
-#' Getting logged expression distribution
-#'
-#' Prepares for plotting the Count Heatmap
-#' @param dist the expression matrix
-#' @param log_count_bins a vector of the cut-offs for the histogram
-#' @return a matrix where the rows are the genes and columns are the number of samples within a count category
-LogDist <- function(counts,log_count_bins){
-  log_dist=apply(log(counts+1,base=10),1,function(x){
-    if(sum(is.na(x))!=length(x)){
-      dist0=sum(x==0)
-      range_c=log_count_bins
-      count=table(cut(x[x>0],range_c))
-      dist=c(dist0,count)/(sum(count)+dist0)
-      return(dist)}else{
-        return(NA)
-      }
-  })
-  log_dist=t(log_dist)
-  return(log_dist)
-}
+# #' Get the logged distribution from master equation simulations
+# #'
+# #' This function converts the frequency on integers from (0-K transcripts) to log scaled frequency, where the log_count_bins gives the range for each count bin
+# #' @param dist a list of master equation simulation results, each element is a vector of length K
+# #' @param log_count_bins a vector of form seq(min,max,stepsize), or doesn't have equal distance bins
+# #' @return a matrix where each column is a bin, and each row is one distribution, and the contents are frequencies of probability of being in each bin 
+# Sim_LogDist <- function(dist,log_count_bins){
+#   bins=10^log_count_bins
+#   Log_dist=lapply(dist,function(X){
+#     inbins=split(X[c(2:length(X))],cut(c(2:length(X)),bins))
+#     dist=c(X[1],sapply(inbins,sum))
+#     dist[is.na(dist)]=0
+#     return(dist)
+#   })
+#   Log_dist=do.call(rbind,Log_dist)
+#   return(Log_dist)
+# }
+
+
+# #' Getting logged expression distribution
+# #'
+# #' Prepares for plotting the Count Heatmap
+# #' @param dist the expression matrix
+# #' @param log_count_bins a vector of the cut-offs for the histogram
+# #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
+# LogDist <- function(counts,log_count_bins){
+#   log_dist=apply(log(counts+1,base=10),1,function(x){
+#     if(sum(is.na(x))!=length(x)){
+#       dist0=sum(x==0)
+#       range_c=log_count_bins
+#       count=table(cut(x[x>0],range_c))
+#       dist=c(dist0,count)/(sum(count)+dist0)
+#       return(dist)}else{
+#         return(NA)
+#       }
+#   })
+#   log_dist=t(log_dist)
+#   return(log_dist)
+# }
+
 
 #' Plotting logged expression distribution
 #'
@@ -131,6 +165,7 @@ LogDist <- function(counts,log_count_bins){
 #' @param filename the name of the output plot
 #' @param saving if the plot should be saved into a file
 #' @param data_name a string which is included in the title of the plot to describe the data used
+#' @export
 PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,
                              filename,saving=F, data_name){
   mean_counts=mean_counts[log_real[,1]<zeropropthres]
@@ -156,28 +191,31 @@ PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
   if(saving==T){ggsave(filename,dev='jpeg',width = 8, height = 8)}else{return(list(ord,p))}
 }
-#' Plotting the histograms of kon,koff,s values
-#'
-#' plot colored histograms of parameters
-#' @param params a matrix of 3 columns, the first one is kon, the second is koff and the third is s
-#' @param samplename the prefix of the plot, the suffix is '.params_dist.jpeg'
-#' @param saving if the plot should be saved to file
-#' @return make a plot of three histograms
-PlotParamHist<-function(params,samplename,saving=F){
-  df <- data.frame(kon = log(base=10,params[,1]),koff=log(base=10,params[,2]),s=log(base=10,params[,3]))
-  df <- melt(df)
-  p1 <- ggplot(df,aes(x=value)) +
-    geom_histogram(data=subset(df,variable == 'kon'),aes(y = ..density..), binwidth=density(df$value)$bw) +
-    geom_density(data=subset(df,variable == 'kon'),fill="red", alpha = 0.2) 
-  p2 <- ggplot(df,aes(x=value)) +
-    geom_histogram(data=subset(df,variable == 'koff'),aes(y = ..density..), binwidth=density(df$value)$bw) +
-    geom_density(data=subset(df,variable == 'koff'),fill="green", alpha = 0.2) 
-  p3 <- ggplot(df,aes(x=value)) +
-    geom_histogram(data=subset(df,variable == 's'),aes(y = ..density..), binwidth=density(df$value)$bw) +
-    geom_density(data=subset(df,variable == 's'),fill="blue", alpha = 0.2) 
-  if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{p <- arrangeGrob(p1, p2, p3, ncol=1)}
-  return(p)
-}
+
+
+# #' Plotting the histograms of kon,koff,s values
+# #'
+# #' plot colored histograms of parameters
+# #' @param params a matrix of 3 columns, the first one is kon, the second is koff and the third is s
+# #' @param samplename the prefix of the plot, the suffix is '.params_dist.jpeg'
+# #' @param saving if the plot should be saved to file
+# #' @return make a plot of three histograms
+# PlotParamHist<-function(params,samplename,saving=F){
+#   df <- data.frame(kon = log(base=10,params[,1]),koff=log(base=10,params[,2]),s=log(base=10,params[,3]))
+#   df <- melt(df)
+#   p1 <- ggplot(df,aes(x=value)) +
+#     geom_histogram(data=subset(df,variable == 'kon'),aes(y = ..density..), binwidth=density(df$value)$bw) +
+#     geom_density(data=subset(df,variable == 'kon'),fill="red", alpha = 0.2) 
+#   p2 <- ggplot(df,aes(x=value)) +
+#     geom_histogram(data=subset(df,variable == 'koff'),aes(y = ..density..), binwidth=density(df$value)$bw) +
+#     geom_density(data=subset(df,variable == 'koff'),fill="green", alpha = 0.2) 
+#   p3 <- ggplot(df,aes(x=value)) +
+#     geom_histogram(data=subset(df,variable == 's'),aes(y = ..density..), binwidth=density(df$value)$bw) +
+#     geom_density(data=subset(df,variable == 's'),fill="blue", alpha = 0.2) 
+#   if(saving==T){ggsave(paste(samplename,'.params_dist.jpeg',sep=''),plot=arrangeGrob(p1, p2, p3, ncol=1),device='jpeg')}else{p <- arrangeGrob(p1, p2, p3, ncol=1)}
+#   return(p)
+# }
+
 
 #' rescale2range
 #'
@@ -193,6 +231,7 @@ rescale2range <- function(vec, n){
 #' @param PCAres the PCA results
 #' @param col_vec a vector to specify the colors for each point
 #' @param figuretitle title for the plot
+#' @export
 plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
   variance_perc <- 100*(PCAres$sdev)^2/sum((PCAres$sdev)^2)
   plot(PCAres$x[,1], PCAres$x[,2], col=col_vec, pch=20,
@@ -206,8 +245,8 @@ plotPCAbasic <- function(PCAres, col_vec, figuretitle) {
 #' ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
 #' @param cols Number of columns in layout
 #' @param layout A matrix specifying the layout. If present, 'cols' is ignored.
+#' @export
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
   
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
@@ -259,6 +298,8 @@ plot_nreads_UMI <- function(hist_res, plot_title){
 #' @param express_prop the minimum proportion of cells a gene should be expressed in
 #' @param plot_file_name the pdf file name for the output plots
 #' @param print_data_dir the directory to print the source data for plots; if NA then do not print
+#' @import ggplot2
+#' @export
 QQplot2RealData <- function(real_data, sim_data, expressed_prop, plot_file_name, print_data_dir=NA){
   real_data <- real_data[rowSums(real_data>0)>floor(dim(real_data)[2]*expressed_prop),]
   sim_data <- sim_data[rowSums(sim_data>0)>floor(dim(sim_data)[2]*expressed_prop),]
@@ -313,21 +354,6 @@ QQplot2RealData <- function(real_data, sim_data, expressed_prop, plot_file_name,
 }
 
 
-#' how well do dots fit to the diagonal (for evaluating our qqplots)
-#' @param x a vector on x axis
-#' @param y a vector on y axis with the same length as x
-dist2diag <- function(x, y, nbins){
-  min_val <- min(c(x,y));  max_val <- max(c(x,y))
-  # make nbins equal interval bins
-  bin_width <- (max_val-min_val)/nbins
-  binned_xy <- sapply(1:nbins, function(ibin){
-    bin_min <- min_val+(ibin-1)*bin_width
-    bin_max <- bin_min+bin_width
-    in_bin <- which(x>=bin_min & x<=bin_max)
-    return(c(mean(x[in_bin]), mean(y[in_bin])))
-  })
-  return(mean(abs(binned_xy[1,]-binned_xy[2,]),na.rm = T))
-}
 
 #' retrieve genes' differential expression information
 #' it outputs three measures for every gene: 
@@ -337,6 +363,7 @@ dist2diag <- function(x, y, nbins){
 #' @param true_counts_res the output of function SimulateTrueCounts()
 #' @param popA the first population to be compared with (usually a number)
 #' @param popB the second population to be compared with
+#' @export
 getDEgenes <- function(true_counts_res, popA, popB){
   meta_cell <- true_counts_res$cell_meta
   meta_gene <- true_counts_res$gene_effects
@@ -374,6 +401,7 @@ getDEgenes <- function(true_counts_res, popA, popB){
 #' Outputs a data frame, where each row corresponds to a cell
 #' Each cell has information "pseudotime" (distance from root) and "branch" (on which branch is the cell)
 #' @param cell_meta the cell meta information stored in the output of SimulateTrueCounts() or True2ObservedCounts()
+#' @export
 getTrajectoryGenes <- function(cell_meta){
   temp <- cell_meta[, 2:3]
   colnames(temp) <- c("branch", "pseudotime")

@@ -4,9 +4,8 @@
 \alias{amplify_1cell}
 \title{This function simulates the amplification, library prep, and the sequencing processes.}
 \usage{
-amplify_1cell(true_counts_1cell, protocol, rate_2cap = 0.1, gene_len,
-  amp_bias, rate_2PCR = 0.8, nPCR = 18, LinearAmp, LinearAmp_coef,
-  N_molecules_SEQ)
+amplify_1cell(true_counts_1cell, protocol, rate_2cap, gene_len, amp_bias,
+  rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ)
 }
 \arguments{
 \item{true_counts_1cell}{the true transcript counts for one cell (one vector)}
@@ -21,7 +20,7 @@ amplify_1cell(true_counts_1cell, protocol, rate_2cap = 0.1, gene_len,
 
 \item{rate_2PCR}{PCR efficiency, usually very high}
 
-\item{nPCR}{the number of PCR cycles}
+\item{nPCR1}{the number of PCR cycles}
 
 \item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
 

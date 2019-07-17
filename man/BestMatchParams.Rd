@@ -4,7 +4,9 @@
 \alias{BestMatchParams}
 \title{Get the best matched parameter}
 \usage{
-BestMatchParams(tech, counts, plotfilename, n_optimal = 3)
+BestMatchParams(tech, counts, plotfilename, n_optimal = 3,
+  depth_range = c(-Inf, Inf), alpha_range = c(-Inf, Inf),
+  idx_set = NULL)
 }
 \arguments{
 \item{tech}{'nonUMI','UMI' the match database are constructed based on reasonable values for each technology}

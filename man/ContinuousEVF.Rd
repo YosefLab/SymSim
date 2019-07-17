@@ -5,7 +5,7 @@
 \title{Generating EVFs for cells sampled along the trajectory of cell development}
 \usage{
 ContinuousEVF(phyla, ncells, n_nd_evf, n_de_evf, impulse = F,
-  evf_center = 1, vary = "all", Sigma, plotting = T,
+  evf_center = 1, vary = "s", Sigma, plotting = T,
   plotname = "cont_evf.pdf", seed)
 }
 \arguments{

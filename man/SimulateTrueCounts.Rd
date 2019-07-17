@@ -5,11 +5,12 @@
 \title{Generate both evf and gene effect and simulate true transcript counts}
 \usage{
 SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
-  evf_center = 1, evf_type = "one.population", nevf = 10, n_de_evf = 0,
-  impulse = F, vary = "all", Sigma = 0.5, phyla = NULL,
-  geffect_mean = 0, gene_effects_sd = 1, gene_effect_prob = 0.3,
-  bimod = 0, param_realdata = "zeisel.imputed", joint = F, randseed,
-  SE = F)
+  evf_center = 1, evf_type = "one.population", nevf = 10,
+  n_de_evf = 0, impulse = F, vary = "s", Sigma = 0.5,
+  phyla = NULL, geffect_mean = 0, gene_effects_sd = 1,
+  gene_effect_prob = 0.3, bimod = 0,
+  param_realdata = "zeisel.imputed", scale_s = 1, prop_hge = 0.015,
+  mean_hge = 5, randseed, SE = F)
 }
 \arguments{
 \item{ncells_total}{number of cells}
@@ -37,6 +38,12 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 \item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
 
 \item{param_realdata}{pick from zeisel.imputed or zeisel.pop4}
+
+\item{scale_s}{a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)}
+
+\item{prop_hge}{the proportion of very highly expressed genes}
+
+\item{mean_hge}{the parameter to amplify the gene-expression levels of the very highly expressed genes}
 
 \item{randseed}{random seed}
 

@@ -3,37 +3,6 @@
 # Master Equation Related Functions
 #############################################################
 
-#' Calculating Master Equation
-#'
-#' This function calculates the distribution of transcritp counts in single cells given the dynamic parameters for gene expression
-#' @param rateParams a vector of length 4 including kon, koff, s, d
-#' @return a vector of X where the probability of having less or equal to X transcripts is greater than 0.999
-#' @examples 
-#' MasterEqn2(c(1,1,10,0.1))
-MasterEqn2 <- function(rateParams){
-  k_on <- rateParams[1]
-  k_off <- rateParams[2]
-  s <- rateParams[3]
-  d <- rateParams[4]
-  p_all=NA
-  k=ceiling(s/5)
-  for(i in c(0:1000)){
-    if(sum(p_all,na.rm=T)>0.999){break}
-    x=seq(i*k, ((i+1)*k-1), 1)
-    y <- (x*log(s/d) + (-s/d) + lgamma(k_on/d+x) + lgamma(k_on/d+k_off/d)) -
-      lfactorial(x) - lgamma(k_on/d+k_off/d+x) - lgamma(k_on/d)
-    z <- sapply(x, function(xx)  Re(kummerM(s/d, k_off/d, (k_on/d+k_off/d+xx),lnchf=1)))
-    logp <- y + z
-    p=exp(logp)
-    if (any(is.na(p))){
-      p <- p[-which(is.na(p))]
-    }
-    p_all=c(p_all,p)  	
-  }
-  return(p_all[-1]) # data_1gene is indices
-}
-
-
 #' Getting GeneEffects matrices 
 #'
 #' This function randomly generates the effect size of each evf on the dynamic expression parameters
@@ -81,6 +50,7 @@ SampleDen <- function(nsample,den_fun){
 #' @param evf a vector of length nevf, the cell specific extrinsic variation factor
 #' @param match_param_den the fitted parameter distribution density to sample from 
 #' @param bimod the bimodality constant
+#' @param scale_s a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
@@ -109,38 +79,6 @@ Get_params <- function(gene_effects,evf,match_param_den,bimod,scale_s){
   return(scaled_params)
 }
 
-#' Getting the parameters for simulating gene expression from EVf and gene effects
-#' Use the joint distribution of kinetic parameters estimated from real data
-#' This function takes gene_effect and EVF, take their dot product and scale the product to the correct range 
-#' by using first a logistic function and then adding/dividing by constant to their correct range
-#' @param gene_effects a list of three matrices (generated using the GeneEffects function), 
-#' each corresponding to one kinetic parameter. Each matrix has nevf columns, and ngenes rows. 
-#' @param evf a vector of length nevf, the cell specific extrinsic variation factor
-#' @param match_param_den the fitted parameter distribution density to sample from 
-#' @param bimod the bimodality constant
-#' @return params a matrix of ngenes * 3
-#' @examples 
-#' Get_params()
-Get_params3 <- function(gene_effects,evf,match_params,bimod){
-  X <- evf[[1]] %*% t(gene_effects[[1]])
-  temp <- alply(X, 1, function(Y){Y})
-  values <- do.call(c,temp)
-  ranks <- rank(values)
-  PC1 <- prcomp(t(match_params))$rotation[,1]
-  PC1 <- order(PC1)
-  temp <- sample(c(1:length(PC1)),length(values),replace=T)
-  temp <- sort(temp)
-  PC1 <- PC1[temp]
-  params <- match_params[PC1,]
-  scaled_params <- lapply(c(1:3),function(i){
-    matrix(data=params[ranks,i],ncol=length(X[1,]),byrow=T)
-  })
-  scaled_params[[1]]<-apply(scaled_params[[1]],2,function(x){x <- 10^(x - bimod)})
-  scaled_params[[2]]<-apply(scaled_params[[2]],2,function(x){x <- 10^(x - bimod)})
-  scaled_params[[3]]<-apply(scaled_params[[3]],2,function(x){x<-abs(x)})
-  scaled_params <- lapply(scaled_params,t)
-  return(scaled_params)
-}
 
 #' Getting the parameters for simulating gene expression from EVf and gene effects
 #'
@@ -154,7 +92,6 @@ Get_params3 <- function(gene_effects,evf,match_params,bimod){
 #' @return params a matrix of ngenes * 3
 #' @examples 
 #' Get_params()
-
 Get_params2 <- function(gene_effects,evf,bimod,ranges){
   params <- lapply(gene_effects,function(X){evf %*% t(X)})
   scaled_params <- lapply(c(1:3),function(i){
@@ -183,6 +120,7 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param N_molecules_SEQ number of molecules sent for sequencing; sequencing depth
 #' @return read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI)
+#' @export
 amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_bias, 
                           rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ){
   ngenes <- length(gene_len)
@@ -335,6 +273,7 @@ evalImpulse <- function(vecImpulseParam, vecTimepoints) {
 #' Creating an example tree with 5 tips
 #' @param plotting True for plotting the tree on console, False for no plot 
 #' @return a tree object
+#' @export
 Phyla5 <- function(plotting=F){
   # par(mfrow=c(2,2))
   phyla<-rtree(2)
@@ -362,6 +301,10 @@ Phyla5 <- function(plotting=F){
   return(phyla)
 }
 
+#' Creating an example tree with 3 tips
+#' @param plotting True for plotting the tree on console, False for no plot 
+#' @return a tree object
+#' @export
 Phyla3 <- function(plotting=F){
   # par(mfrow=c(2,2))
   phyla<-rtree(2)
@@ -583,6 +526,8 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param randseed random seed
 #' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
+#' @import phytools
+#' @export
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
                                n_de_evf=0,impulse=F,vary='s',Sigma=0.5,
@@ -691,6 +636,8 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param hge2true if we add high gene expression to true counts
 #' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 #' @param nbatch number of batches
+#' @import SummarizedExperiment
+#' @export
 True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
                                 lenslope=0.02,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR1=16, nPCR2=10, LinearAmp=F, LinearAmp_coef=2000, 

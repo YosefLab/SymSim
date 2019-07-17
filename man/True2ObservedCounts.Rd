@@ -5,9 +5,10 @@
 \title{Simulate observed count matrix given technical biases and the true counts}
 \usage{
 True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
-  alpha_mean = 0.1, alpha_sd = 0.02, lenslope = 0.01, nbins = 20,
-  gene_len, amp_bias_limit = c(-0.2, 0.2), rate_2PCR = 0.8, nPCR = 16,
-  LinearAmp = F, LinearAmp_coef = 2000, depth_mean, depth_sd)
+  alpha_mean = 0.1, alpha_sd = 0.002, lenslope = 0.02, nbins = 20,
+  gene_len, amp_bias_limit = c(-0.2, 0.2), rate_2PCR = 0.8,
+  nPCR1 = 16, nPCR2 = 10, LinearAmp = F, LinearAmp_coef = 2000,
+  depth_mean, depth_sd, nbatch = 1)
 }
 \arguments{
 \item{SE}{input, should be a summerized experiment rather than a list of elements, default is False}
@@ -30,7 +31,7 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
 
 \item{rate_2PCR}{PCR efficiency, usually very high, default is 0.8}
 
-\item{nPCR}{the number of PCR cycles, default is 16}
+\item{nPCR1}{the number of PCR cycles, default is 16}
 
 \item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
 
@@ -39,6 +40,10 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
 \item{depth_mean}{mean of sequencing depth}
 
 \item{depth_sd}{std of sequencing depth}
+
+\item{nbatch}{number of batches}
+
+\item{hge2true}{if we add high gene expression to true counts}
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts

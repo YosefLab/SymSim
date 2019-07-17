@@ -10,7 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "/data/yosef2/users/xiuwei/simulation/")
+opts_knit$set(root.dir = "/home/xiuwei/Research/incoming/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -34,10 +34,10 @@ or UMI counts) we consider capture efficiency, amplification bias, sequencing
 depth and batch effects. At different steps, users have control on the amount
 of extrinsic variation, intrinsic variation and technical variation.
 
-### Load required packages, load SymSim
-```{r, message=F, warning=FALSE}
+### Install SymSim
+```{r, message=F, warning=FALSE, eval=FALSE}
 library("devtools")
-load_all('SymSim')
+devtools::install('SymSim')
 ```
 
 ## Main functions
@@ -65,6 +65,7 @@ Description of input parameters for these functions can be found at the end of t
 ## Simulate one population
 First, we simulate the case where there is one population.
 ```{r,cache=T}
+library("SymSim")
 ngenes <- 500
 true_counts_res <- SimulateTrueCounts(ncells_total=300, ngenes=ngenes, evf_type="one.population", Sigma=0.5, randseed=0)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="one.population", n_pc=20, label='pop', saving = F, plotname="one.population")

@@ -38,12 +38,12 @@ ClusterQuality <- function(data,meta,n_pc,perplexity,dims,npop=5,return_kmeans=F
   else
     return(res)
 }
+
 #' rand index
 #'
 #' compare two clustering result: proportion of pairs of individual that share the same clustering result in both groupings
 #' @param group1 first clustering
 #' @param group2 second clustering 
-
 rand.index<-function (group1, group2) 
 {
   x <- c(sapply(group1, function(x) {x==group1}))
@@ -60,8 +60,10 @@ rand.index<-function (group1, group2)
 #' @param data: expression matrix
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
+#' @import Rtsne
+#' @import ggplot2
+#' @export
 PlotTsne <- function(meta, data, evf_type, pca = T, n_pc, perplexity=30, label, saving=F, plotname,system.color=T){
-  library('Rtsne')
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
   data <- data[,uniqcols];meta <- meta[uniqcols,,drop=FALSE] 
   uniqrows<-c(1:length(data[,1]))[!duplicated(data)]
@@ -96,7 +98,6 @@ PlotTsne <- function(meta, data, evf_type, pca = T, n_pc, perplexity=30, label, 
 #' @param data: expression matrix
 #' @param plotname: the name of the jpeg file
 #' @param label: the column name of the meta data that the points needs to be colored by
-
 PlotPCA <- function(meta,data,plotname,label,discrete=T,saving=F){
   uniqcols<-c(1:length(data[1,]))[!duplicated(t(data))]
   data <- data[,uniqcols];meta <- meta[uniqcols,] 
@@ -165,6 +166,7 @@ basek2decimal <- function(k, basek_vec){
 #' calculate adjusted rand index between labels from a clustering algorithm and known labels
 #' @param cluster_res results from a cluster algorithm
 #' @param label known label of the cells
+#' @export
 cal_ARI <- function(cluster_res, label){
   ri_all <- adj.rand.index(cluster_res,label)
   ri_pop <- sapply(sort(unique(label)),function(i){
