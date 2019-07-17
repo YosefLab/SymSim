@@ -7,7 +7,7 @@ This package can be installed with R package devtools. First, pull the package w
 In R run:
 ```{r}
 library("devtools")
-devtools::install("SymSim")
+devtools::install_github("YosefLab/SymSim")
 ```
 
 ### Generating datasets with SymSim
