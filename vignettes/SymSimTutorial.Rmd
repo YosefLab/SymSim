@@ -74,7 +74,7 @@ tsne_true_counts[[2]]
 
 For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
 ```{r,cache=T}
-load("SymSim/data/gene_len_pool.RData")
+data(gene_len_pool)
 gene_len <- sample(gene_len_pool, ngenes, replace = FALSE)
 observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, gene_len=gene_len, depth_mean=1e5, depth_sd=3e3)
 ```
