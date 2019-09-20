@@ -37,7 +37,7 @@ of extrinsic variation, intrinsic variation and technical variation.
 ### Install SymSim
 ```{r, message=F, warning=FALSE, eval=FALSE}
 library("devtools")
-devtools::install('SymSim')
+devtools::install_github('YosefLab/SymSim')
 ```
 
 ## Main functions

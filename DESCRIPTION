@@ -35,3 +35,4 @@ VignetteBuilder: knitr
 Author: Chenling Xu [aut],
   Xiuwei Zhang [aut, cre]
 Maintainer: Xiuwei Zhang <zhangxiuwei03@gmail.com>
+

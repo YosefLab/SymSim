@@ -560,10 +560,10 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                               geffect_mean=geffect_mean,geffect_sd=gene_effects_sd)
   if(!is.null(param_realdata)){
     if(param_realdata=="zeisel.imputed"){
-      load('SymSim/R/param_realdata.zeisel.imputed.robj')
+      load('SymSim/data/param_realdata.zeisel.imputed.RData')
     }
     if(param_realdata=="zeisel.pop4"){
-      load('SymSim/R/param_realdata.zeisel.pop4.robj')
+      load('SymSim/data/param_realdata.zeisel.pop4.RData')
     }
     match_params[,1]=log(base=10,match_params[,1])
     match_params[,2]=log(base=10,match_params[,2])
