@@ -107,6 +107,14 @@ Get_params2 <- function(gene_effects,evf,bimod,ranges){
   return(scaled_params)
 }
 
+#' @export
+get_prob <- function(glength){
+  if (glength >= 1000){prob <- 0.7} else{
+    if (glength >= 100 & glength < 1000){prob <- 0.78}
+    else if (glength < 100) {prob <- 0}
+  }
+  return(prob)
+}
 
 #' This function simulates the amplification, library prep, and the sequencing processes.
 #' @param true_counts_1cell the true transcript counts for one cell (one vector)
@@ -125,7 +133,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_
                           rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ){
   ngenes <- length(gene_len)
   if (protocol=="nonUMI"){data(len2nfrag)} else 
-    if(protocol=="UMI"){data(len2prob3pri)} else
+    if(protocol=="UMI"){ } else
     {stop("protocol input should be nonUMI or UMI")}
   inds <- vector("list",2)
   # expand the original vector and apply capture efficiency
@@ -191,21 +199,23 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_
       read_count <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)}) }
     return(read_count)
   } else if (protocol=="UMI"){
+    
+    prob_vec <- sapply(gene_len[trans_idx[1:(length(trans_idx)-1)]], get_prob)
     # fragmentation: 
-    prob_vec <- len2prob3pri[as.character(gene_len[trans_idx])]
     frag_vec <- sapply(1:(length(PCRed_vec)-1), function(igene)
-    {return(rbinom(n=1, size = PCRed_vec[igene], prob = prob_vec ))})
+    {return(rbinom(n=1, size = PCRed_vec[igene], prob = prob_vec[igene] ))})
+    
     # another 10 rounds of amplification to the fragments (fragmentation bias gets amplified)
     for (iPCR in 1:2){
       frag_vec <- frag_vec + sapply(frag_vec, function(x) rbinom(n=1, x, prob = rate_2PCR))
     }
-    for (iPCR in 3:nPCR2){
-      frag_vec <- frag_vec + round(frag_vec*rate_2PCR)
-    }
+    
+    frag_vec <- round(frag_vec * (1+rate_2PCR)^(nPCR2-1))
     
     SEQ_efficiency <- N_molecules_SEQ/sum(frag_vec)
     if (SEQ_efficiency >= 1){sequenced_vec <- frag_vec} else {
       sequenced_vec <- sapply(frag_vec,function(Y){rbinom(n=1,size=Y,prob=SEQ_efficiency)})}
+    
     temp_vec <- c(sequenced_vec,1)
     for (i in seq(2,1,-1)){
       temp_vec1 <- numeric(); temp_vec1[inds[[i]]] <- temp_vec; 
@@ -219,6 +229,7 @@ amplify_1cell <- function(true_counts_1cell, protocol, rate_2cap, gene_len, amp_
       x=recovered_vec[(GI[i]+1):GI[i+1]];
       UMI_counts[i]=sum(x>0); 
     }
+    
     return(list(UMI_counts, sequenced_vec, sum(frag_vec>0)))
   }
 }
