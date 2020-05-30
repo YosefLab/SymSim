@@ -369,6 +369,7 @@ getDEgenes <- function(true_counts_res, popA, popB){
   meta_gene <- true_counts_res$gene_effects
   popA_idx <- which(meta_cell$pop==popA)
   popB_idx <- which(meta_cell$pop==popB)
+  ngenes <- dim(true_counts_res$gene_effects[[1]])[1]
   
   DEstr <- sapply(strsplit(colnames(meta_cell)[which(grepl("evf",colnames(meta_cell)))], "_"), "[[", 2)
   param_str <- sapply(strsplit(colnames(meta_cell)[which(grepl("evf",colnames(meta_cell)))], "_"), "[[", 1)
