@@ -10,7 +10,6 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "/home/xiuwei/Research/incoming/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -64,7 +63,7 @@ Description of input parameters for these functions can be found at the end of t
 
 ## Simulate one population
 First, we simulate the case where there is one population.
-```{r,cache=T}
+```{r,cache=T, warning=FALSE}
 library("SymSim")
 ngenes <- 500
 true_counts_res <- SimulateTrueCounts(ncells_total=300, ngenes=ngenes, evf_type="one.population", Sigma=0.5, randseed=0)
@@ -73,7 +72,7 @@ tsne_true_counts[[2]]
 ```
 
 For the true counts computed above, taking them through the library preparation and sequencing procedures will yield read counts (if protocol="nonUMI") or UMI counts (if protocol="UMI"). Each genes needs to be assigned a gene length. We sample lengths from human transcript lengths.
-```{r,cache=T}
+```{r, warning=FALSE,cache=T}
 data(gene_len_pool)
 gene_len <- sample(gene_len_pool, ngenes, replace = FALSE)
 observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, gene_len=gene_len, depth_mean=1e5, depth_sd=3e3)
@@ -90,7 +89,7 @@ When there are multiple populations, users need to provide a tree. A tree with f
 phyla1 <- Phyla5()
 ```  
 or read from a file with the tree in Newick format:
-```{r,cache=T,fig.width=7, fig.height=3}
+```{r,cache=T, warning=FALSE,fig.width=7, fig.height=3}
 phyla2 <- read.tree("SymSim/data/Newick_ABCDE.txt")
 par(mfrow=c(1,2))
 plot(phyla1)
@@ -99,14 +98,14 @@ plot(phyla2)
   
 
 The true counts of the five populations can be simulated:
-```{r,cache=T}
+```{r, warning=FALSE,cache=T}
 true_counts_res <- SimulateTrueCounts(ncells_total=300, min_popsize=50, i_minpop=2, ngenes=ngenes, nevf=10, evf_type="discrete", n_de_evf=9, vary="s", Sigma=0.5, phyla=Phyla5(), randseed=0)
 true_counts_res_dis <- true_counts_res
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="discrete populations (true counts)")
 tsne_true_counts[[2]]
 ```
 
-```{r,cache=T}
+```{r, warning=FALSE,cache=T}
 observed_counts <- True2ObservedCounts(true_counts=true_counts_res[[1]], meta_cell=true_counts_res[[3]], protocol="nonUMI", alpha_mean=0.1, alpha_sd=0.05, gene_len=gene_len, depth_mean=1e5, depth_sd=3e3)
 tsne_nonUMI_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="observed counts nonUMI")
 tsne_nonUMI_counts[[2]]
@@ -116,30 +115,38 @@ tsne_UMI_counts <- PlotTsne(meta=observed_counts[[2]], data=log2(observed_counts
 tsne_UMI_counts[[2]]
 ```
 
+## Add batch effects 
+We can divide the data we simulated using the previous steps into multiple batches and add batch effects to each batch. 
+```{r, warning=FALSE,cache=T}
+observed_counts_2batches <- DivideBatches(observed_counts_res = observed_counts, nbatch = 2, batch_effect_size = 1)
+tsne_batches <- PlotTsne(meta=observed_counts_2batches[[2]], data=log2(observed_counts_2batches[[1]]+1), evf_type="discrete", n_pc=20, label='batch', saving = F, plotname="observed counts in batches")
+tsne_batches[[2]]
+```
 
 ## Simulate continuous populations
 We use the same tree as used for the simulation of discrete populations above. To visualize the continuous populations, we color the cells by the edges they belong to on the tree. We then label both the internal and tip nodes of the tree.
-```{r,cache=T, fig.width=4, fig.height=3}
+```{r,cache=T,  warning=FALSE,fig.width=4, fig.height=3}
 plot(phyla1, show.tip.label=F)
 nodelabels()
 tiplabels()
 ```
 
-```{r,cache=T}
+```{r, warning=FALSE,cache=T}
 true_counts_res <- SimulateTrueCounts(ncells_total=500, ngenes=ngenes, nevf=20, evf_type="continuous", n_de_evf=12, vary="s", Sigma=0.4, phyla=Phyla5(), randseed=1)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="continuous", n_pc=20, label='pop', saving = F, plotname="continuous populations (true counts)")
 tsne_true_counts[[2]]
 ```
 
+
 ## Find simulations which match a given experimental dataset from our database  
 Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 5 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
-```{r,cache=T, fig.width=6.6, fig.height=2.4}
+```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
 cortex_counts <- read.table("SymSim/data/cortex_counts.txt", header = F, stringsAsFactors = F)
 best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', depth_range = c(200e3,Inf), n_optimal=5)
 best_matches_UMI
 ```
 Given the Th17 dataset:
-```{r,cache=T, fig.width=6.6, fig.height=2.4}
+```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
 load("SymSim/data/Th17_data.RData")
 counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 0) > 10),]
 best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', depth_range = c(1e6, 2e6), n_optimal=5)
@@ -152,13 +159,13 @@ nDiffEVF: the number of DiffEVFs used for each gene
 logFC_theoretical: log2 fold change based on kinetic parameters  
 wil.p_true_counts: adjusted wilcoxon p-value based on true counts  
 
-```{r,cache=T}
+```{r, warning=FALSE,cache=T}
 DEinfo <- getDEgenes(true_counts_res = true_counts_res_dis, popA = 1, popB = 3)
 summary(DEinfo)
 ```
 **getTrajectoryGenes( )** retrieve thes information of cells on continuous trajectories. It outputs a data frame, where each row corresponds to a cell.
 Each cell has information "pseudotime" (distance from root) and "branch" (on which branch is the cell).
-```{r,cache=T}
+```{r, warning=FALSE,cache=T}
 TrajInfo <- getTrajectoryGenes(true_counts_res$cell_meta)
 head(TrajInfo)
 ```
