@@ -31,12 +31,3 @@
 "len2nfrag"
 
 
-#' from transcript length to number of fragments (for the UMI protocol)
-#' @name len2prob3pri
-#' @docType data
-#' @usage data(len2prob3pri)
-#' @format a vector.
-#' @keywords datasets
-#' @examples 
-#' data(len2prob3pri)
-"len2prob3pri"

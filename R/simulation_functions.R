@@ -517,25 +517,24 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 
 #' Generate both evf and gene effect and simulate true transcript counts
 #' @param ncells_total number of cells
-#' @param min_popsize the number of cells 
+#' @param min_popsize the number of cells in the smallest population
 #' @param i_minpop specifies which population has the smallest size
 #' @param ngenes number of genes
 #' @param evf_center the value which evf mean is generated from
 #' @param nevf number of evfs
 #' @param evf_type string that is one of the following: 'one.population','discrete','continuous'
 #' @param n_de_evf number of differential evfs between populations
+#' @param impulse use the impulse function when generating continuous population or not. Default is F. 
 #' @param Sigma parameter of the std of evf values within the same population
 #' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
 #' @param param_realdata pick from zeisel.imputed or zeisel.pop4
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
-#' @param match_params_den empirical density function of the kon,koff and s parameter estimated from real data
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param scale_s a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)
 #' @param prop_hge the proportion of very highly expressed genes
 #' @param mean_hge the parameter to amplify the gene-expression levels of the very highly expressed genes
 #' @param randseed random seed
-#' @param SE return summerized experiment rather than a list of elements, default is False
 #' @return a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts
 #' @import phytools
 #' @export
@@ -544,7 +543,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                                n_de_evf=0,impulse=F,vary='s',Sigma=0.5,
                                phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0,param_realdata="zeisel.imputed",scale_s=1,
-                               prop_hge=0.015, mean_hge=5, randseed,SE=F){
+                               prop_hge=0.015, mean_hge=5, randseed){
   set.seed(randseed)
   n_nd_evf=nevf-n_de_evf
   seed <- sample(c(1:1e5),size=2)
@@ -635,19 +634,19 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param alpha_sd the std of rate of subsampling of transcripts
 #' @param lenslope amount of length bias
 #' @param nbins number of bins for gene length
+#' @param gene_len a vector with lengths of all genes
 #' @param amp_bias_limit range of amplification bias for each gene, a vector of length ngenes
 #' @param rate_2PCR PCR efficiency, usually very high, default is 0.8
-#' @param nPCR1 the number of PCR cycles, default is 16
+#' @param nPCR1 the number of PCR cycles in "pre-amplification" step, default is 16
+#' @param nPCR2 the number of PCR cycles used after fragmentation. 
 #' @param LinearAmp if linear amplification is used for pre-amplification step, default is FALSE
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
-#' @param hge2true if we add high gene expression to true counts
-#' @param SE input, should be a summerized experiment rather than a list of elements, default is False
 #' @param nbatch number of batches
 #' @import SummarizedExperiment
 #' @export
-True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
+True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
                                 lenslope=0.02,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR1=16, nPCR2=10, LinearAmp=F, LinearAmp_coef=2000, 
                                 depth_mean, depth_sd, nbatch=1){  
@@ -699,16 +698,9 @@ True2ObservedCounts <- function(SE=NULL,true_counts,meta_cell,protocol,alpha_mea
     }
     observed_counts <- 2^(log2(observed_counts)+batch_factor)
   }
-  
-  if(is.null(SE)){
-    if (protocol=="UMI"){return(list(counts=observed_counts, cell_meta=meta_cell, nreads_perUMI=nreads_perUMI, 
-                                     nUMI2seq=nUMI2seq))} else
-                                       return(list(counts=observed_counts, cell_meta=meta_cell))
-  } else{
-    assays(SE)$observed_counts <- observed_counts
-    colData(SE)<-meta_cell
-    return(SE)
-  }
+  if (protocol=="UMI"){return(list(counts=observed_counts, cell_meta=meta_cell, nreads_perUMI=nreads_perUMI, 
+                                   nUMI2seq=nUMI2seq))} else
+                                     return(list(counts=observed_counts, cell_meta=meta_cell))
 }
 
 #' Simulate technical biases 
