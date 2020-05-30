@@ -4,8 +4,18 @@
 \alias{PlotTsne}
 \title{Perform tSNE}
 \usage{
-PlotTsne(meta, data, evf_type, pca = T, n_pc, perplexity = 30, label,
-  saving = F, plotname, system.color = T)
+PlotTsne(
+  meta,
+  data,
+  evf_type,
+  pca = T,
+  n_pc,
+  perplexity = 30,
+  label,
+  saving = F,
+  plotname,
+  system.color = T
+)
 }
 \arguments{
 \item{meta:}{simulation parameters}

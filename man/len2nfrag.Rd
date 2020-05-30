@@ -4,7 +4,9 @@
 \name{len2nfrag}
 \alias{len2nfrag}
 \title{from transcript length to number of fragments (for the nonUMI protocol)}
-\format{a vector.}
+\format{
+a vector.
+}
 \usage{
 data(len2nfrag)
 }

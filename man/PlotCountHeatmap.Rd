@@ -4,8 +4,15 @@
 \alias{PlotCountHeatmap}
 \title{Plotting logged expression distribution}
 \usage{
-PlotCountHeatmap(log_real, mean_counts, given_ord = NA,
-  zeropropthres = 0.8, filename, saving = F, data_name)
+PlotCountHeatmap(
+  log_real,
+  mean_counts,
+  given_ord = NA,
+  zeropropthres = 0.8,
+  filename,
+  saving = F,
+  data_name
+)
 }
 \arguments{
 \item{log_real}{the logged distribution of count distribution}

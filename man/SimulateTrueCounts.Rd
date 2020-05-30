@@ -4,18 +4,34 @@
 \alias{SimulateTrueCounts}
 \title{Generate both evf and gene effect and simulate true transcript counts}
 \usage{
-SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
-  evf_center = 1, evf_type = "one.population", nevf = 10,
-  n_de_evf = 0, impulse = F, vary = "s", Sigma = 0.5,
-  phyla = NULL, geffect_mean = 0, gene_effects_sd = 1,
-  gene_effect_prob = 0.3, bimod = 0,
-  param_realdata = "zeisel.imputed", scale_s = 1, prop_hge = 0.015,
-  mean_hge = 5, randseed, SE = F)
+SimulateTrueCounts(
+  ncells_total,
+  min_popsize,
+  i_minpop = 1,
+  ngenes,
+  evf_center = 1,
+  evf_type = "one.population",
+  nevf = 10,
+  n_de_evf = 0,
+  impulse = F,
+  vary = "s",
+  Sigma = 0.5,
+  phyla = NULL,
+  geffect_mean = 0,
+  gene_effects_sd = 1,
+  gene_effect_prob = 0.3,
+  bimod = 0,
+  param_realdata = "zeisel.imputed",
+  scale_s = 1,
+  prop_hge = 0.015,
+  mean_hge = 5,
+  randseed
+)
 }
 \arguments{
 \item{ncells_total}{number of cells}
 
-\item{min_popsize}{the number of cells}
+\item{min_popsize}{the number of cells in the smallest population}
 
 \item{i_minpop}{specifies which population has the smallest size}
 
@@ -28,6 +44,8 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 \item{nevf}{number of evfs}
 
 \item{n_de_evf}{number of differential evfs between populations}
+
+\item{impulse}{use the impulse function when generating continuous population or not. Default is F.}
 
 \item{Sigma}{parameter of the std of evf values within the same population}
 
@@ -47,11 +65,7 @@ SimulateTrueCounts(ncells_total, min_popsize, i_minpop = 1, ngenes,
 
 \item{randseed}{random seed}
 
-\item{SE}{return summerized experiment rather than a list of elements, default is False}
-
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
-
-\item{match_params_den}{empirical density function of the kon,koff and s parameter estimated from real data}
 }
 \value{
 a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts

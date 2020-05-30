@@ -4,8 +4,19 @@
 \alias{amplify_1cell}
 \title{This function simulates the amplification, library prep, and the sequencing processes.}
 \usage{
-amplify_1cell(true_counts_1cell, protocol, rate_2cap, gene_len, amp_bias,
-  rate_2PCR, nPCR1, nPCR2, LinearAmp, LinearAmp_coef, N_molecules_SEQ)
+amplify_1cell(
+  true_counts_1cell,
+  protocol,
+  rate_2cap,
+  gene_len,
+  amp_bias,
+  rate_2PCR,
+  nPCR1,
+  nPCR2,
+  LinearAmp,
+  LinearAmp_coef,
+  N_molecules_SEQ
+)
 }
 \arguments{
 \item{true_counts_1cell}{the true transcript counts for one cell (one vector)}

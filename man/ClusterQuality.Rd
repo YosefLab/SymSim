@@ -4,8 +4,16 @@
 \alias{ClusterQuality}
 \title{cluster-ability of a dataset}
 \usage{
-ClusterQuality(data, meta, n_pc, perplexity, dims, npop = 5,
-  return_kmeans = F, pca_scale = F)
+ClusterQuality(
+  data,
+  meta,
+  n_pc,
+  perplexity,
+  dims,
+  npop = 5,
+  return_kmeans = F,
+  pca_scale = F
+)
 }
 \arguments{
 \item{data:}{transcriptomics matrix}

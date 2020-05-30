@@ -4,15 +4,27 @@
 \alias{True2ObservedCounts}
 \title{Simulate observed count matrix given technical biases and the true counts}
 \usage{
-True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
-  alpha_mean = 0.1, alpha_sd = 0.002, lenslope = 0.02, nbins = 20,
-  gene_len, amp_bias_limit = c(-0.2, 0.2), rate_2PCR = 0.8,
-  nPCR1 = 16, nPCR2 = 10, LinearAmp = F, LinearAmp_coef = 2000,
-  depth_mean, depth_sd, nbatch = 1)
+True2ObservedCounts(
+  true_counts,
+  meta_cell,
+  protocol,
+  alpha_mean = 0.1,
+  alpha_sd = 0.002,
+  lenslope = 0.02,
+  nbins = 20,
+  gene_len,
+  amp_bias_limit = c(-0.2, 0.2),
+  rate_2PCR = 0.8,
+  nPCR1 = 16,
+  nPCR2 = 10,
+  LinearAmp = F,
+  LinearAmp_coef = 2000,
+  depth_mean,
+  depth_sd,
+  nbatch = 1
+)
 }
 \arguments{
-\item{SE}{input, should be a summerized experiment rather than a list of elements, default is False}
-
 \item{true_counts}{gene cell matrix}
 
 \item{meta_cell}{the meta information related to cells, will be combined with technical cell level information and returned}
@@ -27,11 +39,15 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
 
 \item{nbins}{number of bins for gene length}
 
+\item{gene_len}{a vector with lengths of all genes}
+
 \item{amp_bias_limit}{range of amplification bias for each gene, a vector of length ngenes}
 
 \item{rate_2PCR}{PCR efficiency, usually very high, default is 0.8}
 
-\item{nPCR1}{the number of PCR cycles, default is 16}
+\item{nPCR1}{the number of PCR cycles in "pre-amplification" step, default is 16}
+
+\item{nPCR2}{the number of PCR cycles used after fragmentation.}
 
 \item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
 
@@ -42,8 +58,6 @@ True2ObservedCounts(SE = NULL, true_counts, meta_cell, protocol,
 \item{depth_sd}{std of sequencing depth}
 
 \item{nbatch}{number of batches}
-
-\item{hge2true}{if we add high gene expression to true counts}
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts

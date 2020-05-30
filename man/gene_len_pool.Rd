@@ -4,7 +4,9 @@
 \name{gene_len_pool}
 \alias{gene_len_pool}
 \title{a pool of gene lengths to sample from}
-\format{a vector.}
+\format{
+a vector.
+}
 \usage{
 data(gene_len_pool)
 }
