@@ -691,7 +691,8 @@ DivideBatches <- function(observed_counts_res, nbatch, batch_effect_size=1){
   ## add batch effects to observed counts
   # use different mean and same sd to generate the multiplicative factor for different gene in different batch
   observed_counts <- observed_counts_res[["counts"]]
-  cell_meta <- observed_counts_res[["cell_meta"]]
+  meta_cell <- observed_counts_res[["cell_meta"]]
+  ncells <- dim(observed_counts)[2]; ngenes <- dim(observed_counts)[1]
   batchIDs <- sample(1:nbatch, ncells, replace = TRUE)
   meta_cell2 <- data.frame(batch=batchIDs, stringsAsFactors = F)
   meta_cell <- cbind(meta_cell, meta_cell2)
@@ -710,7 +711,7 @@ DivideBatches <- function(observed_counts_res, nbatch, batch_effect_size=1){
     }
   }
   observed_counts <- 2^(log2(observed_counts)+batch_factor)
-  return(list(counts=observed_counts, cell_meta=meta_cell)
+  return(list(counts=observed_counts, cell_meta=meta_cell))
 }
 
 #' Simulate technical biases 
