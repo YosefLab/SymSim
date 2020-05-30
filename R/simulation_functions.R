@@ -643,17 +643,16 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @param LinearAmp_coef the coeficient of linear amplification, that is, how many times each molecule is amplified by
 #' @param depth_mean mean of sequencing depth
 #' @param depth_sd std of sequencing depth
-#' @param nbatch number of batches
 #' @import SummarizedExperiment
 #' @export
 True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
                                 lenslope=0.02,nbins=20,gene_len,amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR1=16, nPCR2=10, LinearAmp=F, LinearAmp_coef=2000, 
-                                depth_mean, depth_sd, nbatch=1){  
-  if(!is.null(SE)){
-    meta_cell <- colData(SE)
-    true_counts <- assays(SE)$count
-  }
+                                depth_mean, depth_sd){  
+  # if(!is.null(SE)){
+  #   meta_cell <- colData(SE)
+  #   true_counts <- assays(SE)$count
+  # }
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_lb <- 0.0005; depth_lb <- 200 # lower bound for capture efficiency and sequencing depth  
@@ -667,8 +666,7 @@ True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,al
                   LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])     
   })
   ## assign random batch ID to cells
-  batchIDs <- sample(1:nbatch, ncells, replace = TRUE)
-  meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec, batch=batchIDs)
+  meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec,stringsAsFactors = F)
   meta_cell <- cbind(meta_cell, meta_cell2)
   
   if (protocol=="UMI"){
@@ -679,28 +677,40 @@ True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,al
   } else
     observed_counts <- do.call(cbind,observed_counts)
   
+  if (protocol=="UMI"){return(list(counts=observed_counts, cell_meta=meta_cell, nreads_perUMI=nreads_perUMI, 
+                                   nUMI2seq=nUMI2seq))
+  } else
+    return(list(counts=observed_counts, cell_meta=meta_cell))
+}
+
+#' Divide the observed counts into multiple batches by adding batch effect to each batch
+#' @param observed_counts_res the output from True2ObservedCounts
+#' @param nbatch number of batches
+#' @param batch_effect_size amount of batch effects. Larger values result in bigger differences between batches. Default is 1.
+DivideBatches <- function(observed_counts_res, nbatch, batch_effect_size=1){
   ## add batch effects to observed counts
   # use different mean and same sd to generate the multiplicative factor for different gene in different batch
-  if (nbatch>1){
-    mean_matrix <- matrix(0, ngenes, nbatch)
-    batch_effect_size <- 2
-    gene_mean <- rnorm(ngenes, 0, 1)
-    temp <- lapply(1:ngenes, function(igene) {
-      return(runif(nbatch, min = gene_mean[igene]-batch_effect_size, max = gene_mean[igene]+batch_effect_size))
-    })
-    mean_matrix <- do.call(rbind, temp)
-    
-    batch_factor <- matrix(0, ngenes, ncells)
-    for (igene in 1:ngenes){
-      for (icell in 1:ncells){
-        batch_factor[igene, icell] <- rnorm(n=1, mean=mean_matrix[igene, batchIDs[icell]], sd=0.01)
-      }
+  observed_counts <- observed_counts_res[["counts"]]
+  cell_meta <- observed_counts_res[["cell_meta"]]
+  batchIDs <- sample(1:nbatch, ncells, replace = TRUE)
+  meta_cell2 <- data.frame(batch=batchIDs, stringsAsFactors = F)
+  meta_cell <- cbind(meta_cell, meta_cell2)
+  
+  mean_matrix <- matrix(0, ngenes, nbatch)
+  gene_mean <- rnorm(ngenes, 0, 1)
+  temp <- lapply(1:ngenes, function(igene) {
+    return(runif(nbatch, min = gene_mean[igene]-batch_effect_size, max = gene_mean[igene]+batch_effect_size))
+  })
+  mean_matrix <- do.call(rbind, temp)
+  
+  batch_factor <- matrix(0, ngenes, ncells)
+  for (igene in 1:ngenes){
+    for (icell in 1:ncells){
+      batch_factor[igene, icell] <- rnorm(n=1, mean=mean_matrix[igene, batchIDs[icell]], sd=0.01)
     }
-    observed_counts <- 2^(log2(observed_counts)+batch_factor)
   }
-  if (protocol=="UMI"){return(list(counts=observed_counts, cell_meta=meta_cell, nreads_perUMI=nreads_perUMI, 
-                                   nUMI2seq=nUMI2seq))} else
-                                     return(list(counts=observed_counts, cell_meta=meta_cell))
+  observed_counts <- 2^(log2(observed_counts)+batch_factor)
+  return(list(counts=observed_counts, cell_meta=meta_cell)
 }
 
 #' Simulate technical biases 
