@@ -4,7 +4,9 @@
 \name{match_params}
 \alias{match_params}
 \title{distribution of kinetic parameters learned from the Zeisel UMI cortex datasets}
-\format{a data frame.}
+\format{
+a data frame.
+}
 \usage{
 data(param_realdata.zeisel.imputed)
 }

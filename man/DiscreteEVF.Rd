@@ -4,8 +4,18 @@
 \alias{DiscreteEVF}
 \title{Generating EVFs for cells sampled from tip populations from a tree}
 \usage{
-DiscreteEVF(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_evf,
-  n_de_evf, vary, evf_center, seed)
+DiscreteEVF(
+  phyla,
+  ncells_total,
+  min_popsize,
+  i_minpop,
+  Sigma,
+  n_nd_evf,
+  n_de_evf,
+  vary,
+  evf_center,
+  seed
+)
 }
 \arguments{
 \item{phyla}{tree for cell developement}

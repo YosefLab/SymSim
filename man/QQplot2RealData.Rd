@@ -4,8 +4,13 @@
 \alias{QQplot2RealData}
 \title{function QQplot2RealData; plot both with ggplot2 and with basic plot}
 \usage{
-QQplot2RealData(real_data, sim_data, expressed_prop, plot_file_name,
-  print_data_dir = NA)
+QQplot2RealData(
+  real_data,
+  sim_data,
+  expressed_prop,
+  plot_file_name,
+  print_data_dir = NA
+)
 }
 \arguments{
 \item{real_data}{gene expression matrix of experimental data}
