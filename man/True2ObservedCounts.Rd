@@ -20,8 +20,7 @@ True2ObservedCounts(
   LinearAmp = F,
   LinearAmp_coef = 2000,
   depth_mean,
-  depth_sd,
-  nbatch = 1
+  depth_sd
 )
 }
 \arguments{
@@ -56,8 +55,6 @@ True2ObservedCounts(
 \item{depth_mean}{mean of sequencing depth}
 
 \item{depth_sd}{std of sequencing depth}
-
-\item{nbatch}{number of batches}
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts
