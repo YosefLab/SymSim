@@ -687,6 +687,7 @@ True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,al
 #' @param observed_counts_res the output from True2ObservedCounts
 #' @param nbatch number of batches
 #' @param batch_effect_size amount of batch effects. Larger values result in bigger differences between batches. Default is 1.
+#' @export
 DivideBatches <- function(observed_counts_res, nbatch, batch_effect_size=1){
   ## add batch effects to observed counts
   # use different mean and same sd to generate the multiplicative factor for different gene in different batch
