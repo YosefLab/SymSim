@@ -10,6 +10,7 @@ vignette: >
 ---
 ```{r "setup", include=FALSE}
 require("knitr")
+#opts_knit$set(root.dir = "/home/xiuwei/Research/incoming/simulation/")
 opts_chunk$set(fig.width=4, fig.height=3) 
 ```
 
@@ -55,9 +56,12 @@ The input parameters of the package allow users to control intrinsic variation, 
 **1** a matrix containing the observed read counts or UMI counts;  
 **2** cell level meta information;  
 
-**BestMatchParams( )** returns parameters to generate datasets with similar statistical properties as a given input real dataset.
+**DivideBatches( )** takes the output of True2ObservedCounts( ) as input and split the data into multiple batches while adding batch effect for each batch. The batch information of each cell is in the output cell level meta information. 
 
-We also provide functions for users to retrieve goldstandard information to benchmark computational methods for clustering, differential expression and trajectory inference. The "true" cluster information for each cell can be simply obtained from the output of function SimulateTrueCounts( ). Function **getDEgenes( )** can be used to obtain differential expression information for genes, given two populations. Function **getTrajectoryGenes( )** returns the simulated trajectory information of cells.
+We provide functions for users to retrieve goldstandard information to benchmark computational methods for clustering, differential expression and trajectory inference. The "true" cluster information for each cell can be simply obtained from the output of function SimulateTrueCounts( ). Function **getDEgenes( )** can be used to obtain differential expression information for genes, given two populations. Function **getTrajectoryGenes( )** returns the simulated trajectory information of cells.
+
+For a single population, **BestMatchParams( )** returns parameters to generate datasets with similar statistical properties as a given input real dataset.
+
 
 Description of input parameters for these functions can be found at the end of this document.
 
@@ -66,7 +70,7 @@ First, we simulate the case where there is one population.
 ```{r,cache=T, warning=FALSE}
 library("SymSim")
 ngenes <- 500
-true_counts_res <- SimulateTrueCounts(ncells_total=300, ngenes=ngenes, evf_type="one.population", Sigma=0.5, randseed=0)
+true_counts_res <- SimulateTrueCounts(ncells_total=300, ngenes=ngenes, evf_type="one.population", Sigma=0.4, randseed=0)
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="one.population", n_pc=20, label='pop', saving = F, plotname="one.population")
 tsne_true_counts[[2]]
 ```
@@ -99,7 +103,7 @@ plot(phyla2)
 
 The true counts of the five populations can be simulated:
 ```{r, warning=FALSE,cache=T}
-true_counts_res <- SimulateTrueCounts(ncells_total=300, min_popsize=50, i_minpop=2, ngenes=ngenes, nevf=10, evf_type="discrete", n_de_evf=9, vary="s", Sigma=0.5, phyla=Phyla5(), randseed=0)
+true_counts_res <- SimulateTrueCounts(ncells_total=300, min_popsize=50, i_minpop=2, ngenes=ngenes, nevf=10, evf_type="discrete", n_de_evf=9, vary="s", Sigma=0.4, phyla=Phyla5(), randseed=0)
 true_counts_res_dis <- true_counts_res
 tsne_true_counts <- PlotTsne(meta=true_counts_res[[3]], data=log2(true_counts_res[[1]]+1), evf_type="discrete", n_pc=20, label='pop', saving = F, plotname="discrete populations (true counts)")
 tsne_true_counts[[2]]
@@ -138,21 +142,6 @@ tsne_true_counts[[2]]
 ```
 
 
-## Find simulations which match a given experimental dataset from our database  
-Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 5 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
-```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
-cortex_counts <- read.table("SymSim/data/cortex_counts.txt", header = F, stringsAsFactors = F)
-best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', depth_range = c(200e3,Inf), n_optimal=5)
-best_matches_UMI
-```
-Given the Th17 dataset:
-```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
-load("SymSim/data/Th17_data.RData")
-counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 0) > 10),]
-best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', depth_range = c(1e6, 2e6), n_optimal=5)
-best_matches_nonUMI
-```
-
 ## Retrieve goldstandard information to benchmark computational methods
 **getDEgenes( )** allows users to obtain DE information for genes. It returns the following information for each gene:  
 nDiffEVF: the number of DiffEVFs used for each gene  
@@ -168,6 +157,22 @@ Each cell has information "pseudotime" (distance from root) and "branch" (on whi
 ```{r, warning=FALSE,cache=T}
 TrajInfo <- getTrajectoryGenes(true_counts_res$cell_meta)
 head(TrajInfo)
+```
+
+
+## Find simulations which match a given experimental dataset from our database  
+Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 5 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
+```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
+cortex_counts <- read.table("SymSim/data/cortex_counts.txt", header = F, stringsAsFactors = F)
+best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', depth_range = c(200e3,Inf), n_optimal=5)
+best_matches_UMI
+```
+Given the Th17 dataset:
+```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
+load("SymSim/data/Th17_data.RData")
+counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 0) > 10),]
+best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', depth_range = c(1e6, 2e6), n_optimal=5)
+best_matches_nonUMI
 ```
 
 ## Description of input parameters for major functions  
@@ -193,7 +198,6 @@ Parameters for function SimulateTrueCounts( ) are:
 **prop_hge** proportion of high expression outlier genes (default=0.015);   
 **mean_hge** the inflation parameter to increase s for the high expression outlier genes;  
 **randseed** random seed to reproduce the results;  
-**SE** return summerized experiment rather than a list of elements, default is False.  
 
 
 Parameters for function True2ObservedCounts( ) are:  
@@ -214,5 +218,3 @@ Parameters for function True2ObservedCounts( ) are:
 **LinearAmp_coef** the number by which the number of transcript is multiplied if linear amplification is used;   
 **depth_mean** mean sequencing depth of all cells;  
 **depth_sd** standard deviation of sequencing depth of all cells;  
-**nbatch** the number of batches;  
-**SE** should the returned value be a summerized experiment rather than a list of elements, default is FALSE.  

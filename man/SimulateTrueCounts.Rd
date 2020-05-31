@@ -47,15 +47,19 @@ SimulateTrueCounts(
 
 \item{impulse}{use the impulse function when generating continuous population or not. Default is F.}
 
+\item{vary}{which kinetic parameters should the differential evfs affect. Default is 's'. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s".}
+
 \item{Sigma}{parameter of the std of evf values within the same population}
 
 \item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package}
+
+\item{geffect_mean}{the mean of the normal distribution where the non-zero gene effect sizes are sampled from}
 
 \item{gene_effect_prob}{the probability that the effect size is not 0}
 
 \item{bimod}{the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal}
 
-\item{param_realdata}{pick from zeisel.imputed or zeisel.pop4}
+\item{param_realdata}{pick from zeisel.imputed or NULL; zeisel.imputed means using the distribution of kinetic parameters learned from the Zeisel 2015 dataset. This option is recommended.}
 
 \item{scale_s}{a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)}
 
@@ -65,7 +69,7 @@ SimulateTrueCounts(
 
 \item{randseed}{random seed}
 
-\item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
+\item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero gene effect sizes are sampled from}
 }
 \value{
 a list of 4 elements, the first element is true counts, second is the gene level meta information, the third is cell level meta information, including a matrix of evf and a vector of cell identity, and the fourth is the parameters kon, koff and s used to simulation the true counts

@@ -524,12 +524,14 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param nevf number of evfs
 #' @param evf_type string that is one of the following: 'one.population','discrete','continuous'
 #' @param n_de_evf number of differential evfs between populations
+#' @param vary which kinetic parameters should the differential evfs affect. Default is 's'. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s".
 #' @param impulse use the impulse function when generating continuous population or not. Default is F. 
 #' @param Sigma parameter of the std of evf values within the same population
 #' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
-#' @param param_realdata pick from zeisel.imputed or zeisel.pop4
+#' @param param_realdata pick from zeisel.imputed or NULL; zeisel.imputed means using the distribution of kinetic parameters learned from the Zeisel 2015 dataset. This option is recommended.
 #' @param gene_effect_prob the probability that the effect size is not 0
-#' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @param geffect_mean the mean of the normal distribution where the non-zero gene effect sizes are sampled from 
+#' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero gene effect sizes are sampled from 
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param scale_s a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)
 #' @param prop_hge the proportion of very highly expressed genes
@@ -665,7 +667,7 @@ True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,al
                   rate_2PCR=rate_2PCR, nPCR1=nPCR1, nPCR2=nPCR2, LinearAmp = LinearAmp, 
                   LinearAmp_coef = LinearAmp_coef, N_molecules_SEQ = depth_vec[icell])     
   })
-  ## assign random batch ID to cells
+
   meta_cell2 <- data.frame(alpha=rate_2cap_vec,depth=depth_vec,stringsAsFactors = F)
   meta_cell <- cbind(meta_cell, meta_cell2)
   
