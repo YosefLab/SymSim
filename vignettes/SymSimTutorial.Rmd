@@ -163,13 +163,13 @@ head(TrajInfo)
 ## Find simulations which match a given experimental dataset from our database  
 Given an experimental dataset, users can find the simulation which match the experimental dataset in terms of statistics including the mean expression, the fano factor and the percentage of expressing cells of genes. The function **BestMatchParams()** returns the parameter configurations which generate the top matching simulations. In the following example, we obtain the top 5 best matching parameter configurations for respectively the cortex and the Th17 datasets. The function also generates Q-Q plots of mean, percent-non-zero, standard deviation (sd) of genes between the given experimental dataset and simulated dataset with top ranking. Given the cortex dataset:
 ```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
-cortex_counts <- read.table("SymSim/data/cortex_counts.txt", header = F, stringsAsFactors = F)
+cortex_counts <- read.table(system.file("extdata", "cortex_counts.txt", package = "SymSim"), header = F, stringsAsFactors = F)
 best_matches_UMI <- BestMatchParams('UMI',cortex_counts,'best_params.umi.qqplot.pdf', depth_range = c(200e3,Inf), n_optimal=5)
 best_matches_UMI
 ```
 Given the Th17 dataset:
 ```{r,cache=T,  warning=FALSE,fig.width=6.6, fig.height=2.4}
-load("SymSim/data/Th17_data.RData")
+load(system.file("extdata", "Th17_data.RData", package = "SymSim"))
 counts <- ss2_130cells_counts[which(rowSums(ss2_130cells_counts > 0) > 10),]
 best_matches_nonUMI <- BestMatchParams('nonUMI',counts,'best_params.nonUMI.qqplot.pdf', depth_range = c(1e6, 2e6), n_optimal=5)
 best_matches_nonUMI

@@ -45,7 +45,9 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
   sd_exprs <- quantile(apply(counts,1,sd),seq(0,1,0.002),na.rm=T)
   percent0 <- quantile(apply(counts,1,percent_nonzero),seq(0,1,0.002))
   
-  tempdata <- read.table(sprintf("SymSim/data/grid_summary/mean_bins_%s.txt",tech), stringsAsFactors = F)
+  tempdata <- read.table(system.file("extdata/grid_summary", sprintf("mean_bins_%s.txt",tech), package = "SymSim"),
+                         stringsAsFactors = F)
+  print("passed!")
   mean_bins <- unname( as.matrix(tempdata))
   tempdata <- read.table(sprintf("SymSim/data/grid_summary/sd_bins_%s.txt",tech), stringsAsFactors = F)
   sd_bins <- unname( as.matrix(tempdata))
