@@ -75,7 +75,7 @@ PlotTsne <- function(meta, data, evf_type, pca = T, n_pc, perplexity=30, label, 
   data_tsne=Rtsne(t(data),perplexity=perplexity)
   plot_tsne <- cbind(meta, data.frame(label=factor(meta[,label]),x=data_tsne$Y[,1],y=data_tsne$Y[,2]))
   p <- ggplot(plot_tsne, aes(x, y))
-  p <- p + geom_point(aes(colour = plot_tsne[['label']]),shape=20) + labs(color=label)
+  p <- p + geom_point(aes(colour = .data[['label']]),shape=20) + labs(color=label)
   if (system.color==F){
     if(evf_type=="discrete" | evf_type=="one.population"){
       color_5pop <- c("#F67670", "#0101FF", "#005826", "#A646F5", "#980000")
