@@ -16,7 +16,7 @@ SimulateTrueCounts(
   impulse = F,
   vary = "s",
   Sigma = 0.5,
-  phyla = NULL,
+  phyla,
   geffect_mean = 0,
   gene_effects_sd = 1,
   gene_effect_prob = 0.3,
@@ -51,7 +51,7 @@ SimulateTrueCounts(
 
 \item{Sigma}{parameter of the std of evf values within the same population}
 
-\item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package}
+\item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly (using pbtree(nclusters) function from phytools package) or read from newick format file using the ape package}
 
 \item{geffect_mean}{the mean of the normal distribution where the non-zero gene effect sizes are sampled from}
 

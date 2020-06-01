@@ -527,7 +527,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param vary which kinetic parameters should the differential evfs affect. Default is 's'. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s".
 #' @param impulse use the impulse function when generating continuous population or not. Default is F. 
 #' @param Sigma parameter of the std of evf values within the same population
-#' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly or read from newick format file using the ape package
+#' @param phyla the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly (using pbtree(nclusters) function from phytools package) or read from newick format file using the ape package
 #' @param param_realdata pick from zeisel.imputed or NULL; zeisel.imputed means using the distribution of kinetic parameters learned from the Zeisel 2015 dataset. This option is recommended.
 #' @param gene_effect_prob the probability that the effect size is not 0
 #' @param geffect_mean the mean of the normal distribution where the non-zero gene effect sizes are sampled from 
@@ -543,7 +543,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
                                n_de_evf=0,impulse=F,vary='s',Sigma=0.5,
-                               phyla=NULL,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
+                               phyla,geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0,param_realdata="zeisel.imputed",scale_s=1,
                                prop_hge=0.015, mean_hge=5, randseed){
   set.seed(randseed)
