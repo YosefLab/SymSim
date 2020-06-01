@@ -47,13 +47,14 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
   
   tempdata <- read.table(system.file("extdata/grid_summary", sprintf("mean_bins_%s.txt",tech), package = "SymSim"),
                          stringsAsFactors = F)
-  print("passed!")
   mean_bins <- unname( as.matrix(tempdata))
-  tempdata <- read.table(sprintf("SymSim/data/grid_summary/sd_bins_%s.txt",tech), stringsAsFactors = F)
+  tempdata <- read.table(system.file("extdata/grid_summary", sprintf("sd_bins_%s.txt",tech), package = "SymSim"), 
+                         stringsAsFactors = F)
   sd_bins <- unname( as.matrix(tempdata))
-  tempdata <- read.table(sprintf("SymSim/data/grid_summary/nonzero_bins_%s.txt",tech), stringsAsFactors = F)
+  tempdata <- read.table(system.file("extdata/grid_summary", sprintf("nonzero_bins_%s.txt",tech), package = "SymSim"), 
+                         stringsAsFactors = F)
   nonzero_bins <- unname( as.matrix(tempdata))
-  load(sprintf("SymSim/data/grid_summary/sim_params_%s.RData",tech))
+  load(system.file("extdata/grid_summary", sprintf("sim_params_%s.RData",tech), package = "SymSim"))
   chosen_params <- which(sim_params$depth_mean >= depth_range[1] & sim_params$depth_mean <= depth_range[2] &
                            sim_params$alpha_mean >= alpha_range[1] & sim_params$alpha_mean <= alpha_range[2])
   if (!is.null(idx_set)){
