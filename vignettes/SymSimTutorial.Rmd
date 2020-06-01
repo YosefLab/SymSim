@@ -94,7 +94,7 @@ phyla1 <- Phyla5()
 ```  
 or read from a file with the tree in Newick format:
 ```{r,cache=T, warning=FALSE,fig.width=7, fig.height=3}
-phyla2 <- read.tree("SymSim/data/Newick_ABCDE.txt")
+phyla2 <- read.tree(system.file("extdata", "Newick_ABCDE.txt", package = "SymSim"))
 par(mfrow=c(1,2))
 plot(phyla1)
 plot(phyla2)
