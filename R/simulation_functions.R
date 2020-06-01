@@ -712,7 +712,7 @@ DivideBatches <- function(observed_counts_res, nbatch, batch_effect_size=1){
       batch_factor[igene, icell] <- rnorm(n=1, mean=mean_matrix[igene, batchIDs[icell]], sd=0.01)
     }
   }
-  observed_counts <- 2^(log2(observed_counts)+batch_factor)
+  observed_counts <- round(2^(log2(observed_counts)+batch_factor))
   return(list(counts=observed_counts, cell_meta=meta_cell))
 }
 
