@@ -136,26 +136,26 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
 # }
 
 
-# #' Getting logged expression distribution
-# #'
-# #' Prepares for plotting the Count Heatmap
-# #' @param dist the expression matrix
-# #' @param log_count_bins a vector of the cut-offs for the histogram
-# #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
-# LogDist <- function(counts,log_count_bins){
-#   log_dist=apply(log(counts+1,base=10),1,function(x){
-#     if(sum(is.na(x))!=length(x)){
-#       dist0=sum(x==0)
-#       range_c=log_count_bins
-#       count=table(cut(x[x>0],range_c))
-#       dist=c(dist0,count)/(sum(count)+dist0)
-#       return(dist)}else{
-#         return(NA)
-#       }
-#   })
-#   log_dist=t(log_dist)
-#   return(log_dist)
-# }
+#' Getting logged expression distribution
+#'
+#' Prepares for plotting the Count Heatmap
+#' @param dist the expression matrix
+#' @param log_count_bins a vector of the cut-offs for the histogram
+#' @return a matrix where the rows are the genes and columns are the number of samples within a count category
+LogDist <- function(counts,log_count_bins){
+  log_dist=apply(log(counts+1,base=10),1,function(x){
+    if(sum(is.na(x))!=length(x)){
+      dist0=sum(x==0)
+      range_c=log_count_bins
+      count=table(cut(x[x>0],range_c))
+      dist=c(dist0,count)/(sum(count)+dist0)
+      return(dist)}else{
+        return(NA)
+      }
+  })
+  log_dist=t(log_dist)
+  return(log_dist)
+}
 
 
 #' Plotting logged expression distribution
