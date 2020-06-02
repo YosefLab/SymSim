@@ -398,7 +398,7 @@ getDEgenes <- function(true_counts_res, popA, popB){
   
   wil.adjp_true_counts <- p.adjust(wil.p_true_counts, method = 'fdr')
   
-  return(list(nDiffEVF=n_useDEevf, logFC_theoretical=logFC_theoretical, wil.adjp_true_counts=wil.adjp_true_counts))
+  return(list(nDiffEVF=n_useDEevf, logFC_theoretical=logFC_theoretical, wil.p_true_counts=wil.adjp_true_counts))
 }
 
 #' retrieve the information of cells on continuous trajectories
