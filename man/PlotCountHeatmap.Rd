@@ -7,27 +7,27 @@
 PlotCountHeatmap(
   log_real,
   mean_counts,
+  data_name,
   given_ord = NA,
   zeropropthres = 0.8,
-  filename,
-  saving = F,
-  data_name
+  filename = NA,
+  saving = F
 )
 }
 \arguments{
-\item{log_real}{the logged distribution of count distribution, obtaned through the LogDist function}
+\item{log_real}{the logged distribution of count distribution, obtained through the LogDist function}
 
 \item{mean_counts}{the average expression for each gene, used for sorting purpose}
+
+\item{data_name}{a string which is included in the title of the plot to describe the data used}
 
 \item{given_ord}{the given order of genes}
 
 \item{zeropropthres}{the genes with zeroproportion greater than this number is not plotted (default to 0.8)}
 
-\item{filename}{the name of the output plot}
+\item{filename}{the name of the output plot. Will not be used if saving=F.}
 
 \item{saving}{if the plot should be saved into a file}
-
-\item{data_name}{a string which is included in the title of the plot to describe the data used}
 }
 \description{
 takes an expression matrix and makes a 2D histogram on the log scale where each row is a gene and the number of samples in a bin is shown by the intensity of the color
