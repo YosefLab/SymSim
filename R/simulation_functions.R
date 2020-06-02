@@ -658,7 +658,7 @@ True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,al
   ngenes <- dim(true_counts)[1]; ncells <- dim(true_counts)[2]
   amp_bias <- cal_amp_bias(lenslope, nbins, gene_len, amp_bias_limit)
   rate_2cap_lb <- 0.0005; depth_lb <- 200 # lower bound for capture efficiency and sequencing depth  
-  rate_2cap_vec <- rnorm_trunc(n=ncells, mean = alpha_mean, sd=alpha_sd, a=rate_2cap_lb, b=Inf)
+  rate_2cap_vec <- rnorm_trunc(n=ncells, mean = alpha_mean, sd=alpha_sd, a=rate_2cap_lb, b=1)
   depth_vec <- rnorm_trunc(n=ncells, mean = depth_mean, sd=depth_sd,a=depth_lb,b=Inf)
 
   observed_counts <- lapply(c(1:ncells),function(icell){
