@@ -142,6 +142,7 @@ BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,
 #' @param dist the expression matrix
 #' @param log_count_bins a vector of the cut-offs for the histogram
 #' @return a matrix where the rows are the genes and columns are the number of samples within a count category
+#' @export
 LogDist <- function(counts,log_count_bins){
   log_dist=apply(log(counts+1,base=10),1,function(x){
     if(sum(is.na(x))!=length(x)){
