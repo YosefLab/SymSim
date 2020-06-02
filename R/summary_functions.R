@@ -161,13 +161,17 @@ LogDist <- function(counts,log_count_bins){
 #' Plotting logged expression distribution
 #'
 #' takes an expression matrix and makes a 2D histogram on the log scale where each row is a gene and the number of samples in a bin is shown by the intensity of the color
-#' @param log_real the logged distribution of count distribution
+#' @param log_real the logged distribution of count distribution, obtaned through the LogDist function
 #' @param mean_counts the average expression for each gene, used for sorting purpose
 #' @param given_ord the given order of genes 
 #' @param zeropropthres the genes with zeroproportion greater than this number is not plotted (default to 0.8)
 #' @param filename the name of the output plot
 #' @param saving if the plot should be saved into a file
 #' @param data_name a string which is included in the title of the plot to describe the data used
+#' @examples  
+#' heatmapplot <- PlotCountHeatmap(LogDist(countmatrix,seq(0, 4, 0.4)),rowMeans(countmatrix),
+#' given_ord= NA,zeropropthres=1,filename=NA,data_name='true counts',saving=F)
+#' heatmapplot[[2]]
 #' @export
 PlotCountHeatmap <- function(log_real, mean_counts,given_ord=NA,zeropropthres=0.8,
                              filename,saving=F, data_name){

@@ -15,7 +15,7 @@ PlotCountHeatmap(
 )
 }
 \arguments{
-\item{log_real}{the logged distribution of count distribution}
+\item{log_real}{the logged distribution of count distribution, obtaned through the LogDist function}
 
 \item{mean_counts}{the average expression for each gene, used for sorting purpose}
 
@@ -31,4 +31,10 @@ PlotCountHeatmap(
 }
 \description{
 takes an expression matrix and makes a 2D histogram on the log scale where each row is a gene and the number of samples in a bin is shown by the intensity of the color
+}
+\examples{
+ 
+heatmapplot <- PlotCountHeatmap(LogDist(countmatrix,seq(0, 4, 0.4)),rowMeans(countmatrix),
+given_ord= NA,zeropropthres=1,filename=NA,data_name='true counts',saving=F)
+heatmapplot[[2]]
 }
