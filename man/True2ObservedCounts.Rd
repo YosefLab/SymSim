@@ -13,14 +13,14 @@ True2ObservedCounts(
   lenslope = 0.02,
   nbins = 20,
   gene_len,
+  depth_mean,
+  depth_sd,
   amp_bias_limit = c(-0.2, 0.2),
   rate_2PCR = 0.8,
   nPCR1 = 16,
   nPCR2 = 10,
   LinearAmp = F,
-  LinearAmp_coef = 2000,
-  depth_mean,
-  depth_sd
+  LinearAmp_coef = 2000
 )
 }
 \arguments{
@@ -40,6 +40,10 @@ True2ObservedCounts(
 
 \item{gene_len}{a vector with lengths of all genes}
 
+\item{depth_mean}{mean of sequencing depth}
+
+\item{depth_sd}{std of sequencing depth}
+
 \item{amp_bias_limit}{range of amplification bias for each gene, a vector of length ngenes}
 
 \item{rate_2PCR}{PCR efficiency, usually very high, default is 0.8}
@@ -51,10 +55,6 @@ True2ObservedCounts(
 \item{LinearAmp}{if linear amplification is used for pre-amplification step, default is FALSE}
 
 \item{LinearAmp_coef}{the coeficient of linear amplification, that is, how many times each molecule is amplified by}
-
-\item{depth_mean}{mean of sequencing depth}
-
-\item{depth_sd}{std of sequencing depth}
 }
 \description{
 Simulate observed count matrix given technical biases and the true counts

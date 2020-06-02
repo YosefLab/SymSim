@@ -13,19 +13,19 @@ SimulateTrueCounts(
   evf_type = "one.population",
   nevf = 10,
   n_de_evf = 0,
-  impulse = F,
   vary = "s",
   Sigma = 0.5,
   phyla,
+  randseed,
   geffect_mean = 0,
   gene_effects_sd = 1,
   gene_effect_prob = 0.3,
   bimod = 0,
   param_realdata = "zeisel.imputed",
   scale_s = 1,
+  impulse = F,
   prop_hge = 0.015,
-  mean_hge = 5,
-  randseed
+  mean_hge = 5
 )
 }
 \arguments{
@@ -45,13 +45,13 @@ SimulateTrueCounts(
 
 \item{n_de_evf}{number of differential evfs between populations}
 
-\item{impulse}{use the impulse function when generating continuous population or not. Default is F.}
-
 \item{vary}{which kinetic parameters should the differential evfs affect. Default is 's'. Can be "kon", "koff", "s", "all", "except_kon", "except_koff", "except_s". Suggestions are "all" or "s".}
 
 \item{Sigma}{parameter of the std of evf values within the same population}
 
 \item{phyla}{the cell developmental tree if chosing 'discrete' or 'continuous' evf type. Can either be generated randomly (using pbtree(nclusters) function from phytools package) or read from newick format file using the ape package}
+
+\item{randseed}{random seed}
 
 \item{geffect_mean}{the mean of the normal distribution where the non-zero gene effect sizes are sampled from}
 
@@ -63,11 +63,11 @@ SimulateTrueCounts(
 
 \item{scale_s}{a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)}
 
+\item{impulse}{use the impulse function when generating continuous population or not. Default is F.}
+
 \item{prop_hge}{the proportion of very highly expressed genes}
 
 \item{mean_hge}{the parameter to amplify the gene-expression levels of the very highly expressed genes}
-
-\item{randseed}{random seed}
 
 \item{gene_effect_sd}{the standard deviation of the normal distribution where the non-zero gene effect sizes are sampled from}
 }
