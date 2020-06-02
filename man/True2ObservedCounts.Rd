@@ -10,11 +10,11 @@ True2ObservedCounts(
   protocol,
   alpha_mean = 0.1,
   alpha_sd = 0.002,
-  lenslope = 0.02,
-  nbins = 20,
   gene_len,
   depth_mean,
   depth_sd,
+  lenslope = 0.02,
+  nbins = 20,
   amp_bias_limit = c(-0.2, 0.2),
   rate_2PCR = 0.8,
   nPCR1 = 16,
@@ -34,15 +34,15 @@ True2ObservedCounts(
 
 \item{alpha_sd}{the std of rate of subsampling of transcripts}
 
-\item{lenslope}{amount of length bias}
-
-\item{nbins}{number of bins for gene length}
-
 \item{gene_len}{a vector with lengths of all genes}
 
 \item{depth_mean}{mean of sequencing depth}
 
 \item{depth_sd}{std of sequencing depth}
+
+\item{lenslope}{amount of length bias}
+
+\item{nbins}{number of bins for gene length}
 
 \item{amp_bias_limit}{range of amplification bias for each gene, a vector of length ngenes}
 

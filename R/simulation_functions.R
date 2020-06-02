@@ -542,8 +542,8 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @export
 SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes, 
                                evf_center=1,evf_type="one.population",nevf=10,
-                               n_de_evf=0,vary='s',Sigma=0.5,
-                               phyla, randseed, geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
+                               phyla, randseed, n_de_evf=0,vary='s',Sigma=0.4,
+                               geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0,param_realdata="zeisel.imputed",scale_s=1,impulse=F,
                                prop_hge=0.015, mean_hge=5){
   set.seed(randseed)
@@ -648,7 +648,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
 #' @import SummarizedExperiment
 #' @export
 True2ObservedCounts <- function(true_counts,meta_cell,protocol,alpha_mean=0.1,alpha_sd=0.002,
-                                lenslope=0.02,nbins=20,gene_len,depth_mean, depth_sd,
+                                gene_len,depth_mean, depth_sd, lenslope=0.02,nbins=20,
                                 amp_bias_limit=c(-0.2, 0.2),
                                 rate_2PCR=0.8,nPCR1=16, nPCR2=10, LinearAmp=F, LinearAmp_coef=2000){  
   # if(!is.null(SE)){
