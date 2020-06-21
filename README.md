@@ -4,7 +4,22 @@ SymSim (Synthetic model of multiple variability factors for Simulation) is an R 
 ### Install from Github
 This package can be installed with R package devtools. First, pull the package with git clone to your working directory. Make sure that you have installed the packages listed in the DESCRIPTION file.
 
-In R run:
+The required Bioconductor packages can be installed as follows in R:
+```
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("IRanges")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("Biobase")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("S4Vectors")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("SummarizedExperiment")
+```
+To install SymSim, run:
 ```{r}
 library("devtools")
 devtools::install_github("YosefLab/SymSim")
