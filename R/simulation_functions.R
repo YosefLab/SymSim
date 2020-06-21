@@ -244,7 +244,7 @@ rnorm_trunc <- function(n, mean, sd, a, b){
     substi_vec <- sapply(1:length(beyond_idx), function(i){
       while (TRUE){
         temp <- rnorm(1, mean = mean, sd=sd)
-        if (temp > a | temp > b) {break}}
+        if (temp > a & temp < b) {break}}
       return(temp)} )
     vec1[beyond_idx] <- substi_vec
   }
