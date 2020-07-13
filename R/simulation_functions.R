@@ -12,10 +12,13 @@
 #' @param prob the probability that the effect size is not 0
 #' @param geffect_mean the mean of the normal distribution where the non-zero effect sizes are dropped from 
 #' @param geffect_sd the standard deviation of the normal distribution where the non-zero effect sizes are dropped from 
+#' @param evf_res the EVFs generated for cells
+#' @param is_in_module a vector of length ngenes. 0 means the gene is not in any gene module. In case of non-zero values, genes with the same value in this vector are in the same module.
 #' @return a list of 3 matrices, each of dimension ngenes * nevf
-GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
+GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd, evf_res, is_in_module){
   set.seed(randseed)
-  lapply(c('kon','koff','s'),function(param){
+  
+  gene_effects <- lapply(c('kon','koff','s'),function(param){
     effect <- lapply(c(1:ngenes),function(i){
       nonzero <- sample(size=nevf,x=c(0,1),prob=c((1-prob),prob),replace=T)
       nonzero[nonzero!=0]=rnorm(sum(nonzero),mean=geffect_mean,sd=geffect_sd)
@@ -23,6 +26,36 @@ GeneEffects <- function(ngenes,nevf,randseed,prob,geffect_mean,geffect_sd){
     })
     return(do.call(rbind,effect))
   })
+  
+  
+  mod_strength <- 0.8
+  if (sum(is_in_module) > 0){ # some genes need to be assigned as module genes; their gene_effects for s will be updated accordingly
+    for (pop in unique(is_in_module[is_in_module>0])){ # for every population, find the 
+      #which(evf_res[[2]]$pop == pop)
+      for (iparam in c(1,3)){
+        nonzero_pos <- order(colMeans(evf_res[[1]][[iparam]][which(evf_res[[2]]$pop==pop),])- colMeans(evf_res[[1]][[iparam]]),
+                             decreasing = T)[1:ceiling(nevf*prob)]
+        geffects_centric <- rnorm(length(nonzero_pos), mean = 0.5, sd=0.5)
+        for (igene in which(is_in_module==pop)){
+          for (ipos in 1:length(nonzero_pos)){
+            gene_effects[[iparam]][igene,nonzero_pos[ipos]] <- rnorm(1, mean=geffects_centric[ipos], sd=(1-mod_strength))
+          }
+          gene_effects[[iparam]][igene,setdiff((1:nevf),nonzero_pos)] <- 0
+        }
+      }
+      
+      nonzero_pos <- order(colMeans(evf_res[[1]][[2]][which(evf_res[[2]]$pop==pop),])- colMeans(evf_res[[1]][[2]]),
+                           decreasing = T)[1:ceiling(nevf*prob)]
+      geffects_centric <- rnorm(length(nonzero_pos), mean = -0.5, sd=0.5)
+      for (igene in which(is_in_module==pop)){
+        for (ipos in 1:length(nonzero_pos)){
+          gene_effects[[2]][igene,nonzero_pos[ipos]] <- rnorm(1, mean=geffects_centric[ipos], sd=(1-mod_strength))
+        }
+        gene_effects[[2]][igene,setdiff((1:nevf),nonzero_pos)] <- 0
+      }
+    }
+  }
+  return(gene_effects)
 }
 
 #' sample from smoothed density function
@@ -534,6 +567,7 @@ DiscreteEVF <- function(phyla, ncells_total, min_popsize, i_minpop, Sigma, n_nd_
 #' @param gene_effect_sd the standard deviation of the normal distribution where the non-zero gene effect sizes are sampled from 
 #' @param bimod the amount of increased bimodality in the transcript distribution, 0 being not changed from the results calculated using evf and gene effects, and 1 being all genes are bimodal
 #' @param scale_s a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)
+#' @param gene_module_prop proportion of genes which are in co-expressed gene module
 #' @param prop_hge the proportion of very highly expressed genes
 #' @param mean_hge the parameter to amplify the gene-expression levels of the very highly expressed genes
 #' @param randseed random seed
@@ -545,7 +579,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                                phyla, randseed, n_de_evf=0,vary='s',Sigma=0.4,
                                geffect_mean=0,gene_effects_sd=1,gene_effect_prob=0.3,
                                bimod=0,param_realdata="zeisel.imputed",scale_s=1,impulse=F,
-                               prop_hge=0.015, mean_hge=5){
+                               gene_module_prop=0,prop_hge=0.015, mean_hge=5){
   set.seed(randseed)
   n_nd_evf=nevf-n_de_evf
   seed <- sample(c(1:1e5),size=2)
@@ -568,8 +602,40 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
                              evf_center=evf_center,vary=vary,impulse=impulse,
                              Sigma,plotting=T,seed=seed[1])    
   }
+  
+  if (gene_module_prop > 0 & evf_type == "continuous"){
+    stop("the gene modules are developed only for evf_type to be discrete")
+  }
+  is_in_module <- numeric(ngenes) # assign modules automatically and return module idx for genes. 
+  if (gene_module_prop > 0){
+    total_module_genes <- ceiling(ngenes*gene_module_prop)
+    min_module_size <- 10
+    if (total_module_genes < min_module_size) {
+      warning("The proportion of module genes is too low. Will not assign any module genes.")
+    } else { # assign module genes to populations. The module genes for population i is expected to be highly expressed in i but not always.
+      pops <- unique(evf_res[[2]]$pop); npop <- length(pops)
+      nblocks <- floor(total_module_genes/min_module_size)
+      nmod_genes_perpop <- numeric(npop)
+      nmod_genes_perpop[1:npop] <- floor(nblocks/npop)*min_module_size
+      extra_blocks <- nblocks - npop*floor(nblocks/npop)
+      if ( extra_blocks > 0) {
+        nmod_genes_perpop[1:extra_blocks] <- nmod_genes_perpop[1:extra_blocks] + min_module_size
+      }
+      extra_genes <- total_module_genes-sum(nmod_genes_perpop)
+      if (extra_genes > 0){
+        nmod_genes_perpop[which.min(nmod_genes_perpop)] <- nmod_genes_perpop[which.min(nmod_genes_perpop)] + extra_genes
+      }
+      # now assign values to is_in_module according to how many module genes are assigned to each population
+      temp <- sample(ngenes); temp2 <- c(0, cumsum(nmod_genes_perpop))
+      for (pop in 1:npop){
+        is_in_module[temp[(temp2[pop]+1): temp2[pop+1]]] <- pop
+      }
+    }
+  }
+  
   gene_effects <- GeneEffects(ngenes=ngenes,nevf=nevf,randseed=seed[2],prob=gene_effect_prob,
-                              geffect_mean=geffect_mean,geffect_sd=gene_effects_sd)
+                              geffect_mean=geffect_mean,geffect_sd=gene_effects_sd, evf_res=evf_res, is_in_module=is_in_module)
+  
   if(!is.null(param_realdata)){
     if(param_realdata=="zeisel.imputed"){
       data(param_realdata.zeisel.imputed)
@@ -624,7 +690,7 @@ SimulateTrueCounts <- function(ncells_total,min_popsize,i_minpop=1,ngenes,
   cell_meta <- cbind( cellid=paste('cell',seq(1,ncells_total),sep='_'),evf_res[[2]],evf_res[[1]])
   counts <- do.call(rbind,counts)
   
-  return(list(counts=counts,gene_effects=gene_effects,cell_meta=cell_meta,kinetic_params=params))
+  return(list(counts=counts, gene_effects=gene_effects, cell_meta=cell_meta,kinetic_params=params, in_module=is_in_module))
 }
 
 

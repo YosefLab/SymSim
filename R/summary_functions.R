@@ -36,6 +36,8 @@ dist2diag <- function(x, y, nbins){
 #' @param counts expression matrix
 #' @param plotfilename output name for qqplot
 #' @param n_optimal number of top parameter configurations to return
+#' @param depth_range if one knows the rough range of sequencing depth, it can be input here.
+#' @param alpha_range if one knows the rough range of mRNA capture efficiency, it can be input here.
 #' @return three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset
 #' @export
 BestMatchParams <- function(tech,counts,plotfilename,n_optimal=3,

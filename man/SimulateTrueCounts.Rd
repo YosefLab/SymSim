@@ -24,6 +24,7 @@ SimulateTrueCounts(
   param_realdata = "zeisel.imputed",
   scale_s = 1,
   impulse = F,
+  gene_module_prop = 0,
   prop_hge = 0.015,
   mean_hge = 5
 )
@@ -64,6 +65,8 @@ SimulateTrueCounts(
 \item{scale_s}{a factor to scale the s parameter, which is used to tune the size of the actual cell (small cells have less number of transcripts in total)}
 
 \item{impulse}{use the impulse function when generating continuous population or not. Default is F.}
+
+\item{gene_module_prop}{proportion of genes which are in co-expressed gene module}
 
 \item{prop_hge}{the proportion of very highly expressed genes}
 

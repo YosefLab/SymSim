@@ -22,6 +22,10 @@ BestMatchParams(
 \item{plotfilename}{output name for qqplot}
 
 \item{n_optimal}{number of top parameter configurations to return}
+
+\item{depth_range}{if one knows the rough range of sequencing depth, it can be input here.}
+
+\item{alpha_range}{if one knows the rough range of mRNA capture efficiency, it can be input here.}
 }
 \value{
 three set of best matching parameters that was used to simulate the best matching dataset to the experimental dataset

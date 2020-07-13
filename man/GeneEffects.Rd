@@ -4,7 +4,16 @@
 \alias{GeneEffects}
 \title{Getting GeneEffects matrices}
 \usage{
-GeneEffects(ngenes, nevf, randseed, prob, geffect_mean, geffect_sd)
+GeneEffects(
+  ngenes,
+  nevf,
+  randseed,
+  prob,
+  geffect_mean,
+  geffect_sd,
+  evf_res,
+  is_in_module
+)
 }
 \arguments{
 \item{ngenes}{number of genes}
@@ -16,6 +25,10 @@ GeneEffects(ngenes, nevf, randseed, prob, geffect_mean, geffect_sd)
 \item{geffect_mean}{the mean of the normal distribution where the non-zero effect sizes are dropped from}
 
 \item{geffect_sd}{the standard deviation of the normal distribution where the non-zero effect sizes are dropped from}
+
+\item{evf_res}{the EVFs generated for cells}
+
+\item{is_in_module}{a vector of length ngenes. 0 means the gene is not in any gene module. In case of non-zero values, genes with the same value in this vector are in the same module.}
 
 \item{randomseed}{(should produce same result if ngenes, nevf and randseed are all the same)}
 }
