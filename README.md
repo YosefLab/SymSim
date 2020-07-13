@@ -29,6 +29,8 @@ devtools::install_github("YosefLab/SymSim")
 
 Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vignettes/SymSimTutorial.Rmd) for examples of using SymSim to simulate datasets.
 
+[New feature] SymSim can now generate co-expressed gene modules. A new argument to the function `SimulateTrueCounts()` which is `gene_module_prop` represent the proportion of genes the user wants to be in gene modules. The smallest module size is 10 genes. For example, if the total number of genes in modules is 100, and the total number of populations is 5, then the 100 genes are randomy assigned to 5 gene modules. A gene module often correspond to a population, meaning that that set of genes tend to be highly expressed in a given population, but there is no guarantee on this. In the output of the function `SimulateTrueCounts()` there is an element `is_in_module` which gives the module ID for each gene (0 means the gene is not in any module).
+
 ### References
 
 Xiuwei Zhang &ast;, Chenling Xu &ast;, Nir Yosef. **Simulating multiple faceted variability in Single Cell RNA sequencing**. _Nature Communications_, 10:2611, 2019. (https://www.nature.com/articles/s41467-019-10500-w).
