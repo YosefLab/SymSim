@@ -448,7 +448,7 @@ ContinuousEVF <- function(phyla,ncells,n_nd_evf,n_de_evf,impulse=F,evf_center=1,
       }
       de_evf <- lapply(de_evf,function(X){X[,4]})
       de_evf <- do.call(cbind,de_evf)
-      de_evf <- de_evf[c(1:ncells),]
+      de_evf <- de_evf[c(1:ncells),] # the de_evf for more cells are generated. Here we need to truncate the last ones.
       evfs <- cbind(nd_evf,de_evf)
       colnames(evfs)<-c(
         paste(param_names[parami],rep('nonDE',length(nd_evf[1,])),c(1:length(nd_evf[1,])),sep='_'),

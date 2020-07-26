@@ -115,7 +115,8 @@ PlotPaths<-function(temp,main){
 SampleEdge <- function(edge,depth,anc_state,edges,ncells,t_sample=NA){
   if(is.na(t_sample[1])){
     #t_sample <- c(0,sort( runif(round(edge[4]*ncells/sum(edges[,4])),0,edge[4]) ))
-    t_sample <- c(0,seq(0, edge[4], edge[4]/(round(edge[4]*ncells/sum(edges[,4]))+1)))
+    if (ceiling(edge[4]*ncells/sum(edges[,4]))-1 < 0) {stop("the total number of cells is too few.")}
+    t_sample <- c(0,seq(0, edge[4], edge[4]/(ceiling(edge[4]*ncells/sum(edges[,4]))-1)))
     t_sample<-c(t_sample,edge[4])
   }else{
     t_sample<-sort(c(0,t_sample-depth))
