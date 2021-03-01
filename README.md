@@ -2,7 +2,7 @@
 SymSim (Synthetic model of multiple variability factors for Simulation) is an R package for simulation of single cell RNA-Seq data. 
 
 ### Install from Github
-This package can be installed with R package devtools. First, pull the package with git clone to your working directory. Make sure that you have installed the packages listed in the DESCRIPTION file.
+This package can be installed with R package devtools. First, make sure that you have installed the packages listed in the DESCRIPTION file.
 
 The required Bioconductor packages can be installed as follows in R:
 ```
