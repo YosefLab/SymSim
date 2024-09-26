@@ -34,3 +34,7 @@ Refer to the [SymSim vignette](https://github.com/YosefLab/SymSim/blob/master/vi
 ### References
 
 Xiuwei Zhang &ast;, Chenling Xu &ast;, Nir Yosef. **Simulating multiple faceted variability in Single Cell RNA sequencing**. _Nature Communications_, 10:2611, 2019. (https://www.nature.com/articles/s41467-019-10500-w).
+
+### Related work
+
+We developed scMultiSim, which generalized SymSim substantially, and can generate multi-omics and spatial data, guided by gene regulatory networks and cell-cell interactions. scMultiSim is available at https://github.com/ZhangLabGT/scMultiSim. 
